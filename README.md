@@ -40,3 +40,7 @@ git checkout -b feature/your-feature-name
 - This project is initialized locally and ready for GitHub integration
 - Keep commits focused and descriptive
 - Use branches for feature development and experimentation
+
+## Projects
+
+- `parkour/`: Parkour, a rooftop runner game through Rouen (open `parkour/index.html`)

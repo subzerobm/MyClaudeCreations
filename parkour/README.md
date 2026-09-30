@@ -1,6 +1,9 @@
 # Parkour
 
-A rooftop parkour runner through Rouen. It is a single HTML page with no dependencies: the character, the city, the music and the sound effects are all drawn or synthesised in code.
+A parkour runner through Rouen with two levels:
+
+- **Niveau 1, les toits (la nuit):** an endless run over the rooftops; at 1 000 m a crown falls on his head.
+- **Niveau 2, Rue Eau-de-Robec (le jour):** a hand-built street course along the Robec with café tables, awnings to bounce on, balconies, benches to vault, a handrail, drawbridges that lift, walls to climb, a UFO flight and a finish line. Hints appear just before each move. It is a single HTML page with no dependencies: the character, the city, the music and the sound effects are all drawn or synthesised in code.
 
 ## Play
 
@@ -35,3 +38,7 @@ Progress is saved automatically in the browser (`localStorage`). The SAUVEGARDE 
 ## Install on a phone
 
 When served over HTTPS (for example GitHub Pages), Chrome can add it to the home screen (menu, then "Add to Home screen"). It then opens full-screen and works offline thanks to `manifest.webmanifest` and `sw.js`.
+
+## Source
+
+`src/core.html` is the game, `src/level2-robec.js` is level 2. Run `sh build.sh` inside `src/` to rebuild `index.html`.

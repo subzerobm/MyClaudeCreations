@@ -1,8 +1,8 @@
-/* ===== Level 2 preview: Rue Eau-de-Robec by day =====
-   Dev-only. build.sh splices this file into the core at the LEVEL2 marker for the
-   preview page; the game Abel gets is built without it. The level is a fixed,
-   hand-built course played by a scripted autopilot (demo only). */
-const R2={acts:[],ai:0,backs:[]};
+/* ===== Level 2: Rue Eau-de-Robec by day =====
+   build.sh splices this file into the core at the LEVEL2 marker. The level is a fixed,
+   hand-built course: the player runs it, the demo plays it with a scripted autopilot,
+   and hints (act.h) show just before each key move. */
+const R2={acts:[],ai:0,hi:0,backs:[]};
 const DAY_FAR={hill:'#8cc7a3',sil:'#86a3d6',lat:'#a4bde6',glow:'rgba(255,255,255,0)'};
 const R2PAL=[{wall:'#e8846a',timber:'#3b2418'},{wall:'#7fc8c0',timber:'#2c3e66'},{wall:'#efe6d6',timber:'#5a2e1a'},{wall:'#ef9fb5',timber:'#4a2a4a'},{wall:'#a8d58a',timber:'#3d2a17'},{wall:'#9fb8ec',timber:'#2a2f5a'},{wall:'#f4b860',timber:'#5a2e1a'},{wall:'#c98f6b',timber:'#3a2216'},{wall:'#d7c9ef',timber:'#3a2f5a'}];
 const SHUT=['#2f7fbf','#3a9a5b','#c8453b','#e5a32e','#7a4fb0'];
@@ -35,9 +35,10 @@ function arcCoins(x0,y0,vy,H,dj,up,v){
 
 const LV2={
   speed:()=>260,
+  finite:true,
   init(){
-    const v=260, S=BASE; R2.acts=[]; R2.ai=0; R2.backs=[]; R2.lastCh=-9;
-    const act=(x,a,c)=>R2.acts.push({x,a,c});
+    const v=260, S=BASE; R2.acts=[]; R2.ai=0; R2.hi=0; R2.backs=[]; R2.lastCh=-9;
+    const act=(x,a,c,h)=>R2.acts.push({x,a,c,h}), hint=(x,h)=>act(x,null,null,h);
     const plat=(x,w,h,kind,o)=>{ const p=Object.assign({x,w,y:S-h,kind},o||{}); plats.push(p); return p; };
     const back=(x,w,h)=>{ const i=R2.backs.length, ch=i-R2.lastCh>=3&&Math.random()<.45; if(ch) R2.lastCh=i; R2.backs.push({x,w,top:S-h,pal:R2PAL[i%R2PAL.length],seed:i*7+3+(i%3),ch,fl:ch&&Math.random()<.35}); };
     const row=(x1,x2,y)=>{ for(let x=x1;x<x2;x+=26) coins.push({x,y,t:false}); };
@@ -50,10 +51,12 @@ const LV2={
     // 1. warm-up on the quay: a pot of geraniums, then a football
     row(120,300,S-22);
     obs('pot',380,24,[382,S-26,402,S]);
+    hint(340,'1 TAPE : saute par-dessus le pot !');
     jumpFrom(380-40,0,0,'Il saute par-dessus le pot de fleurs');
-    placeFoot(590,S,760); act(560,null,'Un ballon ! Il tire dans le but…');
+    placeFoot(590,S,760); act(560,null,'Un ballon ! Il tire dans le but…','Cours dans le ballon : BUT !');
 
     // 2. café terrace: street -> table -> striped awning (bounce) -> balcony -> street
+    hint(880,'Saute sur la table, puis sur le store : BOING !');
     let l1=jumpFrom(880,0,30,'Il saute sur la table du café !');
     const t1=plat(l1-16,50,30,'table');
     plat(t1.x-26,18,16,'chair',{deco:true}); plat(t1.x+t1.w+8,18,16,'chair',{deco:true});
@@ -67,20 +70,23 @@ const LV2={
     // 3. hanging café sign: slide, then a kong vault over a bench
     const s1=l4+300;
     obs('sign',s1,72,[s1,S-400,s1+60,S-34],{over:true});
-    act(s1-32,'slide','Il glisse sous l’enseigne du café');
+    act(s1-32,'slide','Il glisse sous l’enseigne du café','GLISSE VERS LE BAS sous l’enseigne !');
     row(s1-10,s1+70,S-14);
     const bn1=s1+240; bench(bn1);
+    hint(bn1-46,'Saute par-dessus le banc : SAUT DE CHAT !');
     jumpFrom(bn1-46,0,0,'Saut de chat par-dessus le banc !');
 
     // 4. the first drawbridge opens: double jump over the Robec
     const g1=bn1+52+300; lift(g1,210);
     act(g1-420,null,'Attention, le pont se lève !');
+    hint(g1-18,'Le pont se lève : 2 TAPES pour passer !');
     jumpFrom(g1-18,0,0,'Double saut par-dessus le pont levé !',.345);
 
     // 4b. little footbridge, then balance along a handrail
     const g2=g1+210+300; gaps.push([g2,g2+240]);
     plat(g2-6,252,0,'bridge'); act(g2+30,null,'Il passe sur la petite passerelle');
     row(g2+20,g2+230,S-22);
+    hint(g2+240+170,'Saute sur la rambarde : ÉQUILIBRE !');
     const ra=jumpFrom(g2+240+170,0,34,'Il saute sur la rambarde…');
     const rail=plat(ra-16,240,34,'rail'); act(ra+12,null,'ÉQUILIBRE sur la rambarde !');
     row(rail.x+40,rail.x+rail.w-20,S-58);
@@ -88,13 +94,23 @@ const LV2={
 
     // 5. pigeons: slide; street football
     const p1=re+220; makeObst('pigeons',p1,S);
-    act(p1-30,'slide','Il glisse sous les pigeons');
+    act(p1-30,'slide','Il glisse sous les pigeons','GLISSE sous les pigeons !');
     placeFoot(p1+150,S,p1+410); act(p1+110,null,'Un ballon ! Il tire…');
 
     // 5b. the golden record's bubble protects him from a bike
-    items.push({type:'disque',x:p1+530,y:S-48,t:false}); act(p1+500,null,'Disque d’or : une bulle de protection !');
+    items.push({type:'disque',x:p1+530,y:S-48,t:false}); act(p1+500,null,'Disque d’or : une bulle de protection !','Attrape le disque d’or : la bulle te protège !');
     const bk=p1+780; obs('velo',bk,48,[bk+2,S-32,bk+46,S]);
-    act(bk-90,null,'Pas besoin de sauter : la bulle le protège !');
+    act(bk-90,null,'Pas besoin de sauter : la bulle le protège !','Sans bulle ? Saute par-dessus le vélo !');
+
+    // 5c. the Paris ball pulls in the coins; a washing line of jerseys to slide under
+    items.push({type:'ballon',x:bk+230,y:S-48,t:false}); act(bk+200,null,'Le ballon aimant attire les pièces !');
+    for(let i=0;i<14;i++) coins.push({x:bk+300+i*22,y:S-60-Math.sin(i*.7)*50,t:false});
+    const lg=bk+520; makeObst('linge',lg,S); act(lg-32,'slide','Il glisse sous les maillots','GLISSE sous les maillots !');
+
+    // 5d. the UFO carries him over a wide stretch of the Robec
+    const uf=lg+300; items.push({type:'ovni',x:uf,y:S-48,t:false});
+    act(uf-30,null,'MODE OVNI : il vole au-dessus de la Robec !','Attrape l’OVNI… ou passe par la passerelle !');
+    gaps.push([uf+380,uf+1000]); plat(uf+374,632,0,'bridge');
 
     // 5c. the Paris ball pulls in the coins; a washing line of jerseys to slide under
     items.push({type:'ballon',x:bk+230,y:S-48,t:false}); act(bk+200,null,'Le ballon aimant attire les pièces !');
@@ -107,9 +123,10 @@ const LV2={
     gaps.push([uf+380,uf+1000]);
 
     // 6. Spider-Man: climb a house wall, run on the roof, jump down with flips and roll
-    const hx=uf+1750; houses.push({x:hx,w:300,h:190});
+    const hx=uf+1750; houses.push({x:hx,w:300,h:190}); hint(hx-10,'Cours vers le mur : tu grimpes tout seul !');
     row(hx+40,hx+270,S-212);
     items.push({type:'chest',x:hx+160,y:S-202,t:false});
+    hint(hx+300-14,'Du toit : 2 ou 3 TAPES pour des SALTOS !');
     const l5=jumpFrom(hx+300-14,190,0,'Il saute du toit : DOUBLE SALTO !',.3,.66);
 
     // 6b. another kong vault
@@ -117,12 +134,13 @@ const LV2={
     jumpFrom(bn2-46,0,0,'Encore un saut de chat !');
 
     // 6c. a big Paris banner to slide under
-    const bnr=bn2+62+260; makeObst('banner',bnr,S); act(bnr-32,'slide','Il glisse sous la banderole ICI C’EST PARIS');
+    const bnr=bn2+62+260; makeObst('banner',bnr,S); act(bnr-32,'slide','Il glisse sous la banderole ICI C’EST PARIS','GLISSE sous la banderole !');
 
     // 7. the big drawbridge: double jump + flips
     const g3=bnr+80+340; lift(g3,240);
     act(g3-420,null,'Le grand pont s’ouvre !');
     const jx=g3-18, land3=jx+v*simT(-JUMPV,0,.345,.345+.36);
+    hint(jx,'Le grand pont : 2 TAPES, puis une 3e pour un salto !');
     jumpFrom(jx,0,0,'Double saut + salto au-dessus du pont !',.345,.345+.36);
 
     // 8. second terrace: two tables, awning, high balcony, onto a roof
@@ -161,9 +179,11 @@ const LV2={
     addBuilding(x,end-x,S,'quai');
     for(const h of houses){ const b=addBuilding(h.x,h.w,S-h.h,'maison'); b.climb=true; b.pal=R2PAL[(h.x|0)%R2PAL.length]; }
     G.genX=end; G.prevTop=S;
+    R2.acts.sort((p,q)=>p.x-q.x);
     buildings.sort((p,q)=>(p.style==='maison')-(q.style==='maison')||p.x-q.x);
   },
   gen(){ addBuilding(G.genX,2000,BASE,'quai'); },
+  hint(){ const px=G.cam+PX; while(R2.hi<R2.acts.length&&px>=R2.acts[R2.hi].x-230){ const a=R2.acts[R2.hi++]; if(a.h) cap(a.h); } },
   bot(){
     const px=G.cam+PX;
     while(R2.ai<R2.acts.length&&px>=R2.acts[R2.ai].x){
@@ -309,7 +329,7 @@ const LV2={
   },
   onEnd(){
     $('o-title').textContent='FIN DU NIVEAU 2 !';
-    $('o-done').textContent='Aperçu du niveau Rue Eau-de-Robec. Il n’est pas encore dans le jeu d’Abel.';
+    $('o-done').textContent='C’était une démo : ces pièces ne comptent pas. À toi de jouer !';
   }
 };
 function marker(x,y,t,label){ // bouncing arrow over the next place to land
@@ -423,12 +443,3 @@ function buildMid2(){
   }
   mid={img:cvs,w:MW,h:MH,y0:BASE-260};
 }
-LV=LV2;
-(function(){ // preview menu: only the level-2 demo
-  const logo=document.querySelector('.logo'); if(logo) logo.innerHTML='<span>NIVEAU 2</span><span>RUE EAU-DE-ROBEC</span>';
-  const t=document.querySelector('title'); if(t) t.textContent='Parkour Niveau 2';
-  for(const id of ['b-play','b-shop','b-miss','b-savep','b-music']){ const e=$(id); if(e) e.hidden=true; }
-  const st=document.querySelector('.stats'); if(st) st.hidden=true;
-  const ht=document.querySelector('.howto'); if(ht) ht.textContent='Aperçu pour toi seulement : le jeu joue tout seul. Ce niveau n’est pas encore dans la version d’Abel.';
-  const d=$('b-demo'); if(d){ d.textContent='VOIR LE NIVEAU 2'; d.style.flex='1'; }
-})();

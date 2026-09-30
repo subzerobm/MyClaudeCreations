@@ -71,7 +71,7 @@ const LV2={
     // 3. hanging café sign: slide, then a kong vault over a bench
     const s1=l4+300;
     obs('sign',s1,72,[s1,S-400,s1+60,S-34],{over:true});
-    act(s1-32,'slide','Il glisse sous l’enseigne du café','GLISSE VERS LE BAS sous l’enseigne !');
+    act(s1-32,'slide','Il glisse sous l’enseigne du café','GARDE LE DOIGT APPUYÉ : glisse sous l’enseigne !');
     row(s1-10,s1+70,S-14);
     const bn1=s1+240; bench(bn1);
     hint(bn1-46,'Saute par-dessus le banc : SAUT DE CHAT !');
@@ -95,7 +95,7 @@ const LV2={
 
     // 5. pigeons: slide; street football
     const p1=re+220; makeObst('pigeons',p1,S);
-    act(p1-30,'slide','Il glisse sous les pigeons','GLISSE sous les pigeons !');
+    act(p1-30,'slide','Il glisse sous les pigeons','DOIGT APPUYÉ : glisse sous les pigeons !');
     placeFoot(p1+150,S,p1+410); act(p1+110,null,'Un ballon ! Il tire…');
 
     // 5b. the golden record's bubble protects him from a bike
@@ -107,7 +107,7 @@ const LV2={
     // 5c. the Paris ball pulls in the coins; a washing line of jerseys to slide under
     items.push({type:'ballon',x:bk+230,y:S-48,t:false}); act(bk+200,null,'Le ballon aimant attire les pièces !');
     for(let i=0;i<14;i++) coins.push({x:bk+300+i*22,y:S-60-Math.sin(i*.7)*50,t:false});
-    const lg=bk+520; makeObst('linge',lg,S); act(lg-32,'slide','Il glisse sous les maillots','GLISSE sous les maillots !');
+    const lg=bk+520; makeObst('linge',lg,S); act(lg-32,'slide','Il glisse sous les maillots','DOIGT APPUYÉ : glisse sous les maillots !');
 
     // 5d. the UFO carries him over a wide stretch of the Robec
     const uf=lg+300; items.push({type:'ovni',x:uf,y:S-48,t:false});
@@ -127,7 +127,7 @@ const LV2={
     jumpFrom(bn2-46,0,0,'Encore un saut de chat !');
 
     // 6c. a big Paris banner to slide under
-    const bnr=bn2+62+260; makeObst('banner',bnr,S); act(bnr-32,'slide','Il glisse sous la banderole ICI C’EST PARIS','GLISSE sous la banderole !');
+    const bnr=bn2+62+260; makeObst('banner',bnr,S); act(bnr-32,'slide','Il glisse sous la banderole ICI C’EST PARIS','DOIGT APPUYÉ : glisse sous la banderole !');
 
     // 7. the big drawbridge: double jump + flips
     const g3=bnr+80+340; lift(g3,240);

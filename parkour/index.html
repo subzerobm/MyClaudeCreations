@@ -188,7 +188,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div class="row"><button id="b-play" class="btn btn-gold">JOUER</button><button id="b-demo" class="btn btn-red">DÉMO</button></div>
     <div class="row"><button id="b-shop" class="btn">STYLE</button><button id="b-miss" class="btn">DÉFIS</button><button id="b-savep" class="btn">SAUVEGARDE</button></div>
     <div class="row"><button id="b-music" class="ghost">Musique : oui</button><button id="b-sfx" class="ghost">Sons : oui</button><button id="b-fs" class="ghost">Plein écran</button></div>
-    <p class="howto"><span id="howto-lv"><b>Niveau 1</b> : cours le plus loin possible, une arche tous les 1 000 m !</span> · <b>1 tape</b> : sauter · <b>2 tapes</b> : double saut + salto · <b>3 tapes</b> : salto en plus · <b>Glisse vers le bas</b> : glisser. Double salto = pièces x2 · Triple salto = pièces x3 !</p>
+    <p class="howto"><span id="howto-lv"><b>Niveau 1</b> : cours le plus loin possible, une arche tous les 1 000 m !</span> · <b>1 tape</b> : sauter · <b>2 tapes</b> : double saut + salto · <b>3 tapes</b> : salto en plus · <b>Doigt appuyé</b> : glisser. Double salto = pièces x2 · Triple salto = pièces x3 !</p>
   </div>
   <p class="rotate">Tourne ton téléphone pour mieux voir !</p>
 </section>
@@ -759,7 +759,7 @@ const LV2={
     // 3. hanging café sign: slide, then a kong vault over a bench
     const s1=l4+300;
     obs('sign',s1,72,[s1,S-400,s1+60,S-34],{over:true});
-    act(s1-32,'slide','Il glisse sous l’enseigne du café','GLISSE VERS LE BAS sous l’enseigne !');
+    act(s1-32,'slide','Il glisse sous l’enseigne du café','GARDE LE DOIGT APPUYÉ : glisse sous l’enseigne !');
     row(s1-10,s1+70,S-14);
     const bn1=s1+240; bench(bn1);
     hint(bn1-46,'Saute par-dessus le banc : SAUT DE CHAT !');
@@ -783,7 +783,7 @@ const LV2={
 
     // 5. pigeons: slide; street football
     const p1=re+220; makeObst('pigeons',p1,S);
-    act(p1-30,'slide','Il glisse sous les pigeons','GLISSE sous les pigeons !');
+    act(p1-30,'slide','Il glisse sous les pigeons','DOIGT APPUYÉ : glisse sous les pigeons !');
     placeFoot(p1+150,S,p1+410); act(p1+110,null,'Un ballon ! Il tire…');
 
     // 5b. the golden record's bubble protects him from a bike
@@ -795,7 +795,7 @@ const LV2={
     // 5c. the Paris ball pulls in the coins; a washing line of jerseys to slide under
     items.push({type:'ballon',x:bk+230,y:S-48,t:false}); act(bk+200,null,'Le ballon aimant attire les pièces !');
     for(let i=0;i<14;i++) coins.push({x:bk+300+i*22,y:S-60-Math.sin(i*.7)*50,t:false});
-    const lg=bk+520; makeObst('linge',lg,S); act(lg-32,'slide','Il glisse sous les maillots','GLISSE sous les maillots !');
+    const lg=bk+520; makeObst('linge',lg,S); act(lg-32,'slide','Il glisse sous les maillots','DOIGT APPUYÉ : glisse sous les maillots !');
 
     // 5d. the UFO carries him over a wide stretch of the Robec
     const uf=lg+300; items.push({type:'ovni',x:uf,y:S-48,t:false});
@@ -815,7 +815,7 @@ const LV2={
     jumpFrom(bn2-46,0,0,'Encore un saut de chat !');
 
     // 6c. a big Paris banner to slide under
-    const bnr=bn2+62+260; makeObst('banner',bnr,S); act(bnr-32,'slide','Il glisse sous la banderole ICI C’EST PARIS','GLISSE sous la banderole !');
+    const bnr=bn2+62+260; makeObst('banner',bnr,S); act(bnr-32,'slide','Il glisse sous la banderole ICI C’EST PARIS','DOIGT APPUYÉ : glisse sous la banderole !');
 
     // 7. the big drawbridge: double jump + flips
     const g3=bnr+80+340; lift(g3,240);
@@ -1158,7 +1158,7 @@ function swipeUp(){
   if(P.onGround){ jump(); }
   if(!P.onGround&&P.flip>=P.flipTarget-.01&&addFlip()){ if(P.vy>0) P.vy*=.35; }
 }
-function startSlide(){ P.slide=.6; SFX.slide(); dust(G.cam+PX+8,P.y,8); }
+function startSlide(){ P.slide=.6; P.slideHeld=0; SFX.slide(); dust(G.cam+PX+8,P.y,8); }
 function tutNext(){ G.tutStep++; G.tutT=0; if(G.tutStep>=4){ save.tut=true; persist(); } }
 
 /* ---------- fx ---------- */
@@ -1206,7 +1206,8 @@ function update(dt){
 
   const px=G.cam+PX;
   if(P.invuln>0) P.invuln-=dt;
-  if(P.slide>0) P.slide-=dt;
+  checkHolds();
+  if(P.slide>0){ P.slide-=dt; if(holding()&&P.onGround&&P.slideHeld<1.4){ P.slideHeld+=dt; P.slide=Math.max(P.slide,.12); } }
   if(P.roll>0) P.roll-=dt;
   if(P.vaultT>0) P.vaultT-=dt;
   // flight modes
@@ -1299,7 +1300,7 @@ function autopilot(){
   if(P.onGround){
     if(nx){
       const d=nx.box[0]-(px+9);
-      if(nx.over){ if(d<v*.1&&d>-40&&P.slide<.1){ swipeDown(); cap(nx.type==='clock'?'Il glisse sous le Gros-Horloge !':'Il glisse vers le bas : GLISSADE !'); return; } }
+      if(nx.over){ if(d<v*.1&&d>-40&&P.slide<.1){ swipeDown(); cap(nx.type==='clock'?'Il glisse sous le Gros-Horloge !':'Il garde le doigt appuyé : GLISSADE !'); return; } }
       else if(d<v*.13&&d>-12){ jump(); cap('Il tape sur l’écran : SAUT !'); return; }
     }
     if(b&&b.x+b.w-px<v*.06){
@@ -1799,7 +1800,7 @@ function drawTexts(){
   });
 }
 function drawTut(t){
-  const msgs=['1 TAPE : SAUTER','2 TAPES : DOUBLE SAUT + SALTO !','3 TAPES : SALTO EN PLUS !','GLISSE VERS LE BAS : GLISSER'];
+  const msgs=['1 TAPE : SAUTER','2 TAPES : DOUBLE SAUT + SALTO !','3 TAPES : SALTO EN PLUS !','GARDE LE DOIGT APPUYÉ : GLISSER'];
   if(G.tutT<.6) return;
   ctx.save(); ctx.globalAlpha=.9+.1*Math.sin(t*6);
   ctx.font='20px "Lilita One",sans-serif'; ctx.textAlign='center';
@@ -1926,11 +1927,14 @@ function renderMissions(){
    double-tap zoom) or the app around the page cannot swallow a swipe or a quick tap.
    Mouse and pen still use pointer events. Every new finger is a tap (jump / double jump /
    extra flip); a vertical move of 18 px is a swipe, checked while moving and on release. */
-const fingers={}, SWIPE=18;
+const fingers={}, SWIPE=18, HOLD=150; // ms a finger must stay down to count as "hold = slide"
 const isSwipe=(dx,dy)=>Math.abs(dy)>SWIPE&&Math.abs(dy)>Math.abs(dx);
-function fStart(id,x,y){ if(G.state!=='play'||G.demo) return; initAudio(); fingers[id]={x,y,done:false}; jump(); }
+function fStart(id,x,y){ if(G.state!=='play'||G.demo) return; initAudio(); fingers[id]={x,y,t:performance.now(),done:false,hold:false}; }
 function fMove(id,x,y){ const f=fingers[id]; if(!f||f.done) return; if(isSwipe(x-f.x,y-f.y)){ f.done=true; y>f.y?swipeDown():swipeUp(); } }
-function fEnd(id,x,y){ const f=fingers[id]; if(f&&!f.done&&x!==undefined&&isSwipe(x-f.x,y-f.y)) y>f.y?swipeDown():swipeUp(); delete fingers[id]; }
+function fEnd(id,x,y){ const f=fingers[id]; if(!f) return; delete fingers[id]; if(f.done||f.hold) return;
+  if(x!==undefined&&isSwipe(x-f.x,y-f.y)) y>f.y?swipeDown():swipeUp(); else if(x!==undefined) jump(); }
+function checkHolds(){ const now=performance.now(); for(const id in fingers){ const f=fingers[id]; if(!f.done&&!f.hold&&now-f.t>=HOLD){ f.hold=true; swipeDown(); } } }
+const holding=()=>Object.values(fingers).some(f=>f.hold);
 cv.addEventListener('touchstart',e=>{ if(G.state!=='play') return; e.preventDefault(); for(const t of e.changedTouches) fStart(t.identifier,t.clientX,t.clientY); },{passive:false});
 cv.addEventListener('touchmove',e=>{ e.preventDefault(); for(const t of e.changedTouches) fMove(t.identifier,t.clientX,t.clientY); },{passive:false});
 cv.addEventListener('touchend',e=>{ e.preventDefault(); for(const t of e.changedTouches) fEnd(t.identifier,t.clientX,t.clientY); },{passive:false});

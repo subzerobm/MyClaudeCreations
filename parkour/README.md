@@ -12,7 +12,7 @@ Open `index.html` in a browser (Chrome on Android works best, in landscape).
 - **Tap**: jump
 - **Tap in the air**: double jump with a flip
 - **Tap a third time in the air** (or swipe up): an extra flip
-- **Swipe down**: slide (or dive when in the air)
+- **Keep the finger pressed**: slide (or dive when in the air); swiping down works too
 
 A double flip gives x2 coins for 8 seconds; a triple flip gives x3. On a computer, use Space / Up to jump, Down to slide and Right to flip.
 

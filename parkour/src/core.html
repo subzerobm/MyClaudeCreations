@@ -178,7 +178,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div class="row"><button id="b-play" class="btn btn-gold">JOUER</button><button id="b-demo" class="btn btn-red">DÉMO</button></div>
     <div class="row"><button id="b-shop" class="btn">STYLE</button><button id="b-miss" class="btn">DÉFIS</button><button id="b-savep" class="btn">SAUVEGARDE</button></div>
     <div class="row"><button id="b-music" class="ghost">Musique : oui</button><button id="b-sfx" class="ghost">Sons : oui</button><button id="b-fs" class="ghost">Plein écran</button></div>
-    <p class="howto"><span id="howto-lv"><b>Niveau 1</b> : cours le plus loin possible, une arche tous les 1 000 m !</span> · <b>2 tapes</b> : sauter (encore 2 en l’air : double saut) · <b>3 tapes</b> : salto · <b>Doigt appuyé</b> : glisser au sol, planer en l’air, dribbler le ballon jusqu’au but. Double salto = pièces x2 · Triple salto = pièces x3 !</p>
+    <p class="howto"><span id="howto-lv"><b>Niveau 1</b> : cours le plus loin possible, une arche tous les 1 000 m !</span> · <b>1 tape</b> : sauter · <b>2 tapes</b> : double saut + salto · <b>3 tapes</b> : salto en plus · <b>Doigt appuyé</b> : glisser au sol, planer en l’air, dribbler le ballon jusqu’au but. Double salto = pièces x2 · Triple salto = pièces x3 !</p>
   </div>
   <p class="rotate">Tourne ton téléphone pour mieux voir !</p>
 </section>
@@ -693,16 +693,17 @@ function addFlip(){ if(flipCount()>=3) return false; P.flipTarget+=TAU; SFX.flip
 function jump(){
   if(G.state!=='play'||P.dead||G.power.ovni>0||G.hover) return;
   if(P.onGround){ P.vy=-JUMPV; P.onGround=false; P.jumps=1; P.air=0; P.slide=0; SFX.jump(); dust(G.cam+PX,P.y,6); if(G.tutStep===0) tutNext(); }
-  else if(P.jumps<2){ P.vy=-DJUMPV; P.jumps=2; SFX.dbl(); }
+  else if(P.jumps<2){ P.vy=-DJUMPV; P.jumps=2; addFlip(); SFX.dbl(); if(G.tutStep===1) tutNext(); }
+  else if(addFlip()){ if(P.vy>0) P.vy*=.35; }
 }
 function salto(){ // 3 taps: a flip (only in the air)
   if(G.state!=='play'||P.dead||G.power.ovni>0||G.hover||P.onGround) return;
-  if(addFlip()){ if(P.vy>0) P.vy*=.35; if(G.tutStep===1) tutNext(); }
+  if(addFlip()){ if(P.vy>0) P.vy*=.35; }
 }
-function botJump(){ const air=!P.onGround; jump(); if(air) addFlip(); } // demo: double jump with a flip, as before
-/* taps: 2 quick taps = jump (in the air: double jump), 3 = salto; the count restarts after a pause */
-let tapN=0, tapT=0; const TAPGAP=320;
-function onTap(){ const now=performance.now(); tapN=now-tapT<=TAPGAP?tapN+1:1; tapT=now; if(tapN%3===2) jump(); else if(tapN%3===0) salto(); }
+const botJump=()=>jump();
+/* each tap: on the ground = jump; in the air = double jump + salto; then = one more salto */
+let tapN=0;
+function onTap(){ jump(); }
 function swipeDown(){
   if(G.state!=='play'||P.dead||G.power.ovni>0||G.hover) return;
   if(G.tutStep===3&&P.onGround) tutNext();
@@ -863,7 +864,7 @@ function autopilot(){
     if(nx){
       const d=nx.box[0]-(px+9);
       if(nx.over){ if(d<v*.1&&d>-40&&P.slide<.1){ swipeDown(); cap(nx.type==='clock'?'Il glisse sous le Gros-Horloge !':'Il garde le doigt appuyé : GLISSADE !'); return; } }
-      else if(d<v*.13&&d>-12){ jump(); cap('2 tapes : SAUT !'); return; }
+      else if(d<v*.13&&d>-12){ jump(); cap('1 tape : SAUT !'); return; }
     }
     if(b&&b.x+b.w-px<v*.06){
       const nb=nextBuilding(b);
@@ -880,7 +881,7 @@ function autopilot(){
         const nb=G.botGap, tw=(nb.x+4-px)/v;
         if(tw>0){ const y=P.y+P.vy*tw+GRAV/2*tw*tw; if(y>nb.top-2) need=true; }
       }
-      if(need||G.trickPlan){ botJump(); cap(G.trickPlan?'2 tapes en l’air : DOUBLE SAUT + SALTO !':'Double saut pour arriver de l’autre côté !'); return; }
+      if(need||G.trickPlan){ botJump(); cap(G.trickPlan?'2 tapes : DOUBLE SAUT + SALTO !':'Double saut pour arriver de l’autre côté !'); return; }
     }
     if(G.trickPlan&&P.jumps===2&&flipCount()<G.trickPlan&&P.flip>=P.flipTarget-.01){
       salto(); cap(G.trickPlan===3?'3 tapes : TRIPLE SALTO !':'3 tapes : un salto de plus !');
@@ -1374,7 +1375,7 @@ function drawTexts(){
   });
 }
 function drawTut(t){
-  const msgs=['2 TAPES : SAUTER','3 TAPES : SALTO !','EN L’AIR, DOIGT APPUYÉ : PLANER','AU SOL, DOIGT APPUYÉ : GLISSER'];
+  const msgs=['1 TAPE : SAUTER','2 TAPES : DOUBLE SAUT + SALTO !','EN L’AIR, DOIGT APPUYÉ : PLANER','AU SOL, DOIGT APPUYÉ : GLISSER'];
   if(G.tutT<.6) return;
   ctx.save(); ctx.globalAlpha=.9+.1*Math.sin(t*6);
   ctx.font='20px "Lilita One",sans-serif'; ctx.textAlign='center';

@@ -43,3 +43,5 @@ When served over HTTPS (for example GitHub Pages), Chrome can add it to the home
 ## Source
 
 `src/core.html` is the game, `src/level2-robec.js` is level 2. Run `sh build.sh` inside `src/` to rebuild `index.html`.
+
+`src/iconart.html` draws the home-screen icons (`icon-192.png`, `icon-512.png`, `icon-maskable-512.png`).

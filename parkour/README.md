@@ -21,10 +21,11 @@ The **DÉMO** button on the menu makes the game play itself for 1 000 m: it jump
 
 - The runner: blond hair, big white t-shirt, baggy grey-blue pants
 - Rouen at dusk: half-timbered rooftops, the Cathedral spire, Saint-Ouen, Saint-Maclou, and the Gros-Horloge to slide under
-- Roofs with slopes, triangle gables and raised sections
+- Roofs of different shapes: big pointed roofs with dormers, rows of pointed roofs, castles with battlements and pointed towers
 - Obstacles: chimneys (some with red and blue flare smoke), "ICI C'EST PARIS" banners, washing lines of jerseys, pigeons
-- Paris flags on the roofs and "ICI C'EST PARIS" wall murals
-- At 1 000 m: a finish arch, and a crown falls onto his head (unlocks the crown)
+- French flags on the roofs; "ICI C'EST PARIS", "ALLEZ PARIS" and "PSG" banners and tags on the walls
+- Football: a ball and a goal on some roofs; running into the ball kicks it in: "BUUUUUT !" and bonus coins
+- At 1 000 m: a finish arch, and a king's crown (red velvet and gold) falls onto his head (unlocks the crown)
 - Power-ups: Paris ball (coin magnet), Disque d'Or (shield), OVNI (flight), loot chests
 - Style screen with outfits, hats and trails by rarity; 15 challenges (Défis); saved record and coins
 - Snow and a birthday message in December

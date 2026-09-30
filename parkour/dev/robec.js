@@ -36,7 +36,7 @@ const LV2={
     const v=300, S=BASE; R2.acts=[]; R2.ai=0; R2.backs=[];
     const act=(x,a,c)=>R2.acts.push({x,a,c});
     const plat=(x,w,h,kind,o)=>{ const p=Object.assign({x,w,y:S-h,kind},o||{}); plats.push(p); return p; };
-    const back=(x,w,h)=>R2.backs.push({x,w,top:S-h,pal:R2PAL[R2.backs.length%R2PAL.length],seed:R2.backs.length*7+3});
+    const back=(x,w,h)=>R2.backs.push({x,w,top:S-h,pal:R2PAL[R2.backs.length%R2PAL.length],seed:R2.backs.length*7+3+(R2.backs.length%3)});
     const row=(x1,x2,y)=>{ for(let x=x1;x<x2;x+=26) coins.push({x,y,t:false}); };
     const gaps=[], houses=[];
     const jumpFrom=(x,h0,H,c,dj,up)=>{ act(x,'jump',c); if(dj){ act(x+v*dj,'jump'); } if(up) act(x+v*up,'up'); arcCoins(x,S-h0,-JUMPV,H-h0,dj,up,v); return x+v*simT(-JUMPV,H-h0,dj,up); };
@@ -47,7 +47,6 @@ const LV2={
     jumpFrom(380-40,0,0,'Il saute par-dessus le pot de fleurs');
 
     // 2. café terrace: street -> table -> striped awning (bounce) -> balcony -> street
-    back(560,520,270);
     let l1=jumpFrom(700,0,30,'Il saute sur la table du café !');
     const t1=plat(l1-16,50,30,'table');
     plat(t1.x-26,18,16,'chair',{deco:true}); plat(t1.x+t1.w+8,18,16,'chair',{deco:true});
@@ -59,7 +58,7 @@ const LV2={
     let l4=jumpFrom(bal.x+bal.w-12,170,0,'Il saute du balcon !');
 
     // 3. hanging café sign: slide
-    const s1=l4+300; back(s1-70,200,190);
+    const s1=l4+300;
     const sg=makeObst('sign',s1,S); sg.w=72; sg.box=[s1,S-400,s1+60,S-34]; sg.over=true;
     act(s1-32,'slide','Il glisse sous l’enseigne du café');
     row(s1-10,s1+70,S-14);
@@ -75,8 +74,11 @@ const LV2={
     const p1=g2+240+230; makeObst('pigeons',p1,S);
     act(p1-30,'slide','Il glisse sous les pigeons');
 
+    // 5b. street football: kick the ball into the goal
+    placeFoot(p1+150,S,p1+410); act(p1+110,null,'Un ballon ! Il tire…');
+
     // 6. Spider-Man: climb a house wall, run on the roof, jump down
-    const hx=p1+70+280; houses.push({x:hx,w:300,h:190});
+    const hx=p1+70+560; houses.push({x:hx,w:300,h:190});
     row(hx+40,hx+270,S-212);
     items.push({type:'chest',x:hx+160,y:S-202,t:false});
     const l5=jumpFrom(hx+300-14,190,0,'Il saute du toit !');
@@ -88,7 +90,7 @@ const LV2={
     jumpFrom(jx,0,0,'Double saut + salto au-dessus de la rivière !',.345,.345+.42);
 
     // 8. second terrace: two tables, awning, high balcony, onto a roof
-    const tx=land3+220; back(tx+60,720,300);
+    const tx=land3+220;
     let m1=jumpFrom(tx,0,30,'De table en table !');
     const ta=plat(m1-16,50,30,'table'); plat(ta.x-26,18,16,'chair',{deco:true});
     let m2=jumpFrom(m1+10,30,30);
@@ -112,6 +114,11 @@ const LV2={
     const fo=makeObst('finish',fx,S); fo.box=[-1e9,-1e9,-1e9,-1e9]; fo.over=false; fo.passed=true;
     row(l6+60,fx-30,S-22);
 
+    // one continuous row of houses along the street (balconies, awnings and signs hang on it)
+    for(let bx=-400;bx<fx+2600;){ const w=150+Math.random()*130; let h=145+Math.random()*40;
+      for(const p of plats) if(p.kind==='balcony'&&p.x<bx+w&&p.x+p.w>bx) h=Math.max(h,S-p.y+50);
+      back(bx,w,h); bx+=w; }
+
     // quays everywhere except the river gaps; houses on top
     let x=-400; const end=fx+2600;
     for(const [a,b] of gaps.sort((p,q)=>p[0]-q[0])){ addBuilding(x,a-x,S,'quai'); x=b; }
@@ -130,7 +137,7 @@ const LV2={
     }
   },
   build(){
-    buildFar(DAY_FAR); buildMid2();
+    buildFar(DAY_FAR); buildMid2(); for(const b of R2.backs) b.img=null;
     clouds=[]; const r=rng(21); for(let i=0;i<7;i++) clouds.push({x:r()*1600,y:30+r()*Math.max(60,BASE-230),s:.7+r()*.8,p:.05+r()*.08});
   },
   sky(tt){
@@ -151,7 +158,7 @@ const LV2={
     ctx.fillStyle=wg; ctx.fillRect(-10,BASE+26,VW+20,VH);
     ctx.fillStyle='rgba(255,255,255,.45)';
     for(let row=0,y=BASE+34;y<VH;y+=9,row++){ const dir=row%2?1:-1; for(let i=0;i<8;i++){ const x=(((i*131+row*57)+tt*28*dir-(off%400))%(VW+80)+VW+80)%(VW+80)-40; ctx.fillRect(x,y,14,1.6); } }
-    for(const b of R2.backs){ const x=b.x-G.cam; if(x>VW||x+b.w<0) continue; if(!b.img) b.img=backImg(b); ctx.drawImage(b.img,x,b.top,b.w,BASE-b.top); }
+    for(const b of R2.backs){ const x=b.x-G.cam; if(x>VW||x+b.w<0) continue; if(!b.img) b.img=backImg(b); ctx.drawImage(b.img,x,b.top-RH,b.w,BASE-b.top+RH); }
   },
   facade(c,b){ if(b.style==='maison') drawMaison(c,b); else drawQuai(c,b); },
   drawObst(o,x,t){
@@ -252,14 +259,23 @@ function drawMaison(c,b){
   c.fillStyle='#4a5670'; c.fillRect(0,0,w,9); c.fillStyle='#a9b8d2'; c.fillRect(0,0,w,2);
   c.fillStyle='rgba(0,0,0,.2)'; c.fillRect(0,0,5,st);
 }
+const RH=46; // room above each backdrop for its pointed roof
 function backImg(b){
   const R=Math.min(DPR,2), h=BASE-b.top;
-  const cvs=document.createElement('canvas'); cvs.width=Math.ceil(b.w*S*R); cvs.height=Math.ceil(h*S*R);
-  const c=cvs.getContext('2d'); c.scale(S*R,S*R);
-  const r=rng(b.seed); let x=0, i=0;
-  while(x<b.w){ const w=Math.min(b.w-x,70+r()*60); colomb(c,r,x,0,w,h,R2PAL[(b.seed+i++)%R2PAL.length],true); c.fillStyle='rgba(0,0,0,.08)'; c.fillRect(x,0,3,h); x+=w; }
-  c.fillStyle='#5d6a82'; c.fillRect(0,0,b.w,6);
-  c.fillStyle='rgba(20,40,80,.12)'; c.fillRect(0,0,b.w,h);
+  const cvs=document.createElement('canvas'); cvs.width=Math.ceil(b.w*S*R); cvs.height=Math.ceil((h+RH)*S*R);
+  const c=cvs.getContext('2d'); c.scale(S*R,S*R); c.translate(0,RH);
+  const r=rng(b.seed);
+  colomb(c,r,0,0,b.w,h,b.pal,true);
+  c.fillStyle='#5d6a82'; c.beginPath(); c.moveTo(-2,2); c.lineTo(b.w/2,-Math.min(RH-2,b.w*.3)); c.lineTo(b.w+2,2); c.fill();
+  c.fillStyle='#46526b'; c.fillRect(-2,0,b.w+4,4);
+  c.fillStyle='rgba(0,0,0,.1)'; c.fillRect(0,0,3,h);
+  const k=b.seed%3;
+  if(k===0){ const fx=b.w*.3; c.fillStyle='#cfd5e0'; c.fillRect(fx-1,40,2,8); c.fillStyle='#0055a4'; c.fillRect(fx,44,10,36); c.fillStyle='#fff'; c.fillRect(fx+10,44,10,36); c.fillStyle='#ef4135'; c.fillRect(fx+20,44,10,36); }
+  if(k===1&&b.w>170){ const bw=128, mx=(b.w-bw)/2, my=h-92, txt=["ICI C'EST PARIS","ALLEZ PARIS !","PSG"][(b.seed>>2)%3];
+    c.fillStyle='#1b2a5c'; c.fillRect(mx,my,bw,38); c.fillStyle='#fff'; c.fillRect(mx+bw/2-12,my,24,38); c.fillStyle='#e0393e'; c.fillRect(mx+bw/2-8,my,16,38);
+    c.font=(txt.length>12?'14px':'20px')+' "Lilita One",sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.lineWidth=4; c.strokeStyle='#1b2a5c'; c.fillStyle='#fff';
+    c.strokeText(txt,mx+bw/2,my+20); c.fillText(txt,mx+bw/2,my+20); }
+  c.fillStyle='rgba(20,40,80,.1)'; c.fillRect(0,0,b.w,h);
   return cvs;
 }
 function buildMid2(){

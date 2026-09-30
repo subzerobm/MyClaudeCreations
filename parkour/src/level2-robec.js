@@ -52,12 +52,12 @@ const LV2={
     // 1. warm-up on the quay: a pot of geraniums, then a football
     row(120,300,S-22);
     obs('pot',380,24,[382,S-26,402,S]);
-    hint(340,'1 TAPE : saute par-dessus le pot !');
+    hint(340,'2 TAPES : saute par-dessus le pot !');
     jumpFrom(380-40,0,0,'Il saute par-dessus le pot de fleurs');
-    placeFoot(590,S,760); act(560,null,'Un ballon ! Il tire dans le but…','Cours dans le ballon : BUT !');
+    placeFoot(590,S,760); act(560,null,'Un ballon ! Il tire dans le but…','Doigt appuyé sur le ballon : dribble jusqu’au but !');
 
     // 2. café terrace: street -> table -> striped awning (bounce) -> balcony -> street
-    hint(880,'Saute sur la table, puis sur le store : BOING !');
+    hint(880,'Saute (2 tapes) sur la table, puis sur le store : BOING !');
     let l1=jumpFrom(880,0,30,'Il saute sur la table du café !');
     const t1=plat(l1-16,50,30,'table');
     plat(t1.x-26,18,16,'chair',{deco:true}); plat(t1.x+t1.w+8,18,16,'chair',{deco:true});
@@ -74,20 +74,20 @@ const LV2={
     act(s1-32,'slide','Il glisse sous l’enseigne du café','GARDE LE DOIGT APPUYÉ : glisse sous l’enseigne !');
     row(s1-10,s1+70,S-14);
     const bn1=s1+240; bench(bn1);
-    hint(bn1-46,'Saute par-dessus le banc : SAUT DE CHAT !');
+    hint(bn1-46,'2 TAPES : saute par-dessus le banc !');
     jumpFrom(bn1-46,0,0,'Saut de chat par-dessus le banc !');
 
     // 4. the first drawbridge opens: double jump over the Robec
     const g1=bn1+52+300; lift(g1,210);
     act(g1-420,null,'Attention, le pont se lève !');
-    hint(g1-18,'Le pont se lève : 2 TAPES pour passer !');
+    hint(g1-18,'Le pont se lève : saute (2 tapes) et plane (doigt appuyé) !');
     jumpFrom(g1-18,0,0,'Double saut par-dessus le pont levé !',.345);
 
     // 4b. little footbridge, then balance along a handrail
     const g2=g1+210+300; gaps.push([g2,g2+240]);
     plat(g2-6,252,0,'bridge'); act(g2+30,null,'Il passe sur la petite passerelle');
     row(g2+20,g2+230,S-22);
-    hint(g2+240+170,'Saute sur la rambarde : ÉQUILIBRE !');
+    hint(g2+240+170,'2 TAPES : saute sur la rambarde !');
     const ra=jumpFrom(g2+240+170,0,34,'Il saute sur la rambarde…');
     const rail=plat(ra-16,240,34,'rail'); act(ra+12,null,'ÉQUILIBRE sur la rambarde !');
     row(rail.x+40,rail.x+rail.w-20,S-58);
@@ -96,12 +96,12 @@ const LV2={
     // 5. pigeons: slide; street football
     const p1=re+220; makeObst('pigeons',p1,S);
     act(p1-30,'slide','Il glisse sous les pigeons','DOIGT APPUYÉ : glisse sous les pigeons !');
-    placeFoot(p1+150,S,p1+410); act(p1+110,null,'Un ballon ! Il tire…');
+    placeFoot(p1+150,S,p1+410); act(p1+110,null,'Un ballon ! Il tire…','Doigt appuyé sur le ballon : dribble jusqu’au but !');
 
     // 5b. the golden record's bubble protects him from a bike
     items.push({type:'disque',x:p1+530,y:S-48,t:false}); act(p1+500,null,'Disque d’or : une bulle de protection !','Attrape le disque d’or : la bulle te protège !');
     const bk=p1+780; obs('velo',bk,48,[bk+2,S-32,bk+46,S]);
-    hint(bk-44,'Saute par-dessus le vélo pour garder ta bulle (★★) !');
+    hint(bk-44,'Saute (2 tapes) par-dessus le vélo pour garder ta bulle (★★) !');
     jumpFrom(bk-44,0,0,'Il garde sa bulle : saut par-dessus le vélo !');
 
     // 5c. the Paris ball pulls in the coins; a washing line of jerseys to slide under
@@ -119,7 +119,7 @@ const LV2={
     row(hx+40,hx+270,S-212);
     items.push({type:'chest',x:hx+262,y:S-202,t:false});
     jumpFrom(hx+60,190,190,'Un maillot d’or tout là-haut !'); jersey(hx+60+v*.345,S-190-127,'Un maillot d’or au-dessus du toit : saute !');
-    hint(hx+300-14,'Du toit : 2 ou 3 TAPES pour des SALTOS !');
+    hint(hx+300-14,'Saute du toit et fais des SALTOS (3 tapes) !');
     const l5=jumpFrom(hx+300-14,190,0,'Il saute du toit : DOUBLE SALTO !',.3,.66);
 
     // 6b. another kong vault
@@ -133,7 +133,7 @@ const LV2={
     const g3=bnr+80+340; lift(g3,240);
     act(g3-420,null,'Le grand pont s’ouvre !');
     const jx=g3-18, land3=jx+v*simT(-JUMPV,0,.345,.345+.36);
-    hint(jx,'Le grand pont : 2 TAPES, puis une 3e pour un salto !');
+    hint(jx,'Le grand pont : saute, puis double saut ou plane !');
     jersey(jx+v*.663,S-238);
     jumpFrom(jx,0,0,'Double saut + salto au-dessus du pont !',.345,.345+.36);
 
@@ -184,7 +184,7 @@ const LV2={
     while(R2.ai<R2.acts.length&&px>=R2.acts[R2.ai].x){
       const a=R2.acts[R2.ai++];
       if(a.c) cap(a.c);
-      if(a.a==='jump') jump(); else if(a.a==='slide') swipeDown(); else if(a.a==='up') swipeUp();
+      if(a.a==='jump') botJump(); else if(a.a==='slide') swipeDown(); else if(a.a==='up') swipeUp();
     }
   },
   build(){

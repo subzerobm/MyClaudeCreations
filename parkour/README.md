@@ -13,6 +13,10 @@ Open `index.html` in a browser (Chrome on Android works best, in landscape).
 
 A double flip gives x2 coins for 8 seconds; a triple flip gives x3. On a computer, use Space / Up to jump, Down to slide and Right to flip.
 
+## Demo
+
+The **DÉMO** button on the menu makes the game play itself for 1 000 m: it jumps, slides, does double and triple flips, picks up every power-up and a chest, passes under the Gros-Horloge and crosses a finish line. A caption explains each move. Demo coins and scores are not saved.
+
 ## What's in it
 
 - The runner: blond hair, big white t-shirt, baggy grey-blue pants

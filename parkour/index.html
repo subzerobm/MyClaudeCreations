@@ -42,6 +42,11 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .coin{display:inline-block;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3a8 0 18%,var(--gold) 40%,#d89a10 100%);box-shadow:inset 0 0 0 2px #c68a0c}
 #hud-mult{background:var(--red);border-color:#ff9b9e;padding:3px 10px;font-size:17px}
 #hud-powers{display:flex;gap:6px}
+.jer{background:#8a6400;border-color:#ffe07a;font-size:16px;padding:3px 10px}
+.jer::before{content:"";width:14px;height:14px;background:#ffcd3c;clip-path:polygon(25% 0,40% 8%,60% 8%,75% 0,100% 18%,88% 38%,78% 32%,78% 100%,22% 100%,22% 32%,12% 38%,0 18%)}
+.stars{margin:0;font-size:34px;line-height:1;letter-spacing:.08em;color:#ffcd3c;text-shadow:0 3px 0 rgba(0,0,0,.35)}
+.stars i{font-style:normal;color:rgba(255,255,255,.22)}
+.starwhy{margin:0;font-weight:800;font-size:12px;color:var(--muted);line-height:1.4}
 .pw{display:inline-flex;align-items:center;gap:5px;background:rgba(8,16,42,.72);border-radius:999px;padding:2px 9px;font-size:13px;letter-spacing:.04em}
 .pw i{display:block;width:36px;height:5px;border-radius:3px;background:rgba(255,255,255,.2);overflow:hidden}
 .pw i b{display:block;height:100%;background:var(--gold)}
@@ -145,6 +150,10 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   #b-play{font-size:26px;padding:9px 16px}
   .btn{font-size:18px;padding:8px 14px}
   .howto{display:none}
+  #dance{width:84px;height:98px}
+  .over-title{font-size:28px}
+  .olist dd{font-size:17px}
+  .stars{font-size:24px}
   .menu-wrap{gap:9px}
 }
 @media (prefers-reduced-motion:reduce){ .btn{transition:none} }
@@ -154,7 +163,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 <div id="hud" hidden>
   <div class="left">
-    <div class="row" style="gap:6px"><span class="pill"><i class="coin"></i><span id="hud-coins">0</span></span><span id="hud-mult" class="pill" hidden>x2</span></div>
+    <div class="row" style="gap:6px"><span class="pill"><i class="coin"></i><span id="hud-coins">0</span></span><span id="hud-mult" class="pill" hidden>x2</span><span id="hud-jer" class="pill jer" hidden>0/3</span></div>
     <div id="hud-powers"></div>
   </div>
   <div class="mid"><div id="hud-dist">0 m</div><div id="hud-score">0 PTS</div><div id="hud-demo" hidden>DÉMO · le jeu joue tout seul</div></div>
@@ -213,7 +222,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 </section>
 
 <section id="over" class="screen dim" hidden>
-  <div class="panel">
+  <div class="panel scroll">
     <div class="over">
       <canvas id="dance" width="240" height="280"></canvas>
       <div>
@@ -227,6 +236,8 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
         </dl>
       </div>
     </div>
+    <p id="o-stars" class="stars" hidden></p>
+    <p id="o-why" class="starwhy" hidden></p>
     <p id="o-done" class="done" hidden></p>
     <div class="row"><button id="b-again" class="btn btn-gold">REJOUER</button><button id="b-menu" class="btn">MENU</button></div>
   </div>
@@ -270,6 +281,7 @@ const ITEMS=[
  {id:'psgh',cat:'top',name:'Paris Domicile',rar:'rare',price:150,tee:'#1b2a5c',teeS:'#121d44',stripe:['#e0393e','#ffffff']},
  {id:'psga',cat:'top',name:'Paris Extérieur',rar:'rare',price:250,tee:'#f4f4f4',teeS:'#cfd4dd',stripe:['#e0393e','#1b2a5c']},
  {id:'nuit',cat:'top',name:'Nuit Parisienne',rar:'epique',price:450,tee:'#18181f',teeS:'#0c0c12',stripe:['#ff4fa3','#18181f'],pants:'#30303d',pantsS:'#22222c'},
+ {id:'orrobec',cat:'top',name:'Maillot d’or Robec',rar:'legend',price:0,unlock:'stars2',tee:'#f2c230',teeS:'#c99a16',stripe:['#1b2a5c','#ffffff'],shine:true},
  {id:'or',cat:'top',name:"Survêt' Disque d'Or",rar:'legend',price:1000,tee:'#f2c230',teeS:'#c99a16',pants:'#e2b023',pantsS:'#b58a12',shine:true},
  {id:'none',cat:'head',name:'Rien',rar:'commun',price:0},
  {id:'cap',cat:'head',name:'Casquette à l’envers',rar:'commun',price:80},
@@ -565,7 +577,7 @@ function surfAt(px,fy,up){
 function reset(){
   G.crownT=-1; G.cpDone=false; G.finishX=0; G.cps=[]; G.nextCP=FINISH; G.recX=(save.bestDist||0)>50?save.bestDist*10:0; G.recDone=false;
   G.cam=0; G.speed=300; G.dist=0; G.runCoins=0; G.trickPts=0; G.mult=1; G.multT=0; G.shake=0; G.time=0; G.combo=0; G.comboT=0; G.hover=false; G.milestone=0;
-  G.stats={coins:0,dist:0,flips:0,dbl:0,tri:0,under:0,power:0,ovni:0,chest:0,clock:0,goals:0,arches:0}; kicks=[]; G.demoFoot=0;
+  G.stats={coins:0,dist:0,flips:0,dbl:0,tri:0,under:0,power:0,ovni:0,chest:0,clock:0,goals:0,arches:0,jerseys:0}; kicks=[]; G.demoFoot=0;
   G.power={magnet:0,shield:false,ovni:0}; G.nextPower=1500+Math.random()*800; G.lastClock=0; G.ovniCoinX=0;
   G.finishBuilt=false; G.finished=false; G.finT=0; G.demoPw=0; G.demoChest=0; G.cap=''; G.capT=0; G.trickPlan=0; G.lastTrick=0; G.botGap=null;
   buildings=[];plats=[];obst=[];coins=[];items=[];parts=[];texts=[];
@@ -707,6 +719,7 @@ const LV2={
   init(){
     const v=260, S=BASE; R2.acts=[]; R2.ai=0; R2.hi=0; R2.backs=[]; R2.lastCh=-9;
     const act=(x,a,c,h)=>R2.acts.push({x,a,c,h}), hint=(x,h)=>act(x,null,null,h);
+    const jersey=(x,y,h)=>{ items.push({type:'maillot',x,y,t:false}); if(h) hint(x-v*.6,h); };
     const plat=(x,w,h,kind,o)=>{ const p=Object.assign({x,w,y:S-h,kind},o||{}); plats.push(p); return p; };
     const back=(x,w,h)=>{ const i=R2.backs.length, ch=i-R2.lastCh>=3&&Math.random()<.45; if(ch) R2.lastCh=i; R2.backs.push({x,w,top:S-h,pal:R2PAL[i%R2PAL.length],seed:i*7+3+(i%3),ch,fl:ch&&Math.random()<.35}); };
     const row=(x1,x2,y)=>{ for(let x=x1;x<x2;x+=26) coins.push({x,y,t:false}); };
@@ -768,7 +781,8 @@ const LV2={
     // 5b. the golden record's bubble protects him from a bike
     items.push({type:'disque',x:p1+530,y:S-48,t:false}); act(p1+500,null,'Disque d’or : une bulle de protection !','Attrape le disque d’or : la bulle te protège !');
     const bk=p1+780; obs('velo',bk,48,[bk+2,S-32,bk+46,S]);
-    act(bk-90,null,'Pas besoin de sauter : la bulle le protège !','Sans bulle ? Saute par-dessus le vélo !');
+    hint(bk-44,'Saute par-dessus le vélo pour garder ta bulle (★★) !');
+    jumpFrom(bk-44,0,0,'Il garde sa bulle : saut par-dessus le vélo !');
 
     // 5c. the Paris ball pulls in the coins; a washing line of jerseys to slide under
     items.push({type:'ballon',x:bk+230,y:S-48,t:false}); act(bk+200,null,'Le ballon aimant attire les pièces !');
@@ -783,7 +797,8 @@ const LV2={
     // 6. Spider-Man: climb a house wall, run on the roof, jump down with flips and roll
     const hx=uf+1750; houses.push({x:hx,w:300,h:190}); hint(hx-10,'Cours vers le mur : tu grimpes tout seul !');
     row(hx+40,hx+270,S-212);
-    items.push({type:'chest',x:hx+160,y:S-202,t:false});
+    items.push({type:'chest',x:hx+262,y:S-202,t:false});
+    jumpFrom(hx+60,190,190,'Un maillot d’or tout là-haut !'); jersey(hx+60+v*.345,S-190-127,'Un maillot d’or au-dessus du toit : saute !');
     hint(hx+300-14,'Du toit : 2 ou 3 TAPES pour des SALTOS !');
     const l5=jumpFrom(hx+300-14,190,0,'Il saute du toit : DOUBLE SALTO !',.3,.66);
 
@@ -799,6 +814,7 @@ const LV2={
     act(g3-420,null,'Le grand pont s’ouvre !');
     const jx=g3-18, land3=jx+v*simT(-JUMPV,0,.345,.345+.36);
     hint(jx,'Le grand pont : 2 TAPES, puis une 3e pour un salto !');
+    jersey(jx+v*.663,S-238);
     jumpFrom(jx,0,0,'Double saut + salto au-dessus du pont !',.345,.345+.36);
 
     // 8. second terrace: two tables, awning, high balcony, onto a roof
@@ -810,6 +826,7 @@ const LV2={
     let m3=jumpFrom(m2+10,30,70);
     plat(m3-22,86,70,'awning',{bounce:1050});
     let m4=m3+v*simT(-1050,110); arcCoins(m3,S-70,-1050,110,0,0,v);
+    jersey(m3+v*.477,S-70-246,'Rebondis bien haut : un maillot d’or !');
     const b2=plat(m4-30,140,180,'balcony'); act(m4+2,null,'Encore un balcon !');
     const jr=b2.x+b2.w-12;
     act(jr,'jump','Il saute sur le toit !');
@@ -1303,9 +1320,10 @@ function endDemo(){
   G.state='over'; G.lastDemo=true;
   $('o-title').textContent='FIN DE LA DÉMO !'; $('o-title').classList.add('top1');
   $('o-score').textContent=score().toLocaleString('fr-FR'); $('o-dist').textContent=Math.floor(G.dist/10)+' m';
-  $('o-coins').textContent='+'+G.runCoins; $('o-flips').textContent=G.stats.flips; $('o-best').textContent=save.best.toLocaleString('fr-FR');
+  $('o-coins').textContent='+'+G.runCoins; $('o-flips').textContent=G.stats.flips; $('o-best').textContent=bestNow().toLocaleString('fr-FR');
   $('o-done').hidden=false; $('o-done').textContent='C’était une démo : ces pièces ne comptent pas. À toi de jouer !';
   $('b-again').textContent='REVOIR'; show('over');
+  showStars(LV.finite?starsOf():0);
   if(LV.onEnd) LV.onEnd();
 }
 function land(s){
@@ -1348,8 +1366,9 @@ function grab(it){
     kicks.push({x0:it.x,y0:it.y,x1:tx,y1:ty,t:0,d:Math.max(.25,(tx-it.x)/(G.speed*1.9)),goal});
     SFX.kick(); if(G.demo) cap('Il tire dans le ballon…'); return;
   }
-  const cols={ballon:['#fff','#1b2a5c','#e0393e'],disque:['#ffcd3c','#fff'],ovni:['#7dffb2','#6fe3ff'],chest:['#ffcd3c','#fff4b0','#f3952b']}[it.type];
+  const cols={ballon:['#fff','#1b2a5c','#e0393e'],disque:['#ffcd3c','#fff'],ovni:['#7dffb2','#6fe3ff'],chest:['#ffcd3c','#fff4b0','#f3952b'],maillot:['#ffcd3c','#fff4b0','#1b2a5c']}[it.type]||['#fff','#ffcd3c'];
   burst(it.x,it.y,cols,24,280);
+  if(it.type==='maillot'){ G.stats.jerseys=(G.stats.jerseys||0)+1; G.trickPts+=150; SFX.chest(); vibrate(60); say('MAILLOT D’OR '+G.stats.jerseys+'/3 !','#ffcd3c',true); return; }
   if(it.type==='chest'){ G.stats.chest++; G.runCoins+=25*G.mult; G.stats.coins+=25*G.mult; SFX.chest(); say('COFFRE ! +'+(25*G.mult)+' PIÈCES','#ffcd3c',true); return; }
   G.stats.power++; SFX.power(); vibrate(40);
   if(it.type==='ballon'){ G.power.magnet=9; say('BALLON AIMANT !','#fff'); }
@@ -1669,6 +1688,11 @@ function drawItem(it,x,y,t){
     ctx.restore();
   } else if(it.type==='ovni'){ drawUfo(x,y,1.1,t); }
   else if(it.type==='foot'){ drawFootball(x,it.y,8,0); }
+  else if(it.type==='maillot'){ const k=.75+.25*Math.abs(Math.cos(t*3));
+    ctx.save(); ctx.translate(x,y); ctx.scale(k,1);
+    ctx.fillStyle='#ffcd3c'; ctx.strokeStyle='#8a5c00'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(-6,-11); ctx.lineTo(-14,-6); ctx.lineTo(-10,1); ctx.lineTo(-7,-1); ctx.lineTo(-7,12); ctx.lineTo(7,12); ctx.lineTo(7,-1); ctx.lineTo(10,1); ctx.lineTo(14,-6); ctx.lineTo(6,-11); ctx.lineTo(2,-8); ctx.lineTo(-2,-8); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#1b2a5c'; ctx.fillRect(-2,-8,4,20); ctx.fillStyle='#fff'; ctx.font='8px "Lilita One",sans-serif'; ctx.textAlign='center'; ctx.fillText('10',0,6);
+    ctx.restore(); if(Math.random()<.3) parts.push({x:it.x+rand(-12,12),y:y+rand(-12,12),vx:0,vy:-20,l:0,m:.5,s:2,c:'#fff6c0',g:0}); }
   else if(it.type==='chest'){
     const sy=it.y;
     ctx.fillStyle='#8a4f1d'; ctx.fillRect(x-14,sy-8,28,20); ctx.fillStyle='#b8702c'; rr(ctx,x-15,sy-16,30,10,4); ctx.fill();
@@ -1799,6 +1823,7 @@ function updHud(){
   if(last.d!==d){ hud.dist.textContent=d+' m'; last.d=d; }
   if(last.s!==s){ hud.score.textContent=s.toLocaleString('fr-FR')+' PTS'; last.s=s; }
   const m=G.mult>1?G.mult:0; if(last.m!==m){ hud.mult.hidden=!m; hud.mult.textContent='PIÈCES x'+m; last.m=m; }
+  const j=LV.finite?(G.stats.jerseys||0):-1; if(last.j!==j){ $('hud-jer').hidden=j<0; $('hud-jer').textContent=' '+j+'/3'; last.j=j; }
   const pw=[];
   if(G.power.magnet>0) pw.push(['AIMANT',G.power.magnet/9]);
   if(G.power.shield) pw.push(['BOUCLIER',1]);
@@ -1813,10 +1838,20 @@ const scr={menu:$('menu'),shop:$('shop'),missions:$('missions'),savep:$('savep')
 function show(name){ for(const k in scr) scr[k].hidden=k!==name; $('hud').hidden=!(G.state==='play'||G.state==='pause'); }
 function syncToggles(){ $('b-music').textContent='Musique : '+(save.music?'oui':'non'); $('b-sfx').textContent='Sons : '+(save.sfx?'oui':'non'); }
 const bestNow=()=>LV===LV1?save.best:(save.best2||0);
-function refreshMenu(){ $('lv1').classList.toggle('on',LV===LV1); $('lv2').classList.toggle('on',LV!==LV1); $('m-best').textContent=bestNow().toLocaleString('fr-FR'); $('m-coins').textContent=save.coins.toLocaleString('fr-FR'); $('bday').hidden=!DECEMBER; syncToggles(); }
+function refreshMenu(){ const n2=save.stars2||0; $('lv2').querySelector('small').textContent='Rue Eau-de-Robec · '+'★'.repeat(n2)+'☆'.repeat(3-n2); $('lv1').classList.toggle('on',LV===LV1); $('lv2').classList.toggle('on',LV!==LV1); $('m-best').textContent=bestNow().toLocaleString('fr-FR'); $('m-coins').textContent=save.coins.toLocaleString('fr-FR'); $('bday').hidden=!DECEMBER; syncToggles(); }
 function toMenu(){ G.state='menu'; G.demo=false; reset(); refreshMenu(); show('menu'); }
 function startRun(){ initAudio(); SFX.click(); G.demo=false; G.lastDemo=false; reset(); G.state='play'; last={}; show(null); $('hud').hidden=false; $('hud-demo').hidden=true; $('b-again').textContent='REJOUER'; }
 function startDemo(){ initAudio(); SFX.click(); G.demo=true; G.lastDemo=true; reset(); G.state='play'; last={}; show(null); $('hud').hidden=false; $('hud-demo').hidden=false; }
+function starsOf(){ // level 2: 1 finish, 2 + 250 coins with the bubble kept, 3 + both goals and the 3 golden jerseys
+  const two=G.runCoins>=250&&G.power.shield, three=two&&(G.stats.goals||0)>=2&&(G.stats.jerseys||0)>=3;
+  return three?3:two?2:1;
+}
+function showStars(n){
+  const on=LV.finite&&n>0; $('o-stars').hidden=!on; $('o-why').hidden=!on; if(!on) return;
+  $('o-stars').innerHTML='★'.repeat(n)+'<i>'+'★'.repeat(3-n)+'</i>';
+  const c=G.runCoins>=250, sh=!!G.power.shield, gl=(G.stats.goals||0)>=2, jr=(G.stats.jerseys||0)>=3, ok=b=>b?'✔':'✘';
+  $('o-why').textContent='★ Arrivée ✔ · ★★ 250 pièces '+ok(c)+' + bulle gardée '+ok(sh)+' · ★★★ 2 buts '+ok(gl)+' + 3 maillots d’or '+ok(jr)+' ('+(G.stats.jerseys||0)+'/3)';
+}
 function endRun(win){
   if(G.demo){ endDemo(); return; }
   G.state='over';
@@ -1838,6 +1873,10 @@ function endRun(win){
   $('o-done').hidden=!done.length; $('o-done').textContent=done.length?'Défi réussi : '+done.join(' · '):'';
   show('over');
   if(win){} else if(rec) SFX.top1(); else SFX.over();
+  showStars(win?starsOf():0);
+  if(win){ const st=starsOf(); if(st>(save.stars2||0)) save.stars2=st;
+    if(st===3&&!save.owned.includes('orrobec')){ save.owned.push('orrobec'); save.eq.top='orrobec'; $('o-done').hidden=false; $('o-done').textContent='3 ÉTOILES ! Nouveau style débloqué : Maillot d’or Robec !'+($('o-done').textContent?' · '+$('o-done').textContent:''); }
+    persist(); }
 }
 let shopTab='top';
 function renderShop(){
@@ -1849,7 +1888,7 @@ function renderShop(){
     const card=document.createElement('button'); card.className='card'+(eq?' eq':'')+(!owned&&save.coins<it.price?' locked':'');
     card.style.setProperty('--rc',R[2]);
     card.innerHTML=`<canvas width="168" height="168"></canvas><span class="nm">${it.name}</span><span class="rar">${R[0]}</span>`+
-      (eq?'<span class="price">Équipé</span>':owned?'<span class="price">Équiper</span>':`<span class="price"><i class="coin"></i>${it.price}</span>`);
+      (eq?'<span class="price">Équipé</span>':owned?'<span class="price">Équiper</span>':it.unlock?'<span class="price">★★★ niveau 2</span>':`<span class="price"><i class="coin"></i>${it.price}</span>`);
     card.setAttribute('aria-label',it.name+(eq?', équipé':owned?', équiper':', '+it.price+' pièces'));
     card.onclick=()=>buy(it);
     grid.appendChild(card);
@@ -1863,6 +1902,7 @@ function renderShop(){
 function buy(it){
   initAudio();
   if(save.owned.includes(it.id)){ save.eq[it.cat]=it.id; SFX.click(); }
+  else if(it.unlock){ SFX.nope(); toast('Fais 3 étoiles au niveau 2 pour le débloquer !'); return; }
   else if(save.coins>=it.price){ save.coins-=it.price; save.owned.push(it.id); save.eq[it.cat]=it.id; SFX.buy(); toast(it.name+' débloqué !'); }
   else { SFX.nope(); toast('Il te manque '+(it.price-save.coins)+' pièces'); return; }
   persist(); renderShop();

@@ -3,7 +3,7 @@
 A parkour runner through Rouen with two levels:
 
 - **Niveau 1, les toits (la nuit):** an endless run over the rooftops that gets faster and harder. A finish arch every 1 000 m gives bonus coins (100 per km), a protective bubble and a coin multiplier; the first one drops the crown. A pink flag marks the runner's best distance.
-- **Niveau 2, Rue Eau-de-Robec (le jour):** a hand-built street course along the Robec with café tables, awnings to bounce on, balconies, benches to vault, a handrail, drawbridges that lift, walls to climb, a UFO flight and a finish line. Hints appear just before each move. It is a single HTML page with no dependencies: the character, the city, the music and the sound effects are all drawn or synthesised in code.
+- **Niveau 2, Rue Eau-de-Robec (le jour):** a hand-built street course along the Robec with café tables, awnings to bounce on, balconies, benches to vault, a handrail, drawbridges that lift, walls to climb, a UFO flight and a finish line. Hints appear just before each move. Each run earns stars: ★ reach the finish, ★★ also 250 coins with the bubble kept, ★★★ also both goals and the 3 hidden golden jerseys. The first 3-star run unlocks the "Maillot d’or Robec" outfit. It is a single HTML page with no dependencies: the character, the city, the music and the sound effects are all drawn or synthesised in code.
 
 ## Play
 

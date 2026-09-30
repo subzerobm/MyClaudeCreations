@@ -164,7 +164,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div class="row"><button id="b-play" class="btn btn-gold">JOUER</button><button id="b-demo" class="btn btn-red">DÉMO</button></div>
     <div class="row"><button id="b-shop" class="btn">STYLE</button><button id="b-miss" class="btn">DÉFIS</button><button id="b-savep" class="btn">SAUVEGARDE</button></div>
     <div class="row"><button id="b-music" class="ghost">Musique : oui</button><button id="b-sfx" class="ghost">Sons : oui</button><button id="b-fs" class="ghost">Plein écran</button></div>
-    <p class="howto"><b>Tape</b> pour sauter · <b>Tape en l'air</b> : double saut + salto · <b>Glisse vers le bas</b> : glisser · <b>Glisse vers le haut en l'air</b> : salto en plus. Double salto = pièces x2 !</p>
+    <p class="howto"><b>1 tape</b> : sauter · <b>2 tapes</b> : double saut + salto · <b>3 tapes</b> : salto en plus · <b>Glisse vers le bas</b> : glisser. Double salto = pièces x2 · Triple salto = pièces x3 !</p>
   </div>
   <p class="rotate">Tourne ton téléphone pour mieux voir !</p>
 </section>
@@ -563,7 +563,7 @@ function reset(){
   if(LV.init) LV.init(); else addBuilding(-400,1400,BASE,'colombage');
   while(G.genX<G.cam+VW+700) LV.gen();
   P={y:BASE,vy:0,onGround:true,jumps:0,slide:0,flip:0,flipTarget:0,air:0,dead:false,deadT:0,run:0,invuln:0,queueSlide:false,rot:0,climb:null};
-  G.tutStep=(save.tut||G.demo)?3:0; G.tutT=0;
+  G.tutStep=(save.tut||G.demo)?4:0; G.tutT=0;
 }
 function gen(){
   const x0=G.genX, v=speedAt(x0), reach=v*.69, diff=Math.min(1,x0/30000), r=Math.random();
@@ -1062,10 +1062,11 @@ function jump(){
   if(G.state!=='play'||P.dead||G.power.ovni>0||G.hover) return;
   if(P.onGround){ P.vy=-JUMPV; P.onGround=false; P.jumps=1; P.air=0; P.slide=0; SFX.jump(); dust(G.cam+PX,P.y,6); if(G.tutStep===0) tutNext(); }
   else if(P.jumps<2){ P.vy=-DJUMPV; P.jumps=2; addFlip(); SFX.dbl(); if(G.tutStep===1) tutNext(); }
+  else if(addFlip()){ if(P.vy>0) P.vy*=.35; if(G.tutStep===2) tutNext(); }
 }
 function swipeDown(){
   if(G.state!=='play'||P.dead||G.power.ovni>0||G.hover) return;
-  if(G.tutStep===2) tutNext();
+  if(G.tutStep===3) tutNext();
   if(P.onGround){ startSlide(); return; }
   const sd=surfAt(G.cam+PX,P.y,0);
   if(P.air<.18&&P.jumps===1&&P.vy<0&&sd&&!sd.p&&sd.y-P.y<45){ P.y=sd.y; P.vy=0; P.onGround=true; P.jumps=0; P.flip=P.flipTarget=0; startSlide(); return; }
@@ -1077,7 +1078,7 @@ function swipeUp(){
   if(!P.onGround&&P.flip>=P.flipTarget-.01&&addFlip()){ if(P.vy>0) P.vy*=.35; }
 }
 function startSlide(){ P.slide=.6; SFX.slide(); dust(G.cam+PX+8,P.y,8); }
-function tutNext(){ G.tutStep++; G.tutT=0; if(G.tutStep>=3){ save.tut=true; persist(); } }
+function tutNext(){ G.tutStep++; G.tutT=0; if(G.tutStep>=4){ save.tut=true; persist(); } }
 
 /* ---------- fx ---------- */
 function dust(x,y,n){for(let i=0;i<n;i++) parts.push({x:x+rand(-8,8),y:y-2,vx:rand(-90,30),vy:rand(-80,-10),l:0,m:rand(.3,.5),s:rand(2,4),c:'rgba(230,220,200,.8)',g:200});}
@@ -1199,7 +1200,7 @@ function update(dt){
   // milestones
   const m=Math.floor(G.dist/10);
   if(m>=G.milestone+500){ G.milestone+=500; const cheers=['ICI C’EST PARIS !','ALLEZ PARIS !','QUEL ARTISTE !','INARRÊTABLE !']; say(G.milestone+' m ! '+cheers[(G.milestone/500-1)%cheers.length],'#fff'); SFX.trick(2); }
-  if(G.tutStep<3) G.tutT+=dt;
+  if(G.tutStep<4) G.tutT+=dt;
   stepFx(dt);
 }
 
@@ -1232,10 +1233,10 @@ function autopilot(){
         const nb=G.botGap, tw=(nb.x+4-px)/v;
         if(tw>0){ const y=P.y+P.vy*tw+GRAV/2*tw*tw; if(y>nb.top-2) need=true; }
       }
-      if(need||G.trickPlan){ jump(); cap(G.trickPlan?'Il tape en l’air : DOUBLE SAUT + SALTO !':'Double saut pour arriver de l’autre côté !'); return; }
+      if(need||G.trickPlan){ jump(); cap(G.trickPlan?'2 tapes : DOUBLE SAUT + SALTO !':'Double saut pour arriver de l’autre côté !'); return; }
     }
     if(G.trickPlan&&P.jumps===2&&flipCount()<G.trickPlan&&P.flip>=P.flipTarget-.01){
-      swipeUp(); cap(G.trickPlan===3?'Il glisse vers le haut : TRIPLE SALTO !':'Il glisse vers le haut : un salto de plus !');
+      jump(); cap(G.trickPlan===3?'3 tapes : TRIPLE SALTO !':'3 tapes : un salto de plus !');
     }
   }
 }
@@ -1513,7 +1514,7 @@ function render(){
   ctx.setTransform(DPR*S,0,0,DPR*S,0,0);
   if(DECEMBER) drawSnow();
   drawTexts();
-  if(G.state==='play'&&G.tutStep<3&&!P.dead) drawTut(tt);
+  if(G.state==='play'&&G.tutStep<4&&!P.dead) drawTut(tt);
   if(G.demo&&G.capT>0&&G.cap) drawCap();
 }
 function crownAt(c,hx,hy){ // king's crown: red velvet cap, gold band and arches, orb and cross
@@ -1695,7 +1696,7 @@ function drawTexts(){
   });
 }
 function drawTut(t){
-  const msgs=['TAPE pour sauter','TAPE encore en l’air : SALTO !','GLISSE vers le bas pour glisser'];
+  const msgs=['1 TAPE : SAUTER','2 TAPES : DOUBLE SAUT + SALTO !','3 TAPES : SALTO EN PLUS !','GLISSE VERS LE BAS : GLISSER'];
   if(G.tutT<.6) return;
   ctx.save(); ctx.globalAlpha=.9+.1*Math.sin(t*6);
   ctx.font='20px "Lilita One",sans-serif'; ctx.textAlign='center';

@@ -28,7 +28,7 @@
   --body:"Nunito","Segoe UI",system-ui,sans-serif;
   color-scheme:dark;
 }
-html,body{height:100%}
+html,body{height:100%;overscroll-behavior:none}
 [hidden]{display:none!important}
 body{margin:0;background:var(--ink);color:var(--fg);font-family:var(--body);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 #game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
@@ -1263,8 +1263,8 @@ function update(dt){
   for(const c of coins){
     if(c.t){ c.a=(c.a||0)+dt*3; if(c.a>1) c.gone=true; continue; }
     const ddx=c.x-px, ddy=c.y-cy;
-    if(G.power.magnet>0&&Math.abs(ddx)<170&&Math.abs(ddy)<200){ const d=Math.hypot(ddx,ddy)||1; const s=Math.min(d,900*dt); c.x-=ddx/d*s; c.y-=ddy/d*s; }
-    if(Math.abs(c.x-px)<16&&c.y>P.y-h-10&&c.y<P.y+8){
+    if(G.power.magnet>0&&Math.abs(ddx)<100&&Math.abs(ddy)<70){ const d=Math.hypot(ddx,ddy)||1; const s=Math.min(d,600*dt); c.x-=ddx/d*s; c.y-=ddy/d*s; }
+    if(Math.abs(c.x-px)<14&&c.y>P.y-h-4&&c.y<P.y+6){
       c.t=true; G.runCoins+=G.mult; G.stats.coins+=G.mult; G.combo=G.comboT>0?G.combo+1:0; G.comboT=.45; SFX.coin(G.combo);
       burst(c.x,c.y,['#ffe17a','#fff'],4,120);
     }
@@ -1922,11 +1922,23 @@ function renderMissions(){
 }
 
 /* ---------- input ---------- */
-let touch=null;
-cv.addEventListener('pointerdown',e=>{ if(G.state!=='play'||G.demo) return; e.preventDefault(); initAudio(); touch={x:e.clientX,y:e.clientY,id:e.pointerId,done:false}; jump(); });
-cv.addEventListener('pointermove',e=>{ if(!touch||touch.done||e.pointerId!==touch.id) return; const dy=e.clientY-touch.y, dx=e.clientX-touch.x; if(Math.abs(dy)>26&&Math.abs(dy)>Math.abs(dx)){ touch.done=true; dy>0?swipeDown():swipeUp(); } });
-const endTouch=e=>{ if(touch&&e.pointerId===touch.id) touch=null; };
-cv.addEventListener('pointerup',endTouch); cv.addEventListener('pointercancel',endTouch);
+/* Fingers go through touch events with preventDefault, so the browser (pull to refresh,
+   double-tap zoom) or the app around the page cannot swallow a swipe or a quick tap.
+   Mouse and pen still use pointer events. Every new finger is a tap (jump / double jump /
+   extra flip); a vertical move of 18 px is a swipe, checked while moving and on release. */
+const fingers={}, SWIPE=18;
+const isSwipe=(dx,dy)=>Math.abs(dy)>SWIPE&&Math.abs(dy)>Math.abs(dx);
+function fStart(id,x,y){ if(G.state!=='play'||G.demo) return; initAudio(); fingers[id]={x,y,done:false}; jump(); }
+function fMove(id,x,y){ const f=fingers[id]; if(!f||f.done) return; if(isSwipe(x-f.x,y-f.y)){ f.done=true; y>f.y?swipeDown():swipeUp(); } }
+function fEnd(id,x,y){ const f=fingers[id]; if(f&&!f.done&&x!==undefined&&isSwipe(x-f.x,y-f.y)) y>f.y?swipeDown():swipeUp(); delete fingers[id]; }
+cv.addEventListener('touchstart',e=>{ if(G.state!=='play') return; e.preventDefault(); for(const t of e.changedTouches) fStart(t.identifier,t.clientX,t.clientY); },{passive:false});
+cv.addEventListener('touchmove',e=>{ e.preventDefault(); for(const t of e.changedTouches) fMove(t.identifier,t.clientX,t.clientY); },{passive:false});
+cv.addEventListener('touchend',e=>{ e.preventDefault(); for(const t of e.changedTouches) fEnd(t.identifier,t.clientX,t.clientY); },{passive:false});
+cv.addEventListener('touchcancel',e=>{ for(const t of e.changedTouches) fEnd(t.identifier); });
+cv.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch') return; e.preventDefault(); fStart('p'+e.pointerId,e.clientX,e.clientY); });
+cv.addEventListener('pointermove',e=>{ if(e.pointerType!=='touch') fMove('p'+e.pointerId,e.clientX,e.clientY); });
+cv.addEventListener('pointerup',e=>{ if(e.pointerType!=='touch') fEnd('p'+e.pointerId,e.clientX,e.clientY); });
+cv.addEventListener('pointercancel',e=>{ if(e.pointerType!=='touch') fEnd('p'+e.pointerId); });
 window.addEventListener('keydown',e=>{
   if(e.repeat) return;
   if(G.state==='play'&&!G.demo){

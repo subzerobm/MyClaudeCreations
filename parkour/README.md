@@ -21,12 +21,15 @@ The **DÉMO** button on the menu makes the game play itself for 1 000 m: it jump
 
 - The runner: blond hair, big white t-shirt, baggy grey-blue pants
 - Rouen at dusk: half-timbered rooftops, the Cathedral spire, Saint-Ouen, Saint-Maclou, and the Gros-Horloge to slide under
-- Obstacles: chimneys, "ICI C'EST PARIS" banners, pigeons
+- Roofs with slopes, triangle gables and raised sections
+- Obstacles: chimneys (some with red and blue flare smoke), "ICI C'EST PARIS" banners, washing lines of jerseys, pigeons
+- Paris flags on the roofs and "ICI C'EST PARIS" wall murals
+- At 1 000 m: a finish arch, and a crown falls onto his head (unlocks the crown)
 - Power-ups: Paris ball (coin magnet), Disque d'Or (shield), OVNI (flight), loot chests
 - Style screen with outfits, hats and trails by rarity; 15 challenges (Défis); saved record and coins
 - Snow and a birthday message in December
 
-Progress is saved in the browser (`localStorage`), so it stays on the device.
+Progress is saved automatically in the browser (`localStorage`). The SAUVEGARDE screen has a save button and a save code (`PK1-…`) that can be copied and pasted back to restore coins, outfits and records on another phone.
 
 ## Install on a phone
 

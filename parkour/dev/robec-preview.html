@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#08102a">
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon.svg">
+
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 </head>
 <body>
-<title>Parkour Rouen</title>
+<title>Parkour Niveau 2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap">
@@ -629,7 +629,295 @@ function populate(b,v,diff){
 }
 const LV1={speed:speedAt,gen:()=>gen(),facade:drawFacade,sky:nightSky,bg:nightBg,build(){buildFar();buildMid();buildStars();},drawPlat(){}};
 let LV=LV1;
-/*@LEVEL2@*/
+/* ===== Level 2 preview: Rue Eau-de-Robec by day =====
+   Dev-only. build.sh splices this file into the core at the LEVEL2 marker for the
+   preview page; the game Abel gets is built without it. The level is a fixed,
+   hand-built course played by a scripted autopilot (demo only). */
+const R2={acts:[],ai:0,backs:[]};
+const DAY_FAR={hill:'#9fc3b4',sil:'#93acd0',lat:'#aabfdd',glow:'rgba(255,255,255,0)'};
+const R2PAL=[{wall:'#f3e3c3',timber:'#7a3b2c'},{wall:'#f6d7b0',timber:'#2f5f8a'},{wall:'#eae3d3',timber:'#3f6b3a'},{wall:'#f2c9b1',timber:'#8a2e3b'},{wall:'#e1ebe4',timber:'#5b3622'},{wall:'#fbe7a8',timber:'#2f4a6a'}];
+let clouds=[];
+
+/* game-accurate flight time: from height 0 with vertical speed vy (negative = up) until,
+   while falling, the body is back down to height H (positive = above start) */
+function simT(vy,H,dj,up){
+  let y=0,v=vy,t=0,didDj=false,didUp=false; const dt=1/60;
+  for(let i=0;i<600;i++){
+    if(dj&&!didDj&&t>=dj){ v=-DJUMPV; didDj=true; }
+    if(up&&!didUp&&t>=up){ if(v>0) v*=.35; didUp=true; }
+    v+=GRAV*dt; y+=v*dt; t+=dt;
+    if(v>0&&-y<=H) return t;
+  }
+  return t;
+}
+function arcCoins(x0,y0,vy,H,dj,up,v){
+  let y=0,vv=vy,t=0,k=0,didDj=false,didUp=false; const dt=1/60;
+  for(let i=0;i<600;i++){
+    if(dj&&!didDj&&t>=dj){ vv=-DJUMPV; didDj=true; }
+    if(up&&!didUp&&t>=up){ if(vv>0) vv*=.35; didUp=true; }
+    vv+=GRAV*dt; y+=vv*dt; t+=dt;
+    if(vv>0&&-y<=H) break;
+    if(++k%5===0) coins.push({x:x0+v*t,y:y0+y-26,t:false});
+  }
+}
+
+const LV2={
+  speed:()=>300,
+  init(){
+    const v=300, S=BASE; R2.acts=[]; R2.ai=0; R2.backs=[];
+    const act=(x,a,c)=>R2.acts.push({x,a,c});
+    const plat=(x,w,h,kind,o)=>{ const p=Object.assign({x,w,y:S-h,kind},o||{}); plats.push(p); return p; };
+    const back=(x,w,h)=>R2.backs.push({x,w,top:S-h,pal:R2PAL[R2.backs.length%R2PAL.length],seed:R2.backs.length*7+3});
+    const row=(x1,x2,y)=>{ for(let x=x1;x<x2;x+=26) coins.push({x,y,t:false}); };
+    const gaps=[], houses=[];
+    const jumpFrom=(x,h0,H,c,dj,up)=>{ act(x,'jump',c); if(dj){ act(x+v*dj,'jump'); } if(up) act(x+v*up,'up'); arcCoins(x,S-h0,-JUMPV,H-h0,dj,up,v); return x+v*simT(-JUMPV,H-h0,dj,up); };
+
+    // 1. warm-up on the quay, over a pot of geraniums
+    row(120,300,S-22);
+    const pot=makeObst('pot',380,S); pot.w=24; pot.over=false; pot.box=[382,S-26,402,S];
+    jumpFrom(380-40,0,0,'Il saute par-dessus le pot de fleurs');
+
+    // 2. café terrace: street -> table -> striped awning (bounce) -> balcony -> street
+    back(560,520,270);
+    let l1=jumpFrom(700,0,30,'Il saute sur la table du café !');
+    const t1=plat(l1-16,50,30,'table');
+    plat(t1.x-26,18,16,'chair',{deco:true}); plat(t1.x+t1.w+8,18,16,'chair',{deco:true});
+    let l2=jumpFrom(l1+10,30,70);
+    const aw=plat(l2-22,86,70,'awning',{bounce:1050});
+    let l3=l2+v*simT(-1050,100); arcCoins(l2,S-70,-1050,100,0,0,v);
+    const bal=plat(l3-30,150,170,'balcony'); act(l3+2,null,'Il atterrit sur un balcon !');
+    row(bal.x+50,bal.x+bal.w-20,S-192);
+    let l4=jumpFrom(bal.x+bal.w-12,170,0,'Il saute du balcon !');
+
+    // 3. hanging café sign: slide
+    const s1=l4+300; back(s1-70,200,190);
+    const sg=makeObst('sign',s1,S); sg.w=72; sg.box=[s1,S-400,s1+60,S-34]; sg.over=true;
+    act(s1-32,'slide','Il glisse sous l’enseigne du café');
+    row(s1-10,s1+70,S-14);
+
+    // 4. over the Robec, then along a little footbridge
+    const g1=s1+330; gaps.push([g1,g1+150]);
+    jumpFrom(g1-15,0,0,'Il saute au-dessus de la Robec !');
+    const g2=g1+150+280; gaps.push([g2,g2+240]);
+    plat(g2-6,252,0,'bridge'); act(g2+30,null,'Il passe sur la petite passerelle');
+    row(g2+20,g2+230,S-22);
+
+    // 5. pigeons: slide
+    const p1=g2+240+230; makeObst('pigeons',p1,S);
+    act(p1-30,'slide','Il glisse sous les pigeons');
+
+    // 6. Spider-Man: climb a house wall, run on the roof, jump down
+    const hx=p1+70+280; houses.push({x:hx,w:300,h:190});
+    row(hx+40,hx+270,S-212);
+    items.push({type:'chest',x:hx+160,y:S-202,t:false});
+    const l5=jumpFrom(hx+300-14,190,0,'Il saute du toit !');
+
+    // 7. wide river: double jump + flips
+    const g3=l5+240, jx=g3-15;
+    const land3=jx+v*simT(-JUMPV,0,.345,.345+.42);
+    gaps.push([g3,Math.min(g3+300,land3-50)]);
+    jumpFrom(jx,0,0,'Double saut + salto au-dessus de la rivière !',.345,.345+.42);
+
+    // 8. second terrace: two tables, awning, high balcony, onto a roof
+    const tx=land3+220; back(tx+60,720,300);
+    let m1=jumpFrom(tx,0,30,'De table en table !');
+    const ta=plat(m1-16,50,30,'table'); plat(ta.x-26,18,16,'chair',{deco:true});
+    let m2=jumpFrom(m1+10,30,30);
+    const tb=plat(m2-16,50,30,'table'); plat(tb.x+tb.w+8,18,16,'chair',{deco:true});
+    let m3=jumpFrom(m2+10,30,70);
+    plat(m3-22,86,70,'awning',{bounce:1050});
+    let m4=m3+v*simT(-1050,110); arcCoins(m3,S-70,-1050,110,0,0,v);
+    const b2=plat(m4-30,140,180,'balcony'); act(m4+2,null,'Encore un balcon !');
+    const jr=b2.x+b2.w-12;
+    act(jr,'jump','Il saute sur le toit !');
+    let tUp=0; { let y=0,vv=-JUMPV; const dt=1/60; for(let i=0;i<200;i++){ vv+=GRAV*dt; y+=vv*dt; tUp+=dt; if(-y>=46) break; } }
+    const h2x=jr+v*tUp+6, m5=jr+v*simT(-JUMPV,40);
+    houses.push({x:h2x,w:Math.max(260,m5-h2x+200),h:220});
+    arcCoins(jr,S-180,-JUMPV,40,0,0,v);
+    const h2=houses[houses.length-1];
+    row(m5+20,h2x+h2.w-30,S-242);
+    const l6=jumpFrom(h2x+h2.w-14,220,0,'Et il redescend dans la rue !');
+
+    // 9. finish
+    const fx=l6+420; G.finishX=fx;
+    const fo=makeObst('finish',fx,S); fo.box=[-1e9,-1e9,-1e9,-1e9]; fo.over=false; fo.passed=true;
+    row(l6+60,fx-30,S-22);
+
+    // quays everywhere except the river gaps; houses on top
+    let x=-400; const end=fx+2600;
+    for(const [a,b] of gaps.sort((p,q)=>p[0]-q[0])){ addBuilding(x,a-x,S,'quai'); x=b; }
+    addBuilding(x,end-x,S,'quai');
+    for(const h of houses){ const b=addBuilding(h.x,h.w,S-h.h,'maison'); b.climb=true; b.pal=R2PAL[(h.x|0)%R2PAL.length]; }
+    G.genX=end; G.prevTop=S;
+    buildings.sort((p,q)=>(p.style==='maison')-(q.style==='maison')||p.x-q.x);
+  },
+  gen(){ addBuilding(G.genX,2000,BASE,'quai'); },
+  bot(){
+    const px=G.cam+PX;
+    while(R2.ai<R2.acts.length&&px>=R2.acts[R2.ai].x){
+      const a=R2.acts[R2.ai++];
+      if(a.c) cap(a.c);
+      if(a.a==='jump') jump(); else if(a.a==='slide') swipeDown(); else if(a.a==='up') swipeUp();
+    }
+  },
+  build(){
+    buildFar(DAY_FAR); buildMid2();
+    clouds=[]; const r=rng(21); for(let i=0;i<7;i++) clouds.push({x:r()*1600,y:30+r()*Math.max(60,BASE-230),s:.7+r()*.8,p:.05+r()*.08});
+  },
+  sky(tt){
+    const g=ctx.createLinearGradient(0,0,0,BASE+40); g.addColorStop(0,'#4ea6e6'); g.addColorStop(.7,'#9fd4f7'); g.addColorStop(1,'#e2f3ff');
+    ctx.fillStyle=g; ctx.fillRect(0,0,VW,VH);
+    const sx=VW*.82, sy=Math.max(48,BASE-215);
+    const sg=ctx.createRadialGradient(sx,sy,8,sx,sy,70); sg.addColorStop(0,'rgba(255,248,200,.9)'); sg.addColorStop(1,'rgba(255,248,200,0)');
+    ctx.fillStyle=sg; ctx.fillRect(sx-70,sy-70,140,140); ctx.fillStyle='#fff7cf'; ctx.beginPath(); ctx.arc(sx,sy,18,0,TAU); ctx.fill();
+    const off=G.cam+G.bgOff;
+    ctx.fillStyle='rgba(255,255,255,.92)';
+    for(const c of clouds){ const x=((c.x-off*c.p)%(VW+260)+VW+260)%(VW+260)-130; const s=c.s;
+      ctx.beginPath(); ctx.arc(x,c.y,16*s,0,TAU); ctx.arc(x+18*s,c.y-8*s,20*s,0,TAU); ctx.arc(x+40*s,c.y,15*s,0,TAU); ctx.rect(x,c.y-2,40*s,16*s); ctx.fill(); }
+  },
+  bg(off,tt){
+    drawLayers(off);
+    ctx.fillStyle='#8f8a80'; ctx.fillRect(-10,BASE,VW+20,26);
+    const wg=ctx.createLinearGradient(0,BASE+26,0,VH); wg.addColorStop(0,'#58b1dd'); wg.addColorStop(1,'#2b6f9f');
+    ctx.fillStyle=wg; ctx.fillRect(-10,BASE+26,VW+20,VH);
+    ctx.fillStyle='rgba(255,255,255,.45)';
+    for(let row=0,y=BASE+34;y<VH;y+=9,row++){ const dir=row%2?1:-1; for(let i=0;i<8;i++){ const x=(((i*131+row*57)+tt*28*dir-(off%400))%(VW+80)+VW+80)%(VW+80)-40; ctx.fillRect(x,y,14,1.6); } }
+    for(const b of R2.backs){ const x=b.x-G.cam; if(x>VW||x+b.w<0) continue; if(!b.img) b.img=backImg(b); ctx.drawImage(b.img,x,b.top,b.w,BASE-b.top); }
+  },
+  facade(c,b){ if(b.style==='maison') drawMaison(c,b); else drawQuai(c,b); },
+  drawObst(o,x,t){
+    const T=o.top;
+    if(o.type==='pot'){
+      ctx.fillStyle='#c0643b'; ctx.beginPath(); ctx.moveTo(x+4,T); ctx.lineTo(x+1,T-16); ctx.lineTo(x+23,T-16); ctx.lineTo(x+20,T); ctx.fill();
+      ctx.fillStyle='#9c4d2b'; ctx.fillRect(x,T-18,24,3);
+      ctx.fillStyle='#3f8a3a'; for(let i=0;i<5;i++){ ctx.beginPath(); ctx.arc(x+4+i*4,T-20-(i%2)*3,4,0,TAU); ctx.fill(); }
+      ctx.fillStyle='#e0393e'; for(let i=0;i<4;i++){ ctx.beginPath(); ctx.arc(x+5+i*5,T-24-(i%2)*2,2.4,0,TAU); ctx.fill(); }
+      return true;
+    }
+    if(o.type==='sign'){
+      ctx.strokeStyle='#2b2b30'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x+72,T-128); ctx.lineTo(x+4,T-128); ctx.stroke();
+      ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x+72,T-112); ctx.lineTo(x+40,T-128); ctx.moveTo(x+14,T-128); ctx.lineTo(x+14,T-104); ctx.moveTo(x+54,T-128); ctx.lineTo(x+54,T-104); ctx.stroke();
+      const sw=Math.sin(t*2+o.seed)*1.5;
+      ctx.fillStyle='#1b2a5c'; rr(ctx,x+2+sw,T-104,64,62,6); ctx.fill();
+      ctx.fillStyle='#e0393e'; ctx.fillRect(x+2+sw,T-60,64,10);
+      ctx.fillStyle='#ffcd3c'; ctx.font='17px "Lilita One",sans-serif'; ctx.textAlign='center'; ctx.fillText('CAFÉ',x+34+sw,T-80);
+      ctx.fillStyle='#fff'; ctx.font='8px "Nunito",sans-serif'; ctx.fillText('DU ROBEC',x+34+sw,T-66);
+      return true;
+    }
+    return false;
+  },
+  drawPlat(p,x,t){
+    const y=p.y, S=BASE;
+    if(p.kind==='table'){
+      ctx.fillStyle='#2d2d33'; ctx.fillRect(x+p.w/2-1.5,y,3,S-y); ctx.beginPath(); ctx.ellipse(x+p.w/2,S-1,9,2.5,0,0,TAU); ctx.fill();
+      ctx.fillStyle='#f4f4f4'; ctx.beginPath(); ctx.ellipse(x+p.w/2,y+1,p.w/2,4,0,0,TAU); ctx.fill(); ctx.strokeStyle='#9aa0aa'; ctx.lineWidth=1; ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.fillRect(x+p.w/2+6,y-5,5,5); ctx.fillStyle='#6b3f25'; ctx.fillRect(x+p.w/2+6.5,y-5,4,1.5);
+    } else if(p.kind==='chair'){
+      ctx.strokeStyle='#8a5a33'; ctx.lineWidth=2; ctx.beginPath();
+      ctx.moveTo(x+2,S); ctx.lineTo(x+3,y); ctx.moveTo(x+16,S); ctx.lineTo(x+15,y); ctx.moveTo(x+15,y); ctx.lineTo(x+17,y-16); ctx.stroke();
+      ctx.fillStyle='#c98e4f'; ctx.fillRect(x,y-2,18,4); ctx.fillStyle='#8a5a33'; ctx.fillRect(x+12,y-16,6,3);
+    } else if(p.kind==='awning'){
+      if(p.sq>0) p.sq=Math.max(0,p.sq-.06);
+      const yy=y+(p.sq||0)*6;
+      ctx.fillStyle='#55555c'; ctx.fillRect(x+3,yy,2,S-yy); ctx.fillRect(x+p.w-5,yy,2,S-yy);
+      for(let i=0;i*10<p.w;i++){ ctx.fillStyle=['#1b2a5c','#ffffff','#e0393e','#ffffff'][i%4]; ctx.fillRect(x+i*10,yy-2,Math.min(10,p.w-i*10),10); }
+      for(let i=0;i*10<p.w;i++){ ctx.fillStyle=['#1b2a5c','#ffffff','#e0393e','#ffffff'][i%4]; ctx.beginPath(); ctx.arc(x+i*10+5,yy+8,5,0,Math.PI); ctx.fill(); }
+      ctx.fillStyle='rgba(0,0,0,.15)'; ctx.fillRect(x,yy+8,p.w,2);
+    } else if(p.kind==='balcony'){
+      ctx.fillStyle='#d8d0c0'; ctx.fillRect(x,y,p.w,6); ctx.fillStyle='#b8ae9b'; ctx.fillRect(x,y+6,p.w,3);
+      ctx.fillStyle='#b8ae9b'; tri(ctx,x+8,y+9,x+26,y+9,x+8,y+26); tri(ctx,x+p.w-8,y+9,x+p.w-26,y+9,x+p.w-8,y+26);
+      ctx.strokeStyle='rgba(30,30,36,.55)'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.moveTo(x,y-16); ctx.lineTo(x+p.w,y-16);
+      for(let bx=x+4;bx<x+p.w;bx+=8){ ctx.moveTo(bx,y-16); ctx.lineTo(bx,y); } ctx.stroke();
+      for(const fx of [x+6,x+p.w-20]){ ctx.fillStyle='#c0643b'; ctx.fillRect(fx,y-8,14,8); ctx.fillStyle='#e0393e'; for(let i=0;i<3;i++){ ctx.beginPath(); ctx.arc(fx+3+i*4,y-10,2.6,0,TAU); ctx.fill(); } }
+    } else if(p.kind==='bridge'){
+      ctx.fillStyle='#7a4e2a'; ctx.fillRect(x,y,p.w,7); ctx.fillStyle='#9b6a3c'; for(let bx=x;bx<x+p.w;bx+=12) ctx.fillRect(bx,y,11,5);
+      ctx.strokeStyle='#6b4424'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.moveTo(x,y-18); ctx.lineTo(x+p.w,y-18); ctx.stroke();
+      ctx.lineWidth=2; ctx.beginPath(); for(let bx=x+2;bx<=x+p.w;bx+=30){ ctx.moveTo(bx,y); ctx.lineTo(bx,y-18); } ctx.stroke();
+      ctx.strokeStyle='#5d3a1d'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x,y+7); ctx.quadraticCurveTo(x+p.w/2,y+30,x+p.w,y+7); ctx.stroke();
+    }
+  },
+  onEnd(){
+    $('o-title').textContent='FIN DU NIVEAU 2 !';
+    $('o-done').textContent='Aperçu du niveau Rue Eau-de-Robec. Il n’est pas encore dans le jeu d’Abel.';
+  }
+};
+function drawQuai(c,b){
+  const w=b.w,h=b.hgt;
+  c.fillStyle='#bdb3a0'; c.fillRect(0,0,w,h);
+  c.strokeStyle='rgba(90,80,60,.22)'; c.lineWidth=1;
+  for(let y=14;y<h;y+=12){ c.beginPath(); c.moveTo(0,y); c.lineTo(w,y); c.stroke(); for(let x=((y/12)%2)*18;x<w;x+=36){ c.beginPath(); c.moveTo(x,y); c.lineTo(x,y+12); c.stroke(); } }
+  c.fillStyle='rgba(95,140,70,.45)'; c.fillRect(0,30,w,5);
+  c.fillStyle='#8f877a'; c.fillRect(0,0,w,9); c.fillStyle='#a79f91'; for(let x=3;x<w;x+=9) c.fillRect(x,2,6,4);
+  c.fillStyle='rgba(0,0,0,.18)'; c.fillRect(0,0,4,h); c.fillRect(w-4,0,4,h);
+}
+function colomb(c,r,x0,y0,w,h,pal,flower){
+  c.fillStyle=pal.wall; c.fillRect(x0,y0,w,h);
+  const T=pal.timber, FH=40;
+  for(let fy=y0+8;fy<y0+h-8;fy+=FH){
+    c.fillStyle=T; c.fillRect(x0,fy,w,5); c.fillStyle='rgba(0,0,0,.12)'; c.fillRect(x0,fy+5,w,3);
+    const bay=30+Math.floor(r()*8);
+    c.strokeStyle=T; c.lineWidth=3.5;
+    for(let x=x0;x+bay<=x0+w+1;x+=bay){
+      c.fillStyle=T; c.fillRect(x-2,fy,4,FH);
+      const k=r();
+      if(k<.45){
+        const wx=x+6,wy=fy+10,ww=bay-12,wh=22;
+        c.fillStyle=T; c.fillRect(wx-3,wy-3,ww+6,wh+6);
+        const g=c.createLinearGradient(0,wy,0,wy+wh); g.addColorStop(0,'#cfe9fb'); g.addColorStop(1,'#7fb0d8'); c.fillStyle=g; c.fillRect(wx,wy,ww,wh);
+        c.fillStyle='rgba(255,255,255,.6)'; c.fillRect(wx+2,wy+2,3,wh-4);
+        c.fillStyle=T; c.fillRect(wx+ww/2-1,wy,2,wh);
+        if(flower&&r()<.5){ c.fillStyle='#8a5a33'; c.fillRect(wx-3,wy+wh+3,ww+6,4); c.fillStyle='#e0393e'; for(let i=0;i<4;i++){ c.beginPath(); c.arc(wx+i*(ww/3),wy+wh+2,2.4,0,TAU); c.fill(); } }
+      } else if(k<.75){ c.beginPath(); c.moveTo(x,fy+5); c.lineTo(x+bay,fy+FH); c.moveTo(x+bay,fy+5); c.lineTo(x,fy+FH); c.stroke(); }
+      else { c.beginPath(); c.moveTo(x,fy+FH); c.lineTo(x+bay,fy+5); c.stroke(); }
+    }
+  }
+}
+function drawMaison(c,b){
+  const r=rng(b.seed), w=b.w, st=BASE-b.top;
+  colomb(c,r,0,0,w,st-48,b.pal,true);
+  c.fillStyle=b.pal.timber; c.fillRect(0,st-50,w,50);
+  for(let x=14;x<w-40;x+=70){ c.fillStyle='#a9d4ef'; c.fillRect(x,st-42,44,34); c.fillStyle='rgba(255,255,255,.5)'; c.fillRect(x+4,st-38,4,26); }
+  c.fillStyle='#ffcd3c'; c.font='12px "Lilita One",sans-serif'; c.textAlign='left'; c.fillText('BOULANGERIE',10,st-44);
+  if(w>220){ const fx=w-60; c.fillStyle='#1b2a5c'; c.fillRect(fx,30,26,40); c.fillStyle='#fff'; c.fillRect(fx+9,30,8,40); c.fillStyle='#e0393e'; c.fillRect(fx+10.5,30,5,40); }
+  c.fillStyle='#bdb3a0'; c.fillRect(0,st,w,b.hgt-st);
+  c.fillStyle='#4a5670'; c.fillRect(0,0,w,9); c.fillStyle='#a9b8d2'; c.fillRect(0,0,w,2);
+  c.fillStyle='rgba(0,0,0,.2)'; c.fillRect(0,0,5,st);
+}
+function backImg(b){
+  const R=Math.min(DPR,2), h=BASE-b.top;
+  const cvs=document.createElement('canvas'); cvs.width=Math.ceil(b.w*S*R); cvs.height=Math.ceil(h*S*R);
+  const c=cvs.getContext('2d'); c.scale(S*R,S*R);
+  const r=rng(b.seed); let x=0, i=0;
+  while(x<b.w){ const w=Math.min(b.w-x,70+r()*60); colomb(c,r,x,0,w,h,R2PAL[(b.seed+i++)%R2PAL.length],true); c.fillStyle='rgba(0,0,0,.08)'; c.fillRect(x,0,3,h); x+=w; }
+  c.fillStyle='#5d6a82'; c.fillRect(0,0,b.w,6);
+  c.fillStyle='rgba(20,40,80,.12)'; c.fillRect(0,0,b.w,h);
+  return cvs;
+}
+function buildMid2(){
+  const MW=1400,MH=300,R=Math.min(DPR,1.5);
+  const cvs=document.createElement('canvas'); cvs.width=Math.ceil(MW*S*R); cvs.height=Math.ceil(MH*S*R);
+  const c=cvs.getContext('2d'); c.scale(S*R,S*R);
+  const g=260, r=rng(31); let x=0,i=0;
+  while(x<MW){
+    let w=50+r()*45; if(x+w>MW-40) w=MW-x;
+    const h=110+r()*85, top=g-h, pal=R2PAL[i++%R2PAL.length];
+    colomb(c,r,x,top,w,h,pal,false);
+    c.fillStyle='#6f7c95'; tri(c,x-2,top,x+w+2,top,x+w/2,top-Math.min(62,w*.8));
+    c.fillStyle='rgba(120,150,190,.28)'; c.fillRect(x,top-64,w,h+64);
+    x+=w;
+  }
+  mid={img:cvs,w:MW,h:MH,y0:BASE-260};
+}
+LV=LV2;
+(function(){ // preview menu: only the level-2 demo
+  const logo=document.querySelector('.logo'); if(logo) logo.innerHTML='<span>NIVEAU 2</span><span>RUE EAU-DE-ROBEC</span>';
+  const t=document.querySelector('title'); if(t) t.textContent='Parkour Niveau 2';
+  for(const id of ['b-play','b-shop','b-miss','b-savep','b-music']){ const e=$(id); if(e) e.hidden=true; }
+  const st=document.querySelector('.stats'); if(st) st.hidden=true;
+  const ht=document.querySelector('.howto'); if(ht) ht.textContent='Aperçu pour toi seulement : le jeu joue tout seul. Ce niveau n’est pas encore dans la version d’Abel.';
+  const d=$('b-demo'); if(d){ d.textContent='VOIR LE NIVEAU 2'; d.style.flex='1'; }
+})();
+
 function roofAt(px){ let best=null; for(const b of buildings){ if(px+6>=b.x&&px-6<=b.x+b.w){ if(!best||b.top<best.top) best=b; } } return best; }
 
 /* ---------- player actions ---------- */
@@ -1363,6 +1651,6 @@ function frame(now){
 requestAnimationFrame(frame);
 })();
 </script>
-<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script>
+
 </body>
 </html>

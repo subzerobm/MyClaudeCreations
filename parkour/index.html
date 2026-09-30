@@ -412,6 +412,8 @@ function pose(k,t){
     case 'fall': return {lean:.1,bob:0,legs:[[.45,.5],[-.15,.35]],arms:[[1.9,.4],[-1.6,.3]]};
     case 'tuck': return {lean:.6,bob:0,hipY:-4,legs:[[1.7,2.5],[1.5,2.4]],arms:[[1.2,1.3],[.9,1.3]]};
     case 'slide': return {lean:-1.25,bob:0,hipY:16,hx:-6,legs:[[1.5,.05],[1.25,.6]],arms:[[1.9,.3],[-.9,.3]]};
+    case 'vault': return {lean:1.25,bob:0,hipY:-2,legs:[[-.9,1.5],[-1.1,1.4]],arms:[[.35,.1],[.55,.1]]};
+    case 'balance':{ const s=Math.sin(t*3); return {lean:s*.12,bob:0,legs:[[.12,.1],[-.12,.1]],arms:[[1.55+s*.35,.1],[1.55-s*.35,.1]]}; }
     case 'climb':{ const s=Math.sin(t); return {lean:.05,bob:0,legs:[[.7+s*.45,1.1],[.7-s*.45,1.1]],arms:[[2.9+s*.25,.15],[2.9-s*.25,.15]]}; }
     case 'dance':{
       const s=Math.sin(t*7);
@@ -726,6 +728,8 @@ function update(dt){
   const px=G.cam+PX;
   if(P.invuln>0) P.invuln-=dt;
   if(P.slide>0) P.slide-=dt;
+  if(P.roll>0) P.roll-=dt;
+  if(P.vaultT>0) P.vaultT-=dt;
   // flight modes
   if(G.power.ovni>0){
     G.power.ovni-=dt; const ty=BASE-170; P.y+=(ty-P.y)*Math.min(1,dt*4); P.vy=0; P.onGround=false; P.jumps=2; P.flip=P.flipTarget=0;
@@ -740,8 +744,8 @@ function update(dt){
     const prevY=P.y;
     if(P.onGround){
       const s=surfAt(px,P.y,24);
-      if(!s||s.y>P.y+14){ P.onGround=false; P.vy=0; P.jumps=1; P.air=0; }
-      else P.y=s.y;
+      if(!s||s.y>P.y+14){ P.onGround=false; P.vy=0; P.jumps=1; P.air=0; P.on=null; }
+      else { P.y=s.y; P.on=s.p?s.p.kind:null; }
     }
     if(!P.onGround){
       P.vy+=GRAV*dt; P.y+=P.vy*dt; P.air+=dt;
@@ -767,10 +771,11 @@ function update(dt){
   for(const o of obst){
     if(o.dead) continue;
     if(!o.passed&&o.box[2]<bx1){ o.passed=true; if(o.over){ G.stats.under++; } if(o.type==='clock'){ G.stats.clock++; G.trickPts+=100; say('GROS-HORLOGE ! +100','#ffcd3c'); } }
+    if(o.vault&&!o.vd&&!P.onGround&&bx2>o.box[0]&&bx1<o.box[2]&&by2<o.box[1]+4){ o.vd=true; P.vaultT=.42; G.trickPts+=75; say('SAUT DE CHAT ! +75','#7dffb2'); SFX.trick(1); }
     if(bx2>o.box[0]&&bx1<o.box[2]&&by2>o.box[1]&&by1<o.box[3]){
       if(P.invuln>0||G.power.ovni>0||G.hover) continue;
+      if(G.power.shield){ G.power.shield=false; o.dead=true; P.invuln=.8; SFX.shield(); vibrate(60); burst((o.box[0]+o.box[2])/2,Math.max(o.box[1],o.top-80),['#ffcd3c','#fff'],22,300); say('PROTÉGÉ PAR LA BULLE !','#ffcd3c',true); continue; }
       if(G.demo){ if(!o.hitD){ o.hitD=true; G.rescue=(G.rescue||0)+1; } continue; }
-      if(G.power.shield){ G.power.shield=false; o.dead=true; P.invuln=.8; SFX.shield(); vibrate(60); burst((o.box[0]+o.box[2])/2,Math.max(o.box[1],o.top-80),['#ffcd3c','#fff'],22,300); say('PROTÉGÉ !','#ffcd3c'); continue; }
       die(); return;
     }
   }
@@ -850,10 +855,12 @@ function endDemo(){
   if(LV.onEnd) LV.onEnd();
 }
 function land(s){
+  const fallV=P.vy; P.on=s.p?s.p.kind:null;
   P.y=s.y; P.vy=0; P.onGround=true; P.jumps=0; P.air=0; G.trickPlan=0; G.botGap=null;
   let n=Math.floor(P.flip/TAU+1e-6); if(P.flipTarget-P.flip>0 && P.flipTarget-P.flip<1.3) n=flipCount();
   P.flip=P.flipTarget=0;
   if(n>0) trick(n);
+  if(!(s.p&&s.p.bounce)&&fallV>1150&&G.state==='play'&&!P.dead){ P.roll=.45; G.trickPts+=50; say('ROULADE ! +50','#fff'); }
   if(s.p&&s.p.bounce){ P.vy=-s.p.bounce; P.onGround=false; P.jumps=1; s.p.sq=1; SFX.bounce(); if(G.demo) cap('BOING ! Il rebondit sur le store du café'); return; }
   SFX.land(); dust(G.cam+PX,P.y,5);
   if(P.queueSlide){ P.queueSlide=false; startSlide(); }
@@ -1153,6 +1160,9 @@ function drawPlayer(tt){
   else if(G.finished&&G.speed<40) kind='dance';
   else if(P.climb) kind='climb';
   else if(G.power.ovni>0||G.hover) kind='jump';
+  else if(P.roll>0&&P.onGround){ kind='tuck'; rot=(1-P.roll/.45)*TAU; }
+  else if(P.vaultT>0&&!P.onGround) kind='vault';
+  else if(P.onGround&&P.on==='rail'&&P.slide<=0) kind='balance';
   else if(P.slide>0&&P.onGround) kind='slide';
   else if(!P.onGround){ if(P.flip<P.flipTarget){ kind='tuck'; rot=P.flip; } else kind=P.vy<0?'jump':'fall'; }
   drawAbel(ctx,x,y,1,kind,kind==='run'||kind==='climb'?P.run:tt,eqNow(),rot);

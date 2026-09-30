@@ -9,8 +9,9 @@ A parkour runner through Rouen with two levels:
 
 Open `index.html` in a browser (Chrome on Android works best, in landscape).
 
-- **2 quick taps**: jump (2 more in the air: double jump)
-- **3 quick taps**: salto
+- **1 tap**: jump
+- **2nd tap in the air**: double jump + salto
+- **3rd tap in the air**: one more salto
 - **Keep the finger pressed**: slide on the ground, glide in the air, dribble the ball into the goal (double bonus)
 - Swiping down / up still slides / flips
 

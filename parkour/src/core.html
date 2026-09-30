@@ -56,7 +56,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .btn-gold{background:var(--gold);color:#3a2600;box-shadow:0 6px 0 #b8860b}
 .btn-gold:active{box-shadow:0 2px 0 #b8860b}
 .btn-red{background:var(--red);color:#fff;box-shadow:0 5px 0 #8f1c20}
-.ghost{font-weight:900;font-size:13px;letter-spacing:.05em;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.14)}
+.ghost{font-weight:900;font-size:13px;letter-spacing:.05em;padding:7px 12px;border-radius:999px;background:rgba(8,16,42,.88);border:2px solid rgba(255,255,255,.2)}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .row>.btn{flex:1 1 28%;min-width:max-content}
 
@@ -68,15 +68,15 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .logo span{display:block}.logo span:last-child{color:var(--gold);font-size:.8em;margin-top:.2em}
 .bday{margin:0;font-family:var(--display);font-size:18px;color:var(--gold)}
 .stats{display:flex;gap:10px;flex-wrap:wrap}
-.stat{background:rgba(8,16,42,.7);border-radius:12px;padding:6px 12px;display:flex;flex-direction:column;border:2px solid rgba(255,255,255,.1)}
+.stat{background:rgba(8,16,42,.88);border-radius:12px;padding:6px 12px;display:flex;flex-direction:column;border:2px solid rgba(255,255,255,.1)}
 .stat small{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .stat b{font-family:var(--display);font-weight:400;font-size:22px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
 #b-play{font-size:30px;padding:12px 18px;flex:2}
 #b-demo{font-size:22px}
 #hud-demo{display:inline-block;margin-top:4px;background:var(--red);border-radius:999px;padding:2px 10px;font-family:var(--body);font-weight:900;font-size:12px;letter-spacing:.06em}
-.howto{margin:0;font-size:12.5px;font-weight:800;color:var(--muted);line-height:1.45;max-width:46ch}
-.howto b{color:#fff}
-.rotate{position:fixed;left:16px;right:16px;top:calc(env(safe-area-inset-top,0px) + 10px);text-align:center;font-weight:900;font-size:13px;color:var(--gold);margin:0}
+.howto{margin:0;font-size:12.5px;font-weight:800;color:#fff;line-height:1.45;background:rgba(8,16,42,.9);border:2px solid rgba(255,255,255,.14);border-radius:12px;padding:6px 10px}
+.howto b{color:var(--gold)}
+.rotate{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 10px);text-align:center;font-weight:900;font-size:13px;color:var(--gold);margin:0;background:rgba(8,16,42,.9);padding:4px 12px;border-radius:999px;white-space:nowrap}
 
 /* Shop */
 .panel-head{display:flex;align-items:center;gap:10px}
@@ -139,7 +139,13 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   .stat b{font-size:18px}
   #b-play{font-size:26px;padding:9px 16px}
   .btn{font-size:18px;padding:8px 14px}
-  .howto{display:none}
+  .howto{font-size:10.5px;line-height:1.3;padding:4px 8px}
+  .menu-wrap{gap:6px}
+  #b-play{font-size:22px;padding:6px 14px}
+  .btn{font-size:16px;padding:6px 12px}
+  .ghost{padding:4px 10px;font-size:12px}
+  .stat small{font-size:10px}
+  .logo{font-size:clamp(22px,3.8vw,38px)}
   #dance{width:84px;height:98px}
   .over-title{font-size:28px}
   .olist dd{font-size:17px}
@@ -172,7 +178,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div class="row"><button id="b-play" class="btn btn-gold">JOUER</button><button id="b-demo" class="btn btn-red">DÉMO</button></div>
     <div class="row"><button id="b-shop" class="btn">STYLE</button><button id="b-miss" class="btn">DÉFIS</button><button id="b-savep" class="btn">SAUVEGARDE</button></div>
     <div class="row"><button id="b-music" class="ghost">Musique : oui</button><button id="b-sfx" class="ghost">Sons : oui</button><button id="b-fs" class="ghost">Plein écran</button></div>
-    <p class="howto"><b>Niveau 1</b> : cours le plus loin possible, une arche tous les 1 000 m ! · <b>1 tape</b> : sauter · <b>2 tapes</b> : double saut + salto · <b>3 tapes</b> : salto en plus · <b>Glisse vers le bas</b> : glisser. Double salto = pièces x2 · Triple salto = pièces x3 !</p>
+    <p class="howto"><span id="howto-lv"><b>Niveau 1</b> : cours le plus loin possible, une arche tous les 1 000 m !</span> · <b>1 tape</b> : sauter · <b>2 tapes</b> : double saut + salto · <b>3 tapes</b> : salto en plus · <b>Glisse vers le bas</b> : glisser. Double salto = pièces x2 · Triple salto = pièces x3 !</p>
   </div>
   <p class="rotate">Tourne ton téléphone pour mieux voir !</p>
 </section>
@@ -1344,7 +1350,8 @@ function drawTut(t){
   if(G.tutT<.6) return;
   ctx.save(); ctx.globalAlpha=.9+.1*Math.sin(t*6);
   ctx.font='20px "Lilita One",sans-serif'; ctx.textAlign='center';
-  const y=Math.min(BASE+60,VH-30);
+  const y=Math.min(BASE+60,VH-30), w=ctx.measureText(msgs[G.tutStep]).width+30;
+  ctx.fillStyle='rgba(8,16,42,.94)'; rr(ctx,VW/2-w/2,y-22,w,32,16); ctx.fill();
   ctx.lineWidth=5; ctx.strokeStyle='#0a1128'; ctx.strokeText(msgs[G.tutStep],VW/2,y); ctx.fillStyle='#ffcd3c'; ctx.fillText(msgs[G.tutStep],VW/2,y);
   ctx.restore();
 }
@@ -1352,7 +1359,7 @@ function drawCap(){
   ctx.save(); ctx.globalAlpha=Math.min(1,G.capT*3);
   ctx.font='18px "Lilita One",sans-serif'; ctx.textAlign='center';
   const y=Math.min(BASE+58,VH-26)-(G.state==='play'&&!G.demo&&G.tutStep<4?40:0), w=ctx.measureText(G.cap).width+28;
-  ctx.fillStyle='rgba(8,16,42,.8)'; rr(ctx,VW/2-w/2,y-20,w,30,15); ctx.fill();
+  ctx.fillStyle='rgba(8,16,42,.94)'; rr(ctx,VW/2-w/2,y-20,w,30,15); ctx.fill(); ctx.strokeStyle='#ffcd3c'; ctx.lineWidth=1.5; ctx.stroke();
   ctx.fillStyle='#fff'; ctx.fillText(G.cap,VW/2,y+1);
   ctx.restore();
 }
@@ -1387,7 +1394,7 @@ const scr={menu:$('menu'),shop:$('shop'),missions:$('missions'),savep:$('savep')
 function show(name){ for(const k in scr) scr[k].hidden=k!==name; $('hud').hidden=!(G.state==='play'||G.state==='pause'); }
 function syncToggles(){ $('b-music').textContent='Musique : '+(save.music?'oui':'non'); $('b-sfx').textContent='Sons : '+(save.sfx?'oui':'non'); }
 const bestNow=()=>LV===LV1?save.best:(save.best2||0);
-function refreshMenu(){ const n2=save.stars2||0; $('lv2').querySelector('small').textContent='Rue Eau-de-Robec · '+'★'.repeat(n2)+'☆'.repeat(3-n2); $('lv1').classList.toggle('on',LV===LV1); $('lv2').classList.toggle('on',LV!==LV1); $('m-best').textContent=bestNow().toLocaleString('fr-FR'); $('m-coins').textContent=save.coins.toLocaleString('fr-FR'); $('bday').hidden=!DECEMBER; syncToggles(); }
+function refreshMenu(){ $('b-demo').hidden=LV!==LV1; $('howto-lv').innerHTML=LV===LV1?'<b>Niveau 1</b> : cours le plus loin possible, une arche tous les 1 000 m !':'<b>Niveau 2</b> : arrive au bout et gagne ★★★ (bulle gardée + 250 pièces, 2 buts, 3 maillots d’or) !'; const n2=save.stars2||0; $('lv2').querySelector('small').textContent='Rue Eau-de-Robec · '+'★'.repeat(n2)+'☆'.repeat(3-n2); $('lv1').classList.toggle('on',LV===LV1); $('lv2').classList.toggle('on',LV!==LV1); $('m-best').textContent=bestNow().toLocaleString('fr-FR'); $('m-coins').textContent=save.coins.toLocaleString('fr-FR'); $('bday').hidden=!DECEMBER; syncToggles(); }
 function toMenu(){ G.state='menu'; G.demo=false; reset(); refreshMenu(); show('menu'); }
 function startRun(){ initAudio(); SFX.click(); G.demo=false; G.lastDemo=false; reset(); G.state='play'; last={}; show(null); $('hud').hidden=false; $('hud-demo').hidden=true; $('b-again').textContent='REJOUER'; }
 function startDemo(){ initAudio(); SFX.click(); G.demo=true; G.lastDemo=true; reset(); G.state='play'; last={}; show(null); $('hud').hidden=false; $('hud-demo').hidden=false; }

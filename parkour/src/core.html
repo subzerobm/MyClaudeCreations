@@ -159,11 +159,11 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       <div class="stat"><small>Record</small><b id="m-best">0</b></div>
       <div class="stat"><small>Pièces</small><b><i class="coin"></i><span id="m-coins">0</span></b></div>
     </div>
-    <div class="lvl" role="group" aria-label="Choisis ton niveau"><button id="lv1" class="lvbtn on">NIVEAU 1<small>Les toits · la nuit</small></button><button id="lv2" class="lvbtn">NIVEAU 2<small>Rue Eau-de-Robec · le jour</small></button></div>
+    <div class="lvl" role="group" aria-label="Choisis ton niveau"><button id="lv1" class="lvbtn on">NIVEAU 1<small>Les toits · sans fin : bats ton record !</small></button><button id="lv2" class="lvbtn">NIVEAU 2<small>Rue Eau-de-Robec · le jour</small></button></div>
     <div class="row"><button id="b-play" class="btn btn-gold">JOUER</button><button id="b-demo" class="btn btn-red">DÉMO</button></div>
     <div class="row"><button id="b-shop" class="btn">STYLE</button><button id="b-miss" class="btn">DÉFIS</button><button id="b-savep" class="btn">SAUVEGARDE</button></div>
     <div class="row"><button id="b-music" class="ghost">Musique : oui</button><button id="b-sfx" class="ghost">Sons : oui</button><button id="b-fs" class="ghost">Plein écran</button></div>
-    <p class="howto"><b>1 tape</b> : sauter · <b>2 tapes</b> : double saut + salto · <b>3 tapes</b> : salto en plus · <b>Glisse vers le bas</b> : glisser. Double salto = pièces x2 · Triple salto = pièces x3 !</p>
+    <p class="howto"><b>Niveau 1</b> : cours le plus loin possible, une arche tous les 1 000 m ! · <b>1 tape</b> : sauter · <b>2 tapes</b> : double saut + salto · <b>3 tapes</b> : salto en plus · <b>Glisse vers le bas</b> : glisser. Double salto = pièces x2 · Triple salto = pièces x3 !</p>
   </div>
   <p class="rotate">Tourne ton téléphone pour mieux voir !</p>
 </section>
@@ -294,6 +294,7 @@ const MISSIONS=[
  {id:'m3000',t:'Cours 3 000 m en une partie',k:'dist',g:3000,r:400,best:1},
  {id:'g3',t:'Marque 3 buts',k:'goals',g:3,r:120},
  {id:'g1',t:'Marque un but',k:'goals',g:1,r:50},
+ {id:'a2',t:'Passe 2 arches (2 000 m) en une partie',k:'arches',g:2,r:300,best:1},
 ];
 function ensureMissions(){
   if(!Array.isArray(save.missions)) save.missions=[];
@@ -552,9 +553,9 @@ function surfAt(px,fy,up){
   return best;
 }
 function reset(){
-  G.crownT=-1; G.cpDone=false; G.finishX=0;
+  G.crownT=-1; G.cpDone=false; G.finishX=0; G.cps=[]; G.nextCP=FINISH; G.recX=(save.bestDist||0)>50?save.bestDist*10:0; G.recDone=false;
   G.cam=0; G.speed=300; G.dist=0; G.runCoins=0; G.trickPts=0; G.mult=1; G.multT=0; G.shake=0; G.time=0; G.combo=0; G.comboT=0; G.hover=false; G.milestone=0;
-  G.stats={coins:0,dist:0,flips:0,dbl:0,tri:0,under:0,power:0,ovni:0,chest:0,clock:0,goals:0}; kicks=[]; G.demoFoot=0;
+  G.stats={coins:0,dist:0,flips:0,dbl:0,tri:0,under:0,power:0,ovni:0,chest:0,clock:0,goals:0,arches:0}; kicks=[]; G.demoFoot=0;
   G.power={magnet:0,shield:false,ovni:0}; G.nextPower=1500+Math.random()*800; G.lastClock=0; G.ovniCoinX=0;
   G.finishBuilt=false; G.finished=false; G.finT=0; G.demoPw=0; G.demoChest=0; G.cap=''; G.capT=0; G.trickPlan=0; G.lastTrick=0; G.botGap=null;
   buildings=[];plats=[];obst=[];coins=[];items=[];parts=[];texts=[];
@@ -613,9 +614,11 @@ function populate(b,v,diff){
     coinRow(b.x+60,cx-40,b); for(let x=cx;x<cx+130;x+=24) coins.push({x,y:b.top-14,t:false});
     return;
   }
-  if(!G.demo&&!G.finishBuilt&&b.x+b.w>FINISH&&LV===LV1){
-    G.finishBuilt=true; G.finishX=b.x+70; const o=makeObst('finish',G.finishX,b.top); o.box=[-1e9,-1e9,-1e9,-1e9]; o.over=false; o.passed=true;
-    pos=Math.max(pos,G.finishX+300);
+  if(!G.demo&&LV===LV1&&b.x+b.w>G.nextCP){ // a finish arch every 1 000 m
+    const km=Math.round(G.nextCP/FINISH), cx=clamp(G.nextCP+PX-40,b.x+70,Math.max(b.x+70,b.x+b.w-320)); G.nextCP+=FINISH;
+    b.bumps=b.bumps.filter(u=>u.e<cx-40||u.s>cx+300); if(b.roof!=='flat'&&!b.bumps.length){ b.roof='flat'; } b.mh=b.bumps.length?b.mh:0; b.img=null;
+    const o=makeObst('finish',cx,b.top); o.box=[-1e9,-1e9,-1e9,-1e9]; o.over=false; o.passed=true; o.km=km;
+    G.cps.push({x:cx,km,done:false}); pos=Math.max(pos,cx+300);
   }
   const footOk=b.w>=560&&(G.demo?(G.demoFoot<3&&b.x>900+G.demoFoot*3000):Math.random()<.22);
   if(footOk){ // a flat roof with a ball and a goal
@@ -720,7 +723,8 @@ function update(dt){
   }
   if(G.capT>0) G.capT-=dt;
   if(G.crownT>=0) G.crownT+=dt;
-  if(!G.demo&&LV===LV1&&G.finishX&&!G.cpDone&&G.cam+PX>G.finishX+40) checkpoint();
+  if(!G.demo&&LV===LV1&&G.recX&&!G.recDone&&G.cam+PX>G.recX){ G.recDone=true; say('NOUVEAU RECORD DE DISTANCE !','#ff7ad9',true); SFX.trick(3); vibrate(80); }
+  if(!G.demo&&LV===LV1) for(const cp of G.cps) if(!cp.done&&G.cam+PX>cp.x+40){ cp.done=true; checkpoint(cp); }
   if(!G.demo&&LV.finite&&!G.finished&&G.finishX&&G.cam+PX>G.finishX+40){ G.finished=true; G.crownT=0; G.cap=''; say('ARRIVÉE ! NIVEAU TERMINÉ !','#ffcd3c',true); SFX.top1(); vibrate(120); if(!save.owned.includes('crown')){ save.owned.push('crown'); persist(); } }
   if(!G.demo&&!G.finished&&LV.hint) LV.hint();
   const dx=(P.climb?0:G.speed)*dt; G.cam+=dx; G.dist+=dx;
@@ -869,11 +873,19 @@ function land(s){
   SFX.land(); dust(G.cam+PX,P.y,5);
   if(P.queueSlide){ P.queueSlide=false; startSlide(); }
 }
-function checkpoint(){
-  G.cpDone=true; G.crownT=0; SFX.top1(); vibrate(100);
-  burst(G.finishX,BASE-120,['#ffcd3c','#e0393e','#fff','#2d8ef0'],40,320);
-  if(!save.owned.includes('crown')){ save.owned.push('crown'); save.eq.head='crown'; persist(); say('1 000 m ! COURONNE DÉBLOQUÉE !','#ffcd3c',true); }
-  else say('1 000 m ! LE ROI DE ROUEN !','#ffcd3c',true);
+function checkpoint(cp){ // bigger rewards the further he gets
+  const km=cp.km, bonus=100*km;
+  SFX.top1(); vibrate(100); G.stats.arches=(G.stats.arches||0)+1;
+  for(let i=0;i<3;i++) burst(cp.x+20+i*30,BASE-120-i*20,['#ffcd3c','#e0393e','#fff','#2d8ef0'],30,320);
+  G.runCoins+=bonus; G.stats.coins+=bonus; G.trickPts+=250*km;
+  G.power.shield=true; setMult(Math.min(3,1+Math.ceil(km/2))); G.multT=12;
+  const lab=(km*1000).toLocaleString('fr-FR')+' m';
+  if(km===1){ G.crownT=0;
+    if(!save.owned.includes('crown')){ save.owned.push('crown'); save.eq.head='crown'; persist(); say(lab+' ! COURONNE DÉBLOQUÉE !','#ffcd3c',true); }
+    else say(lab+' ! LE ROI DE ROUEN !','#ffcd3c',true); }
+  else say(lab+' ! '+(['','','INCROYABLE','LÉGENDAIRE','IMBATTABLE'][km]||'LÉGENDE DE ROUEN')+' !','#ffcd3c',true);
+  say('+'+bonus+' PIÈCES · BULLE · PIÈCES x'+G.mult,'#7dffb2');
+  say(km===1?'CONTINUE ! PLUS VITE, PLUS DUR…':'ENCORE PLUS VITE… JUSQU’OÙ IRAS-TU ?','#fff');
 }
 function trick(n){
   G.stats.flips+=n;
@@ -1112,6 +1124,10 @@ function render(){
   for(const o of obst) if(o.type==='clock'&&o.x-cam<VW+40&&o.x+o.w-cam>-40) drawBelfry(o,o.x-cam);
   for(const b of buildings){ const x=b.x-cam; if(x>VW||x+b.w<0) continue; ctx.drawImage(facadeImg(b),x,b.top-b.mh,b.w,b.hgt+b.mh); if(b.flag) drawFlag(b.flag-cam,topAt(b,b.flag),tt); }
   for(const p of plats){ const x=p.x-cam; if(x>VW+60||x+p.w<-60) continue; LV.drawPlat(p,x,tt); }
+  if(G.recX&&!G.demo&&LV===LV1&&G.state!=='menu'){ const rx=G.recX-cam; if(rx>-60&&rx<VW+60){ const sf=surfAt(G.recX,-1e9,1e9), ry=sf?sf.y:BASE;
+    ctx.fillStyle='#fff'; ctx.fillRect(rx-1,ry-78,3,78); const w=Math.sin(tt*5)*2;
+    ctx.fillStyle='#ff7ad9'; ctx.beginPath(); ctx.moveTo(rx+2,ry-78); ctx.lineTo(rx+60,ry-74+w); ctx.lineTo(rx+60,ry-52+w); ctx.lineTo(rx+2,ry-56); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='9px "Lilita One",sans-serif'; ctx.textAlign='left'; ctx.fillText('TON RECORD',rx+7,ry-67+w/2); ctx.fillText((save.bestDist||0).toLocaleString('fr-FR')+' m',rx+7,ry-58+w/2); } }
   if(LV.overlay) LV.overlay(cam,tt);
   for(const o of obst){ const x=o.x-cam; if(x>VW+40||x+o.w<-40||o.dead) continue; drawObst(o,x,tt); }
   for(const c of coins){ const x=c.x-cam; if(x<-20||x>VW+20) continue; drawCoin(x,c.y,tt,c); }
@@ -1269,7 +1285,7 @@ function drawObst(o,x,t){
     ctx.fillStyle='#e8e8ee'; ctx.fillRect(x,T-150,6,150); ctx.fillRect(x+104,T-150,6,150);
     for(let i=0;i<14;i++) for(let j=0;j<3;j++){ ctx.fillStyle=(i+j)%2?'#111':'#fff'; ctx.fillRect(x+i*7.86,T-156+j*7,7.86,7); }
     ctx.fillStyle='#e0393e'; ctx.fillRect(x+6,T-135,98,26);
-    ctx.fillStyle='#fff'; ctx.font='18px "Lilita One",sans-serif'; ctx.textAlign='center'; ctx.fillText('ARRIVÉE',x+55,T-115);
+    ctx.fillStyle='#fff'; ctx.font='18px "Lilita One",sans-serif'; ctx.textAlign='center'; ctx.fillText(o.km?(o.km*1000).toLocaleString('fr-FR')+' m':'ARRIVÉE',x+55,T-115);
     for(let i=0;i<6;i++){ ctx.fillStyle=['#ffcd3c','#2d8ef0','#e0393e'][i%3]; tri(ctx,x+8+i*17,T-109,x+22+i*17,T-109,x+15+i*17,T-99+Math.sin(t*4+i)*2); }
   } else if(o.type==='clock'){
     const cx=x+65, cy=T-93;
@@ -1362,6 +1378,7 @@ function endRun(win){
   G.stats.dist=Math.floor(G.dist/10);
   save.coins+=G.runCoins; save.runs++;
   if(rec){ if(LV===LV1) save.best=sc; else save.best2=sc; }
+  if(LV===LV1) save.bestDist=Math.max(save.bestDist||0,G.stats.dist);
   const done=[];
   for(const m of save.missions){
     const def=MISSIONS.find(x=>x.id===m.id); if(!def) continue;

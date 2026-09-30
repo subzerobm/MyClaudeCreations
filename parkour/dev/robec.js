@@ -9,21 +9,22 @@ let clouds=[];
 
 /* game-accurate flight time: from height 0 with vertical speed vy (negative = up) until,
    while falling, the body is back down to height H (positive = above start) */
+const upList=u=>u?(Array.isArray(u)?u.slice():[u]):[];
 function simT(vy,H,dj,up){
-  let y=0,v=vy,t=0,didDj=false,didUp=false; const dt=1/60;
+  let y=0,v=vy,t=0,didDj=false; const dt=1/60, ups=upList(up);
   for(let i=0;i<600;i++){
     if(dj&&!didDj&&t>=dj){ v=-DJUMPV; didDj=true; }
-    if(up&&!didUp&&t>=up){ if(v>0) v*=.35; didUp=true; }
+    if(ups.length&&t>=ups[0]){ ups.shift(); if(v>0) v*=.35; }
     v+=GRAV*dt; y+=v*dt; t+=dt;
     if(v>0&&-y<=H) return t;
   }
   return t;
 }
 function arcCoins(x0,y0,vy,H,dj,up,v){
-  let y=0,vv=vy,t=0,k=0,didDj=false,didUp=false; const dt=1/60;
+  let y=0,vv=vy,t=0,k=0,didDj=false; const dt=1/60, ups=upList(up);
   for(let i=0;i<600;i++){
     if(dj&&!didDj&&t>=dj){ vv=-DJUMPV; didDj=true; }
-    if(up&&!didUp&&t>=up){ if(vv>0) vv*=.35; didUp=true; }
+    if(ups.length&&t>=ups[0]){ ups.shift(); if(vv>0) vv*=.35; }
     vv+=GRAV*dt; y+=vv*dt; t+=dt;
     if(vv>0&&-y<=H) break;
     if(++k%5===0) coins.push({x:x0+v*t,y:y0+y-26,t:false});
@@ -31,23 +32,24 @@ function arcCoins(x0,y0,vy,H,dj,up,v){
 }
 
 const LV2={
-  speed:()=>300,
+  speed:()=>260,
   init(){
-    const v=300, S=BASE; R2.acts=[]; R2.ai=0; R2.backs=[];
+    const v=260, S=BASE; R2.acts=[]; R2.ai=0; R2.backs=[];
     const act=(x,a,c)=>R2.acts.push({x,a,c});
     const plat=(x,w,h,kind,o)=>{ const p=Object.assign({x,w,y:S-h,kind},o||{}); plats.push(p); return p; };
     const back=(x,w,h)=>R2.backs.push({x,w,top:S-h,pal:R2PAL[R2.backs.length%R2PAL.length],seed:R2.backs.length*7+3+(R2.backs.length%3)});
     const row=(x1,x2,y)=>{ for(let x=x1;x<x2;x+=26) coins.push({x,y,t:false}); };
     const gaps=[], houses=[];
-    const jumpFrom=(x,h0,H,c,dj,up)=>{ act(x,'jump',c); if(dj){ act(x+v*dj,'jump'); } if(up) act(x+v*up,'up'); arcCoins(x,S-h0,-JUMPV,H-h0,dj,up,v); return x+v*simT(-JUMPV,H-h0,dj,up); };
+    const jumpFrom=(x,h0,H,c,dj,up)=>{ act(x,'jump',c); if(dj){ act(x+v*dj,'jump'); } for(const u of upList(up)) act(x+v*u,'up'); arcCoins(x,S-h0,-JUMPV,H-h0,dj,up,v); return x+v*simT(-JUMPV,H-h0,dj,up); };
 
     // 1. warm-up on the quay, over a pot of geraniums
     row(120,300,S-22);
     const pot=makeObst('pot',380,S); pot.w=24; pot.over=false; pot.box=[382,S-26,402,S];
     jumpFrom(380-40,0,0,'Il saute par-dessus le pot de fleurs');
+    placeFoot(590,S,760); act(560,null,'Un ballon ! Il tire dans le but…');
 
     // 2. café terrace: street -> table -> striped awning (bounce) -> balcony -> street
-    let l1=jumpFrom(700,0,30,'Il saute sur la table du café !');
+    let l1=jumpFrom(880,0,30,'Il saute sur la table du café !');
     const t1=plat(l1-16,50,30,'table');
     plat(t1.x-26,18,16,'chair',{deco:true}); plat(t1.x+t1.w+8,18,16,'chair',{deco:true});
     let l2=jumpFrom(l1+10,30,70);
@@ -81,13 +83,13 @@ const LV2={
     const hx=p1+70+560; houses.push({x:hx,w:300,h:190});
     row(hx+40,hx+270,S-212);
     items.push({type:'chest',x:hx+160,y:S-202,t:false});
-    const l5=jumpFrom(hx+300-14,190,0,'Il saute du toit !');
+    const l5=jumpFrom(hx+300-14,190,0,'Il saute du toit : DOUBLE SALTO !',.3,.66);
 
     // 7. wide river: double jump + flips
     const g3=l5+240, jx=g3-15;
-    const land3=jx+v*simT(-JUMPV,0,.345,.345+.42);
+    const land3=jx+v*simT(-JUMPV,0,.345,.345+.36);
     gaps.push([g3,Math.min(g3+300,land3-50)]);
-    jumpFrom(jx,0,0,'Double saut + salto au-dessus de la rivière !',.345,.345+.42);
+    jumpFrom(jx,0,0,'Double saut + salto au-dessus de la rivière !',.345,.345+.36);
 
     // 8. second terrace: two tables, awning, high balcony, onto a roof
     const tx=land3+220;
@@ -107,7 +109,7 @@ const LV2={
     arcCoins(jr,S-180,-JUMPV,40,0,0,v);
     const h2=houses[houses.length-1];
     row(m5+20,h2x+h2.w-30,S-242);
-    const l6=jumpFrom(h2x+h2.w-14,220,0,'Et il redescend dans la rue !');
+    const l6=jumpFrom(h2x+h2.w-14,220,0,'Il saute du toit : TRIPLE SALTO !',.3,[.66,1.02]);
 
     // 9. finish
     const fx=l6+420; G.finishX=fx;
@@ -182,11 +184,26 @@ const LV2={
     }
     return false;
   },
+  overlay(cam,t){
+    const S=BASE, pulse=.55+.45*Math.sin(t*6);
+    for(const b of buildings){ if(!b.climb) continue; const x=b.x-cam; if(x>VW||x+b.w<0) continue;
+      // bright climbing holds up the wall and a glowing roof edge: this is where he climbs and runs
+      const hc=['#ff4d4d','#ffcd3c','#3fd16b','#2d8ef0','#ff7ad9'];
+      for(let y=S-14,i=0;y>b.top+10;y-=22,i++){ ctx.fillStyle=hc[i%hc.length]; ctx.beginPath(); ctx.ellipse(x+6+(i%2)*7,y,4.5,3.5,.4,0,TAU); ctx.fill(); }
+      ctx.strokeStyle=`rgba(255,205,60,${.5+.5*pulse})`; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x,S); ctx.lineTo(x,b.top); ctx.lineTo(x+b.w,b.top); ctx.stroke();
+      if(x>PX+30&&x<VW) marker(x+b.w*.3,b.top-18,t,'GRIMPE');
+    }
+    for(const p of plats){ if(p.deco) continue; const x=p.x-cam; if(x<PX+30||x>VW) continue;
+      marker(x+p.w/2,p.y-(p.kind==='balcony'?30:20),t,p.kind==='awning'?'REBOND':null); }
+  },
   drawPlat(p,x,t){
     const y=p.y, S=BASE;
+    if(!p.deco&&p.kind!=='bridge'){ const a=.35+.25*Math.sin(t*6); ctx.fillStyle=`rgba(255,215,70,${a*.5})`; ctx.fillRect(x-7,y-8,p.w+14,18); ctx.fillStyle=`rgba(255,215,70,${a})`; ctx.fillRect(x-3,y-4,p.w+6,10); }
     if(p.kind==='table'){
       ctx.fillStyle='#2d2d33'; ctx.fillRect(x+p.w/2-1.5,y,3,S-y); ctx.beginPath(); ctx.ellipse(x+p.w/2,S-1,9,2.5,0,0,TAU); ctx.fill();
-      ctx.fillStyle='#f4f4f4'; ctx.beginPath(); ctx.ellipse(x+p.w/2,y+1,p.w/2,4,0,0,TAU); ctx.fill(); ctx.strokeStyle='#9aa0aa'; ctx.lineWidth=1; ctx.stroke();
+      ctx.save(); ctx.beginPath(); ctx.rect(x-3,y-1,p.w+6,11); ctx.clip();
+      for(let i=0;i<9;i++) for(let j=0;j<2;j++){ ctx.fillStyle=(i+j)%2?'#e0393e':'#ffffff'; ctx.fillRect(x-3+i*(p.w+6)/9,y-1+j*5.5,(p.w+6)/9+.5,5.5); }
+      ctx.restore(); ctx.strokeStyle='#8a1f22'; ctx.lineWidth=1.2; ctx.strokeRect(x-3,y-1,p.w+6,11);
       ctx.fillStyle='#fff'; ctx.fillRect(x+p.w/2+6,y-5,5,5); ctx.fillStyle='#6b3f25'; ctx.fillRect(x+p.w/2+6.5,y-5,4,1.5);
     } else if(p.kind==='chair'){
       ctx.strokeStyle='#8a5a33'; ctx.lineWidth=2; ctx.beginPath();
@@ -196,11 +213,12 @@ const LV2={
       if(p.sq>0) p.sq=Math.max(0,p.sq-.06);
       const yy=y+(p.sq||0)*6;
       ctx.fillStyle='#55555c'; ctx.fillRect(x+3,yy,2,S-yy); ctx.fillRect(x+p.w-5,yy,2,S-yy);
-      for(let i=0;i*10<p.w;i++){ ctx.fillStyle=['#1b2a5c','#ffffff','#e0393e','#ffffff'][i%4]; ctx.fillRect(x+i*10,yy-2,Math.min(10,p.w-i*10),10); }
-      for(let i=0;i*10<p.w;i++){ ctx.fillStyle=['#1b2a5c','#ffffff','#e0393e','#ffffff'][i%4]; ctx.beginPath(); ctx.arc(x+i*10+5,yy+8,5,0,Math.PI); ctx.fill(); }
+      for(let i=0;i*10<p.w;i++){ ctx.fillStyle=['#1b2a5c','#ffffff','#e0393e','#ffffff'][i%4]; ctx.fillRect(x+i*10,yy-4,Math.min(10,p.w-i*10),14); }
+      for(let i=0;i*10<p.w;i++){ ctx.fillStyle=['#1b2a5c','#ffffff','#e0393e','#ffffff'][i%4]; ctx.beginPath(); ctx.arc(x+i*10+5,yy+10,5,0,Math.PI); ctx.fill(); }
+      ctx.strokeStyle='#10183a'; ctx.lineWidth=1.5; ctx.strokeRect(x,yy-4,p.w,14);
       ctx.fillStyle='rgba(0,0,0,.15)'; ctx.fillRect(x,yy+8,p.w,2);
     } else if(p.kind==='balcony'){
-      ctx.fillStyle='#d8d0c0'; ctx.fillRect(x,y,p.w,6); ctx.fillStyle='#b8ae9b'; ctx.fillRect(x,y+6,p.w,3);
+      ctx.fillStyle='#fff4d6'; ctx.fillRect(x,y,p.w,7); ctx.fillStyle='#ffcd3c'; ctx.fillRect(x,y,p.w,2.5); ctx.fillStyle='#b8ae9b'; ctx.fillRect(x,y+7,p.w,3);
       ctx.fillStyle='#b8ae9b'; tri(ctx,x+8,y+9,x+26,y+9,x+8,y+26); tri(ctx,x+p.w-8,y+9,x+p.w-26,y+9,x+p.w-8,y+26);
       ctx.strokeStyle='rgba(30,30,36,.55)'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.moveTo(x,y-16); ctx.lineTo(x+p.w,y-16);
       for(let bx=x+4;bx<x+p.w;bx+=8){ ctx.moveTo(bx,y-16); ctx.lineTo(bx,y); } ctx.stroke();
@@ -217,6 +235,12 @@ const LV2={
     $('o-done').textContent='Aperçu du niveau Rue Eau-de-Robec. Il n’est pas encore dans le jeu d’Abel.';
   }
 };
+function marker(x,y,t,label){ // bouncing arrow over the next place to land
+  const by=y-Math.abs(Math.sin(t*5))*7;
+  ctx.fillStyle='#ffcd3c'; ctx.strokeStyle='#10183a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x-8,by-12); ctx.lineTo(x+8,by-12); ctx.lineTo(x+8,by-6); ctx.lineTo(x+13,by-6); ctx.lineTo(x,by+4); ctx.lineTo(x-13,by-6); ctx.lineTo(x-8,by-6); ctx.closePath(); ctx.fill(); ctx.stroke();
+  if(label){ ctx.font='11px "Lilita One",sans-serif'; ctx.textAlign='center'; ctx.lineWidth=3; ctx.strokeText(label,x,by-17); ctx.fillText(label,x,by-17); }
+}
 function drawQuai(c,b){
   const w=b.w,h=b.hgt;
   c.fillStyle='#bdb3a0'; c.fillRect(0,0,w,h);
@@ -275,7 +299,7 @@ function backImg(b){
     c.fillStyle='#1b2a5c'; c.fillRect(mx,my,bw,38); c.fillStyle='#fff'; c.fillRect(mx+bw/2-12,my,24,38); c.fillStyle='#e0393e'; c.fillRect(mx+bw/2-8,my,16,38);
     c.font=(txt.length>12?'14px':'20px')+' "Lilita One",sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.lineWidth=4; c.strokeStyle='#1b2a5c'; c.fillStyle='#fff';
     c.strokeText(txt,mx+bw/2,my+20); c.fillText(txt,mx+bw/2,my+20); }
-  c.fillStyle='rgba(20,40,80,.1)'; c.fillRect(0,0,b.w,h);
+  c.fillStyle='rgba(150,180,220,.42)'; c.fillRect(-2,-RH,b.w+4,h+RH);
   return cvs;
 }
 function buildMid2(){
@@ -288,7 +312,7 @@ function buildMid2(){
     const h=110+r()*85, top=g-h, pal=R2PAL[i++%R2PAL.length];
     colomb(c,r,x,top,w,h,pal,false);
     c.fillStyle='#6f7c95'; tri(c,x-2,top,x+w+2,top,x+w/2,top-Math.min(62,w*.8));
-    c.fillStyle='rgba(120,150,190,.28)'; c.fillRect(x,top-64,w,h+64);
+    c.fillStyle='rgba(150,180,220,.5)'; c.fillRect(x,top-64,w,h+64);
     x+=w;
   }
   mid={img:cvs,w:MW,h:MH,y0:BASE-260};

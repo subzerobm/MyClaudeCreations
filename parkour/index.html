@@ -232,7 +232,7 @@ const TAU=Math.PI*2;
 const $=id=>document.getElementById(id);
 const cv=$('game'), ctx=cv.getContext('2d');
 let W=0,H=0,DPR=1,S=1,VW=560,VH=360,BASE=250,PX=140;
-const GRAV=2200, JUMPV=760, DJUMPV=700, FLIPSPD=TAU/0.4;
+const GRAV=2200, JUMPV=760, DJUMPV=700, FLIPSPD=TAU/0.34;
 const DECEMBER=new Date().getMonth()===11;
 
 /* ---------- save ---------- */
@@ -505,7 +505,7 @@ let P=null, buildings=[], plats=[], obst=[], coins=[], items=[], parts=[], texts
 const PALS=[{wall:'#efe2c6',timber:'#5b3622'},{wall:'#ead2a6',timber:'#6e2d27'},{wall:'#f1e7d6',timber:'#35475f'},{wall:'#e3c9a3',timber:'#4a3524'},{wall:'#dde3d6',timber:'#2f4a3a'},{wall:'#f0d9c9',timber:'#7a3b2c'}];
 const FINISH=10000; // demo finish line (1 000 m)
 const DEMO_PW=[[900,'ballon'],[2600,'disque'],[4300,'ovni'],[7200,'ballon']];
-const speedAt=x=>300+Math.min(340,Math.max(0,x)*.011);
+const speedAt=x=>270+Math.min(270,Math.max(0,x)*.008);
 
 function addBuilding(x,w,top,style){
   const b={x,w,top,style,seed:(Math.random()*1e9)|0,pal:PALS[(Math.random()*PALS.length)|0],img:null,hgt:0,bumps:[],mh:0};
@@ -686,7 +686,7 @@ function tutNext(){ G.tutStep++; G.tutT=0; if(G.tutStep>=3){ save.tut=true; pers
 /* ---------- fx ---------- */
 function dust(x,y,n){for(let i=0;i<n;i++) parts.push({x:x+rand(-8,8),y:y-2,vx:rand(-90,30),vy:rand(-80,-10),l:0,m:rand(.3,.5),s:rand(2,4),c:'rgba(230,220,200,.8)',g:200});}
 function burst(x,y,cols,n,sp){for(let i=0;i<n;i++){const a=Math.random()*TAU,s=rand(sp*.3,sp); parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:0,m:rand(.4,.8),s:rand(2,4.5),c:cols[i%cols.length],g:300});}}
-function say(s,col,big){texts.push({s,c:col||'#fff',t:0,m:1.4,big:!!big});}
+function say(s,col,big){texts.push({s,c:col||'#fff',t:0,m:big?3.2:2.6,big:!!big}); if(texts.length>3) texts.shift();}
 function toast(msg){const t=$('toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast.h); toast.h=setTimeout(()=>t.hidden=true,1800);}
 
 /* ---------- update ---------- */
@@ -805,7 +805,7 @@ function update(dt){
 }
 
 /* ---------- demo autopilot ---------- */
-function cap(s){ G.cap=s; G.capT=1.7; }
+function cap(s){ G.cap=s; G.capT=2.6; }
 function nextBuilding(b){ let n=null; for(const o of buildings){ if(o!==b&&o.x>=b.x+b.w-4&&(!n||o.x<n.x)) n=o; } return n; }
 function autopilot(){
   if(P.dead||G.power.ovni>0||G.hover) return;
@@ -820,7 +820,7 @@ function autopilot(){
     }
     if(b&&b.x+b.w-px<v*.06){
       const nb=nextBuilding(b);
-      if(nb&&(nb.x-(b.x+b.w)>2||nb.top<b.top-2)){ jump(); G.botGap=nb; cap('Il saute par-dessus le vide !'); return; }
+      if(nb&&(nb.x-(b.x+b.w)>2||nb.top<b.top-2)){ jump(); G.botGap=nb; if(nb.top>b.top+12){ G.trickN=G.trickN===2?3:2; G.trickPlan=G.trickN; cap('Il saute du toit : '+(G.trickN===3?'TRIPLE':'DOUBLE')+' SALTO !'); } else cap('Il saute par-dessus le vide !'); return; }
     }
     const clear=(!nx||nx.box[0]-px>v*1.15)&&b&&(b.x+b.w-px>v*1.2);
     if(clear&&G.dist-G.lastTrick>700&&G.dist>400){
@@ -1101,6 +1101,7 @@ function render(){
   for(const o of obst) if(o.type==='clock'&&o.x-cam<VW+40&&o.x+o.w-cam>-40) drawBelfry(o,o.x-cam);
   for(const b of buildings){ const x=b.x-cam; if(x>VW||x+b.w<0) continue; ctx.drawImage(facadeImg(b),x,b.top-b.mh,b.w,b.hgt+b.mh); if(b.flag) drawFlag(b.flag-cam,topAt(b,b.flag),tt); }
   for(const p of plats){ const x=p.x-cam; if(x>VW+60||x+p.w<-60) continue; LV.drawPlat(p,x,tt); }
+  if(LV.overlay) LV.overlay(cam,tt);
   for(const o of obst){ const x=o.x-cam; if(x>VW+40||x+o.w<-40||o.dead) continue; drawObst(o,x,tt); }
   for(const c of coins){ const x=c.x-cam; if(x<-20||x>VW+20) continue; drawCoin(x,c.y,tt,c); }
   for(const k of kicks){ const u=Math.min(1,k.t/k.d), x=k.x0+(k.x1-k.x0)*u-cam, y=k.y0+(k.y1-k.y0)*u-Math.sin(u*Math.PI)*70; if(u<1||k.t<k.d+.5) drawFootball(x,u<1?y:k.y1+Math.min(14,(k.t-k.d)*60),8,k.t*14); }
@@ -1283,7 +1284,7 @@ function drawTexts(){
   const baseY=Math.max(90,BASE-175);
   texts.forEach((t,i)=>{
     const k=t.t/t.m, pop=Math.min(1,t.t*8), sc=(t.big?1.25:1)*(.6+.4*pop);
-    ctx.save(); ctx.globalAlpha=k>.75?(1-k)*4:1; ctx.translate(VW/2,baseY-(texts.length-1-i)*30-k*14); ctx.scale(sc,sc);
+    ctx.save(); ctx.globalAlpha=k>.75?(1-k)*4:1; ctx.translate(VW/2,baseY+i*32-k*8); ctx.scale(sc,sc);
     ctx.font='24px "Lilita One",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.lineWidth=6; ctx.strokeStyle='#0a1128'; ctx.lineJoin='round'; ctx.strokeText(t.s,0,0); ctx.fillStyle=t.c; ctx.fillText(t.s,0,0);
     ctx.restore();

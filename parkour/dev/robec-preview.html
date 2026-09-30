@@ -232,7 +232,7 @@ const TAU=Math.PI*2;
 const $=id=>document.getElementById(id);
 const cv=$('game'), ctx=cv.getContext('2d');
 let W=0,H=0,DPR=1,S=1,VW=560,VH=360,BASE=250,PX=140;
-const GRAV=2200, JUMPV=760, DJUMPV=700, FLIPSPD=TAU/0.4;
+const GRAV=2200, JUMPV=760, DJUMPV=700, FLIPSPD=TAU/0.34;
 const DECEMBER=new Date().getMonth()===11;
 
 /* ---------- save ---------- */
@@ -505,7 +505,7 @@ let P=null, buildings=[], plats=[], obst=[], coins=[], items=[], parts=[], texts
 const PALS=[{wall:'#efe2c6',timber:'#5b3622'},{wall:'#ead2a6',timber:'#6e2d27'},{wall:'#f1e7d6',timber:'#35475f'},{wall:'#e3c9a3',timber:'#4a3524'},{wall:'#dde3d6',timber:'#2f4a3a'},{wall:'#f0d9c9',timber:'#7a3b2c'}];
 const FINISH=10000; // demo finish line (1 000 m)
 const DEMO_PW=[[900,'ballon'],[2600,'disque'],[4300,'ovni'],[7200,'ballon']];
-const speedAt=x=>300+Math.min(340,Math.max(0,x)*.011);
+const speedAt=x=>270+Math.min(270,Math.max(0,x)*.008);
 
 function addBuilding(x,w,top,style){
   const b={x,w,top,style,seed:(Math.random()*1e9)|0,pal:PALS[(Math.random()*PALS.length)|0],img:null,hgt:0,bumps:[],mh:0};
@@ -663,21 +663,22 @@ let clouds=[];
 
 /* game-accurate flight time: from height 0 with vertical speed vy (negative = up) until,
    while falling, the body is back down to height H (positive = above start) */
+const upList=u=>u?(Array.isArray(u)?u.slice():[u]):[];
 function simT(vy,H,dj,up){
-  let y=0,v=vy,t=0,didDj=false,didUp=false; const dt=1/60;
+  let y=0,v=vy,t=0,didDj=false; const dt=1/60, ups=upList(up);
   for(let i=0;i<600;i++){
     if(dj&&!didDj&&t>=dj){ v=-DJUMPV; didDj=true; }
-    if(up&&!didUp&&t>=up){ if(v>0) v*=.35; didUp=true; }
+    if(ups.length&&t>=ups[0]){ ups.shift(); if(v>0) v*=.35; }
     v+=GRAV*dt; y+=v*dt; t+=dt;
     if(v>0&&-y<=H) return t;
   }
   return t;
 }
 function arcCoins(x0,y0,vy,H,dj,up,v){
-  let y=0,vv=vy,t=0,k=0,didDj=false,didUp=false; const dt=1/60;
+  let y=0,vv=vy,t=0,k=0,didDj=false; const dt=1/60, ups=upList(up);
   for(let i=0;i<600;i++){
     if(dj&&!didDj&&t>=dj){ vv=-DJUMPV; didDj=true; }
-    if(up&&!didUp&&t>=up){ if(vv>0) vv*=.35; didUp=true; }
+    if(ups.length&&t>=ups[0]){ ups.shift(); if(vv>0) vv*=.35; }
     vv+=GRAV*dt; y+=vv*dt; t+=dt;
     if(vv>0&&-y<=H) break;
     if(++k%5===0) coins.push({x:x0+v*t,y:y0+y-26,t:false});
@@ -685,23 +686,24 @@ function arcCoins(x0,y0,vy,H,dj,up,v){
 }
 
 const LV2={
-  speed:()=>300,
+  speed:()=>260,
   init(){
-    const v=300, S=BASE; R2.acts=[]; R2.ai=0; R2.backs=[];
+    const v=260, S=BASE; R2.acts=[]; R2.ai=0; R2.backs=[];
     const act=(x,a,c)=>R2.acts.push({x,a,c});
     const plat=(x,w,h,kind,o)=>{ const p=Object.assign({x,w,y:S-h,kind},o||{}); plats.push(p); return p; };
     const back=(x,w,h)=>R2.backs.push({x,w,top:S-h,pal:R2PAL[R2.backs.length%R2PAL.length],seed:R2.backs.length*7+3+(R2.backs.length%3)});
     const row=(x1,x2,y)=>{ for(let x=x1;x<x2;x+=26) coins.push({x,y,t:false}); };
     const gaps=[], houses=[];
-    const jumpFrom=(x,h0,H,c,dj,up)=>{ act(x,'jump',c); if(dj){ act(x+v*dj,'jump'); } if(up) act(x+v*up,'up'); arcCoins(x,S-h0,-JUMPV,H-h0,dj,up,v); return x+v*simT(-JUMPV,H-h0,dj,up); };
+    const jumpFrom=(x,h0,H,c,dj,up)=>{ act(x,'jump',c); if(dj){ act(x+v*dj,'jump'); } for(const u of upList(up)) act(x+v*u,'up'); arcCoins(x,S-h0,-JUMPV,H-h0,dj,up,v); return x+v*simT(-JUMPV,H-h0,dj,up); };
 
     // 1. warm-up on the quay, over a pot of geraniums
     row(120,300,S-22);
     const pot=makeObst('pot',380,S); pot.w=24; pot.over=false; pot.box=[382,S-26,402,S];
     jumpFrom(380-40,0,0,'Il saute par-dessus le pot de fleurs');
+    placeFoot(590,S,760); act(560,null,'Un ballon ! Il tire dans le but…');
 
     // 2. café terrace: street -> table -> striped awning (bounce) -> balcony -> street
-    let l1=jumpFrom(700,0,30,'Il saute sur la table du café !');
+    let l1=jumpFrom(880,0,30,'Il saute sur la table du café !');
     const t1=plat(l1-16,50,30,'table');
     plat(t1.x-26,18,16,'chair',{deco:true}); plat(t1.x+t1.w+8,18,16,'chair',{deco:true});
     let l2=jumpFrom(l1+10,30,70);
@@ -735,13 +737,13 @@ const LV2={
     const hx=p1+70+560; houses.push({x:hx,w:300,h:190});
     row(hx+40,hx+270,S-212);
     items.push({type:'chest',x:hx+160,y:S-202,t:false});
-    const l5=jumpFrom(hx+300-14,190,0,'Il saute du toit !');
+    const l5=jumpFrom(hx+300-14,190,0,'Il saute du toit : DOUBLE SALTO !',.3,.66);
 
     // 7. wide river: double jump + flips
     const g3=l5+240, jx=g3-15;
-    const land3=jx+v*simT(-JUMPV,0,.345,.345+.42);
+    const land3=jx+v*simT(-JUMPV,0,.345,.345+.36);
     gaps.push([g3,Math.min(g3+300,land3-50)]);
-    jumpFrom(jx,0,0,'Double saut + salto au-dessus de la rivière !',.345,.345+.42);
+    jumpFrom(jx,0,0,'Double saut + salto au-dessus de la rivière !',.345,.345+.36);
 
     // 8. second terrace: two tables, awning, high balcony, onto a roof
     const tx=land3+220;
@@ -761,7 +763,7 @@ const LV2={
     arcCoins(jr,S-180,-JUMPV,40,0,0,v);
     const h2=houses[houses.length-1];
     row(m5+20,h2x+h2.w-30,S-242);
-    const l6=jumpFrom(h2x+h2.w-14,220,0,'Et il redescend dans la rue !');
+    const l6=jumpFrom(h2x+h2.w-14,220,0,'Il saute du toit : TRIPLE SALTO !',.3,[.66,1.02]);
 
     // 9. finish
     const fx=l6+420; G.finishX=fx;
@@ -836,11 +838,26 @@ const LV2={
     }
     return false;
   },
+  overlay(cam,t){
+    const S=BASE, pulse=.55+.45*Math.sin(t*6);
+    for(const b of buildings){ if(!b.climb) continue; const x=b.x-cam; if(x>VW||x+b.w<0) continue;
+      // bright climbing holds up the wall and a glowing roof edge: this is where he climbs and runs
+      const hc=['#ff4d4d','#ffcd3c','#3fd16b','#2d8ef0','#ff7ad9'];
+      for(let y=S-14,i=0;y>b.top+10;y-=22,i++){ ctx.fillStyle=hc[i%hc.length]; ctx.beginPath(); ctx.ellipse(x+6+(i%2)*7,y,4.5,3.5,.4,0,TAU); ctx.fill(); }
+      ctx.strokeStyle=`rgba(255,205,60,${.5+.5*pulse})`; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x,S); ctx.lineTo(x,b.top); ctx.lineTo(x+b.w,b.top); ctx.stroke();
+      if(x>PX+30&&x<VW) marker(x+b.w*.3,b.top-18,t,'GRIMPE');
+    }
+    for(const p of plats){ if(p.deco) continue; const x=p.x-cam; if(x<PX+30||x>VW) continue;
+      marker(x+p.w/2,p.y-(p.kind==='balcony'?30:20),t,p.kind==='awning'?'REBOND':null); }
+  },
   drawPlat(p,x,t){
     const y=p.y, S=BASE;
+    if(!p.deco&&p.kind!=='bridge'){ const a=.35+.25*Math.sin(t*6); ctx.fillStyle=`rgba(255,215,70,${a*.5})`; ctx.fillRect(x-7,y-8,p.w+14,18); ctx.fillStyle=`rgba(255,215,70,${a})`; ctx.fillRect(x-3,y-4,p.w+6,10); }
     if(p.kind==='table'){
       ctx.fillStyle='#2d2d33'; ctx.fillRect(x+p.w/2-1.5,y,3,S-y); ctx.beginPath(); ctx.ellipse(x+p.w/2,S-1,9,2.5,0,0,TAU); ctx.fill();
-      ctx.fillStyle='#f4f4f4'; ctx.beginPath(); ctx.ellipse(x+p.w/2,y+1,p.w/2,4,0,0,TAU); ctx.fill(); ctx.strokeStyle='#9aa0aa'; ctx.lineWidth=1; ctx.stroke();
+      ctx.save(); ctx.beginPath(); ctx.rect(x-3,y-1,p.w+6,11); ctx.clip();
+      for(let i=0;i<9;i++) for(let j=0;j<2;j++){ ctx.fillStyle=(i+j)%2?'#e0393e':'#ffffff'; ctx.fillRect(x-3+i*(p.w+6)/9,y-1+j*5.5,(p.w+6)/9+.5,5.5); }
+      ctx.restore(); ctx.strokeStyle='#8a1f22'; ctx.lineWidth=1.2; ctx.strokeRect(x-3,y-1,p.w+6,11);
       ctx.fillStyle='#fff'; ctx.fillRect(x+p.w/2+6,y-5,5,5); ctx.fillStyle='#6b3f25'; ctx.fillRect(x+p.w/2+6.5,y-5,4,1.5);
     } else if(p.kind==='chair'){
       ctx.strokeStyle='#8a5a33'; ctx.lineWidth=2; ctx.beginPath();
@@ -850,11 +867,12 @@ const LV2={
       if(p.sq>0) p.sq=Math.max(0,p.sq-.06);
       const yy=y+(p.sq||0)*6;
       ctx.fillStyle='#55555c'; ctx.fillRect(x+3,yy,2,S-yy); ctx.fillRect(x+p.w-5,yy,2,S-yy);
-      for(let i=0;i*10<p.w;i++){ ctx.fillStyle=['#1b2a5c','#ffffff','#e0393e','#ffffff'][i%4]; ctx.fillRect(x+i*10,yy-2,Math.min(10,p.w-i*10),10); }
-      for(let i=0;i*10<p.w;i++){ ctx.fillStyle=['#1b2a5c','#ffffff','#e0393e','#ffffff'][i%4]; ctx.beginPath(); ctx.arc(x+i*10+5,yy+8,5,0,Math.PI); ctx.fill(); }
+      for(let i=0;i*10<p.w;i++){ ctx.fillStyle=['#1b2a5c','#ffffff','#e0393e','#ffffff'][i%4]; ctx.fillRect(x+i*10,yy-4,Math.min(10,p.w-i*10),14); }
+      for(let i=0;i*10<p.w;i++){ ctx.fillStyle=['#1b2a5c','#ffffff','#e0393e','#ffffff'][i%4]; ctx.beginPath(); ctx.arc(x+i*10+5,yy+10,5,0,Math.PI); ctx.fill(); }
+      ctx.strokeStyle='#10183a'; ctx.lineWidth=1.5; ctx.strokeRect(x,yy-4,p.w,14);
       ctx.fillStyle='rgba(0,0,0,.15)'; ctx.fillRect(x,yy+8,p.w,2);
     } else if(p.kind==='balcony'){
-      ctx.fillStyle='#d8d0c0'; ctx.fillRect(x,y,p.w,6); ctx.fillStyle='#b8ae9b'; ctx.fillRect(x,y+6,p.w,3);
+      ctx.fillStyle='#fff4d6'; ctx.fillRect(x,y,p.w,7); ctx.fillStyle='#ffcd3c'; ctx.fillRect(x,y,p.w,2.5); ctx.fillStyle='#b8ae9b'; ctx.fillRect(x,y+7,p.w,3);
       ctx.fillStyle='#b8ae9b'; tri(ctx,x+8,y+9,x+26,y+9,x+8,y+26); tri(ctx,x+p.w-8,y+9,x+p.w-26,y+9,x+p.w-8,y+26);
       ctx.strokeStyle='rgba(30,30,36,.55)'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.moveTo(x,y-16); ctx.lineTo(x+p.w,y-16);
       for(let bx=x+4;bx<x+p.w;bx+=8){ ctx.moveTo(bx,y-16); ctx.lineTo(bx,y); } ctx.stroke();
@@ -871,6 +889,12 @@ const LV2={
     $('o-done').textContent='Aperçu du niveau Rue Eau-de-Robec. Il n’est pas encore dans le jeu d’Abel.';
   }
 };
+function marker(x,y,t,label){ // bouncing arrow over the next place to land
+  const by=y-Math.abs(Math.sin(t*5))*7;
+  ctx.fillStyle='#ffcd3c'; ctx.strokeStyle='#10183a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x-8,by-12); ctx.lineTo(x+8,by-12); ctx.lineTo(x+8,by-6); ctx.lineTo(x+13,by-6); ctx.lineTo(x,by+4); ctx.lineTo(x-13,by-6); ctx.lineTo(x-8,by-6); ctx.closePath(); ctx.fill(); ctx.stroke();
+  if(label){ ctx.font='11px "Lilita One",sans-serif'; ctx.textAlign='center'; ctx.lineWidth=3; ctx.strokeText(label,x,by-17); ctx.fillText(label,x,by-17); }
+}
 function drawQuai(c,b){
   const w=b.w,h=b.hgt;
   c.fillStyle='#bdb3a0'; c.fillRect(0,0,w,h);
@@ -929,7 +953,7 @@ function backImg(b){
     c.fillStyle='#1b2a5c'; c.fillRect(mx,my,bw,38); c.fillStyle='#fff'; c.fillRect(mx+bw/2-12,my,24,38); c.fillStyle='#e0393e'; c.fillRect(mx+bw/2-8,my,16,38);
     c.font=(txt.length>12?'14px':'20px')+' "Lilita One",sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.lineWidth=4; c.strokeStyle='#1b2a5c'; c.fillStyle='#fff';
     c.strokeText(txt,mx+bw/2,my+20); c.fillText(txt,mx+bw/2,my+20); }
-  c.fillStyle='rgba(20,40,80,.1)'; c.fillRect(0,0,b.w,h);
+  c.fillStyle='rgba(150,180,220,.42)'; c.fillRect(-2,-RH,b.w+4,h+RH);
   return cvs;
 }
 function buildMid2(){
@@ -942,7 +966,7 @@ function buildMid2(){
     const h=110+r()*85, top=g-h, pal=R2PAL[i++%R2PAL.length];
     colomb(c,r,x,top,w,h,pal,false);
     c.fillStyle='#6f7c95'; tri(c,x-2,top,x+w+2,top,x+w/2,top-Math.min(62,w*.8));
-    c.fillStyle='rgba(120,150,190,.28)'; c.fillRect(x,top-64,w,h+64);
+    c.fillStyle='rgba(150,180,220,.5)'; c.fillRect(x,top-64,w,h+64);
     x+=w;
   }
   mid={img:cvs,w:MW,h:MH,y0:BASE-260};
@@ -990,7 +1014,7 @@ function tutNext(){ G.tutStep++; G.tutT=0; if(G.tutStep>=3){ save.tut=true; pers
 /* ---------- fx ---------- */
 function dust(x,y,n){for(let i=0;i<n;i++) parts.push({x:x+rand(-8,8),y:y-2,vx:rand(-90,30),vy:rand(-80,-10),l:0,m:rand(.3,.5),s:rand(2,4),c:'rgba(230,220,200,.8)',g:200});}
 function burst(x,y,cols,n,sp){for(let i=0;i<n;i++){const a=Math.random()*TAU,s=rand(sp*.3,sp); parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:0,m:rand(.4,.8),s:rand(2,4.5),c:cols[i%cols.length],g:300});}}
-function say(s,col,big){texts.push({s,c:col||'#fff',t:0,m:1.4,big:!!big});}
+function say(s,col,big){texts.push({s,c:col||'#fff',t:0,m:big?3.2:2.6,big:!!big}); if(texts.length>3) texts.shift();}
 function toast(msg){const t=$('toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast.h); toast.h=setTimeout(()=>t.hidden=true,1800);}
 
 /* ---------- update ---------- */
@@ -1109,7 +1133,7 @@ function update(dt){
 }
 
 /* ---------- demo autopilot ---------- */
-function cap(s){ G.cap=s; G.capT=1.7; }
+function cap(s){ G.cap=s; G.capT=2.6; }
 function nextBuilding(b){ let n=null; for(const o of buildings){ if(o!==b&&o.x>=b.x+b.w-4&&(!n||o.x<n.x)) n=o; } return n; }
 function autopilot(){
   if(P.dead||G.power.ovni>0||G.hover) return;
@@ -1124,7 +1148,7 @@ function autopilot(){
     }
     if(b&&b.x+b.w-px<v*.06){
       const nb=nextBuilding(b);
-      if(nb&&(nb.x-(b.x+b.w)>2||nb.top<b.top-2)){ jump(); G.botGap=nb; cap('Il saute par-dessus le vide !'); return; }
+      if(nb&&(nb.x-(b.x+b.w)>2||nb.top<b.top-2)){ jump(); G.botGap=nb; if(nb.top>b.top+12){ G.trickN=G.trickN===2?3:2; G.trickPlan=G.trickN; cap('Il saute du toit : '+(G.trickN===3?'TRIPLE':'DOUBLE')+' SALTO !'); } else cap('Il saute par-dessus le vide !'); return; }
     }
     const clear=(!nx||nx.box[0]-px>v*1.15)&&b&&(b.x+b.w-px>v*1.2);
     if(clear&&G.dist-G.lastTrick>700&&G.dist>400){
@@ -1405,6 +1429,7 @@ function render(){
   for(const o of obst) if(o.type==='clock'&&o.x-cam<VW+40&&o.x+o.w-cam>-40) drawBelfry(o,o.x-cam);
   for(const b of buildings){ const x=b.x-cam; if(x>VW||x+b.w<0) continue; ctx.drawImage(facadeImg(b),x,b.top-b.mh,b.w,b.hgt+b.mh); if(b.flag) drawFlag(b.flag-cam,topAt(b,b.flag),tt); }
   for(const p of plats){ const x=p.x-cam; if(x>VW+60||x+p.w<-60) continue; LV.drawPlat(p,x,tt); }
+  if(LV.overlay) LV.overlay(cam,tt);
   for(const o of obst){ const x=o.x-cam; if(x>VW+40||x+o.w<-40||o.dead) continue; drawObst(o,x,tt); }
   for(const c of coins){ const x=c.x-cam; if(x<-20||x>VW+20) continue; drawCoin(x,c.y,tt,c); }
   for(const k of kicks){ const u=Math.min(1,k.t/k.d), x=k.x0+(k.x1-k.x0)*u-cam, y=k.y0+(k.y1-k.y0)*u-Math.sin(u*Math.PI)*70; if(u<1||k.t<k.d+.5) drawFootball(x,u<1?y:k.y1+Math.min(14,(k.t-k.d)*60),8,k.t*14); }
@@ -1587,7 +1612,7 @@ function drawTexts(){
   const baseY=Math.max(90,BASE-175);
   texts.forEach((t,i)=>{
     const k=t.t/t.m, pop=Math.min(1,t.t*8), sc=(t.big?1.25:1)*(.6+.4*pop);
-    ctx.save(); ctx.globalAlpha=k>.75?(1-k)*4:1; ctx.translate(VW/2,baseY-(texts.length-1-i)*30-k*14); ctx.scale(sc,sc);
+    ctx.save(); ctx.globalAlpha=k>.75?(1-k)*4:1; ctx.translate(VW/2,baseY+i*32-k*8); ctx.scale(sc,sc);
     ctx.font='24px "Lilita One",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.lineWidth=6; ctx.strokeStyle='#0a1128'; ctx.lineJoin='round'; ctx.strokeText(t.s,0,0); ctx.fillStyle=t.c; ctx.fillText(t.s,0,0);
     ctx.restore();

@@ -621,7 +621,7 @@ function populate(b,v,diff){
   const footOk=b.w>=560&&(G.demo?(G.demoFoot<3&&b.x>900+G.demoFoot*3000):Math.random()<.22);
   if(footOk){ // a flat roof with a ball and a goal
     if(inBump(b,b.x+60,b.x+440)){ b.bumps=[]; b.mh=0; b.roof='flat'; b.style='colombage'; b.img=null; }
-    if(G.demo) G.demoFoot++; placeFoot(b.x+110,b.top,b.x+370); pos=Math.max(pos,b.x+470);
+    const fb=G.demo?b.x+220:b.x+110; if(G.demo) G.demoFoot++; placeFoot(fb,b.top,fb+260); pos=Math.max(pos,fb+360);
   }
   if(Math.random()<.5&&b.w>300) b.flag=b.x+(b.roof==='gable'?b.w/2:b.w-38);
   const dens=G.demo?.38:.5+.35*diff;
@@ -1188,7 +1188,7 @@ function update(dt){
   // items
   for(const it of items){
     if(it.t) continue;
-    if(Math.abs(it.x-px)<24&&it.y>P.y-h-18&&it.y<P.y+14) grab(it);
+    if(Math.abs(it.x-px)<24&&((G.demo&&it.type==='foot')||(it.y>P.y-h-18&&it.y<P.y+14))) grab(it);
   }
   stepKicks(dt);
   if(G.power.magnet>0) G.power.magnet-=dt;

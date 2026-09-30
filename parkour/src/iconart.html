@@ -24,15 +24,19 @@ function scene(c){
   c.fillStyle='#e7b53a'; for(let i=0;i<16;i++){ const a=i/16*TAU; c.beginPath(); c.moveTo(cx+Math.cos(a-.09)*11,cy+Math.sin(a-.09)*11); c.lineTo(cx+Math.cos(a)*33,cy+Math.sin(a)*33); c.lineTo(cx+Math.cos(a+.09)*11,cy+Math.sin(a+.09)*11); c.fill(); }
   c.fillStyle='#ffd964'; c.beginPath(); c.arc(cx,cy,10,0,TAU); c.fill();
   c.strokeStyle='#ffd964'; c.lineWidth=5; c.lineCap='round'; c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+22,cy-22); c.stroke();
-  // front row of colourful half-timbered houses
+  // cobbled street
+  c.fillStyle='#6d5f55'; c.fillRect(0,432,512,80);
+  c.fillStyle='#8a7a6c'; for(let y=438;y<512;y+=12) for(let x=((y/12)%2)*10;x<512;x+=20){ c.beginPath(); c.ellipse(x,y,8,4.5,0,0,TAU); c.fill(); }
+  // front row of wide, low half-timbered houses standing on the street
   const pals=[['#e8846a','#3b2418'],['#7fc8c0','#2c3e66'],['#efe6d6','#5a2e1a'],['#ef9fb5','#4a2a4a'],['#a8d58a','#3d2a17'],['#9fb8ec','#2a2f5a']];
-  let x=-6,i=0;
-  while(x<512){ const w=66+((i*37)%24), top=330+((i*23)%22), [wall,tim]=pals[i%pals.length];
-    c.fillStyle=wall; c.fillRect(x,top,w,200);
-    c.fillStyle='#46526b'; tri(c,x-3,top+1,x+w+3,top+1,x+w/2,top-42);
-    c.fillStyle=tim; c.fillRect(x,top,w,5); c.fillRect(x,top+44,w,5); c.fillRect(x,top,5,200); c.fillRect(x+w-5,top,5,200);
-    c.strokeStyle=tim; c.lineWidth=4; c.beginPath(); c.moveTo(x+4,top+5); c.lineTo(x+w-4,top+44); c.moveTo(x+w-4,top+5); c.lineTo(x+4,top+44); c.stroke();
-    c.fillStyle='#ffd27a'; c.fillRect(x+w/2-10,top+60,20,24); c.fillStyle=tim; c.fillRect(x+w/2-1,top+60,2,24);
+  let x=-20,i=0;
+  while(x<512){ const w=104+((i*29)%26), h=86+((i*17)%22), top=432-h, [wall,tim]=pals[i%pals.length];
+    c.fillStyle='#46526b'; tri(c,x-5,top+1,x+w+5,top+1,x+w/2,top-Math.min(58,w*.5));
+    c.fillStyle=wall; c.fillRect(x,top,w,h);
+    c.fillStyle=tim; c.fillRect(x,top,w,5); c.fillRect(x,top+h/2-2,w,5); c.fillRect(x,top,5,h); c.fillRect(x+w-5,top,5,h); c.fillRect(x+w/2-2.5,top,5,h/2);
+    c.strokeStyle=tim; c.lineWidth=4; c.beginPath(); c.moveTo(x+5,top+5); c.lineTo(x+w/2-3,top+h/2-2); c.moveTo(x+w-5,top+5); c.lineTo(x+w/2+3,top+h/2-2); c.stroke();
+    for(const wx of [x+w*.22,x+w*.62]){ c.fillStyle='#ffd27a'; c.fillRect(wx,top+h/2+10,w*.16,h*.24); c.fillStyle=tim; c.fillRect(wx+w*.08-1,top+h/2+10,2,h*.24); }
+    c.fillStyle=tim; c.fillRect(x+w/2-7,432-24,14,24);
     x+=w; i++; }
 }
 function crown(c,hx,hy,s){ // hy = top of the head

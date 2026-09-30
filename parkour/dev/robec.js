@@ -4,10 +4,10 @@
    hand-built course played by a scripted autopilot (demo only). */
 const R2={acts:[],ai:0,backs:[]};
 const DAY_FAR={hill:'#8cc7a3',sil:'#86a3d6',lat:'#a4bde6',glow:'rgba(255,255,255,0)'};
-const R2PAL=[{wall:'#f4b860',timber:'#5a2e1a'},{wall:'#e8846a',timber:'#3b2418'},{wall:'#7fc8c0',timber:'#2c3e66'},{wall:'#f6d55c',timber:'#6a2c1c'},{wall:'#ef9fb5',timber:'#4a2a4a'},{wall:'#a8d58a',timber:'#3d2a17'},{wall:'#9fb8ec',timber:'#2a2f5a'}];
+const R2PAL=[{wall:'#e8846a',timber:'#3b2418'},{wall:'#7fc8c0',timber:'#2c3e66'},{wall:'#efe6d6',timber:'#5a2e1a'},{wall:'#ef9fb5',timber:'#4a2a4a'},{wall:'#a8d58a',timber:'#3d2a17'},{wall:'#9fb8ec',timber:'#2a2f5a'},{wall:'#f4b860',timber:'#5a2e1a'},{wall:'#c98f6b',timber:'#3a2216'},{wall:'#d7c9ef',timber:'#3a2f5a'}];
 const SHUT=['#2f7fbf','#3a9a5b','#c8453b','#e5a32e','#7a4fb0'];
 const FLOW=['#e0393e','#ff7ad9','#ffcd3c','#ffffff','#b14fe0'];
-let clouds=[];
+let clouds=[], stOuen=null;
 
 /* game-accurate flight time: from height 0 with vertical speed vy (negative = up) until,
    while falling, the body is back down to height H (positive = above start) */
@@ -36,13 +36,13 @@ function arcCoins(x0,y0,vy,H,dj,up,v){
 const LV2={
   speed:()=>260,
   init(){
-    const v=260, S=BASE; R2.acts=[]; R2.ai=0; R2.backs=[];
+    const v=260, S=BASE; R2.acts=[]; R2.ai=0; R2.backs=[]; R2.lastCh=-9;
     const act=(x,a,c)=>R2.acts.push({x,a,c});
     const plat=(x,w,h,kind,o)=>{ const p=Object.assign({x,w,y:S-h,kind},o||{}); plats.push(p); return p; };
-    const back=(x,w,h)=>R2.backs.push({x,w,top:S-h,pal:R2PAL[R2.backs.length%R2PAL.length],seed:R2.backs.length*7+3+(R2.backs.length%3)});
+    const back=(x,w,h)=>{ const i=R2.backs.length, ch=i-R2.lastCh>=3&&Math.random()<.45; if(ch) R2.lastCh=i; R2.backs.push({x,w,top:S-h,pal:R2PAL[i%R2PAL.length],seed:i*7+3+(i%3),ch,fl:ch&&Math.random()<.35}); };
     const row=(x1,x2,y)=>{ for(let x=x1;x<x2;x+=26) coins.push({x,y,t:false}); };
     const obs=(type,x,w,box,o)=>{ const ob=makeObst(type,x,S); ob.w=w; ob.box=box; Object.assign(ob,{over:false},o||{}); return ob; };
-    const bench=x=>obs('banc',x,52,[x+2,S-26,x+50,S],{vault:true});
+    const bench=x=>obs('banc',x,62,[x+2,S-30,x+60,S],{vault:true});
     const lift=(g,w)=>{ gaps.push([g,g+w]); return plat(g,w,0,'lift',{trig:380,a:0}); };
     const gaps=[], houses=[];
     const jumpFrom=(x,h0,H,c,dj,up)=>{ act(x,'jump',c); if(dj){ act(x+v*dj,'jump'); } for(const u of upList(up)) act(x+v*u,'up'); arcCoins(x,S-h0,-JUMPV,H-h0,dj,up,v); return x+v*simT(-JUMPV,H-h0,dj,up); };
@@ -96,8 +96,18 @@ const LV2={
     const bk=p1+780; obs('velo',bk,48,[bk+2,S-32,bk+46,S]);
     act(bk-90,null,'Pas besoin de sauter : la bulle le protège !');
 
+    // 5c. the Paris ball pulls in the coins; a washing line of jerseys to slide under
+    items.push({type:'ballon',x:bk+230,y:S-48,t:false}); act(bk+200,null,'Le ballon aimant attire les pièces !');
+    for(let i=0;i<14;i++) coins.push({x:bk+300+i*22,y:S-60-Math.sin(i*.7)*50,t:false});
+    const lg=bk+520; makeObst('linge',lg,S); act(lg-32,'slide','Il glisse sous les maillots');
+
+    // 5d. the UFO carries him over a wide stretch of the Robec
+    const uf=lg+300; items.push({type:'ovni',x:uf,y:S-48,t:false});
+    act(uf-30,null,'MODE OVNI : il vole au-dessus de la Robec !');
+    gaps.push([uf+380,uf+1000]);
+
     // 6. Spider-Man: climb a house wall, run on the roof, jump down with flips and roll
-    const hx=bk+48+320; houses.push({x:hx,w:300,h:190});
+    const hx=uf+1750; houses.push({x:hx,w:300,h:190});
     row(hx+40,hx+270,S-212);
     items.push({type:'chest',x:hx+160,y:S-202,t:false});
     const l5=jumpFrom(hx+300-14,190,0,'Il saute du toit : DOUBLE SALTO !',.3,.66);
@@ -106,8 +116,11 @@ const LV2={
     const bn2=l5+230; bench(bn2);
     jumpFrom(bn2-46,0,0,'Encore un saut de chat !');
 
+    // 6c. a big Paris banner to slide under
+    const bnr=bn2+62+260; makeObst('banner',bnr,S); act(bnr-32,'slide','Il glisse sous la banderole ICI C’EST PARIS');
+
     // 7. the big drawbridge: double jump + flips
-    const g3=bn2+52+340; lift(g3,240);
+    const g3=bnr+80+340; lift(g3,240);
     act(g3-420,null,'Le grand pont s’ouvre !');
     const jx=g3-18, land3=jx+v*simT(-JUMPV,0,.345,.345+.36);
     jumpFrom(jx,0,0,'Double saut + salto au-dessus du pont !',.345,.345+.36);
@@ -138,8 +151,8 @@ const LV2={
     row(l6+60,fx-30,S-22);
 
     // one continuous row of houses along the street (balconies, awnings and signs hang on it)
-    for(let bx=-400;bx<fx+2600;){ const w=150+Math.random()*130; let h=145+Math.random()*40;
-      for(const p of plats) if(p.kind==='balcony'&&p.x<bx+w&&p.x+p.w>bx) h=Math.max(h,S-p.y+50);
+    for(let bx=-400;bx<fx+2600;){ const w=150+Math.random()*130; let h=92+Math.random()*38;
+      for(const p of plats) if(p.kind==='balcony'&&p.x<bx+w&&p.x+p.w>bx) h=Math.max(h,S-p.y+40);
       back(bx,w,h); bx+=w; }
 
     // quays everywhere except the river gaps; houses on top
@@ -160,7 +173,7 @@ const LV2={
     }
   },
   build(){
-    buildFar(DAY_FAR); buildMid2(); for(const b of R2.backs) b.img=null;
+    buildFar(DAY_FAR); buildMid2(); buildStOuen(); for(const b of R2.backs) b.img=null;
     clouds=[]; const r=rng(21); for(let i=0;i<7;i++) clouds.push({x:r()*1600,y:30+r()*Math.max(60,BASE-230),s:.7+r()*.8,p:.05+r()*.08});
   },
   sky(tt){
@@ -176,13 +189,14 @@ const LV2={
   },
   bg(off,tt){
     drawLayers(off);
+    if(stOuen){ const P2=2600, o=((off*.2)%P2+P2)%P2; const k=Math.min(.78,(BASE-20)/stOuen.h), sw=stOuen.w*k, shh=stOuen.h*k; for(const sx of [520-o,520-o+P2]) if(sx>-sw&&sx<VW) ctx.drawImage(stOuen.img,sx,BASE-shh+6,sw,shh); }
     ctx.fillStyle='#9a8470'; ctx.fillRect(-10,BASE,VW+20,26);
     const wg=ctx.createLinearGradient(0,BASE+26,0,VH); wg.addColorStop(0,'#3cc6dc'); wg.addColorStop(1,'#1c77a6');
     ctx.fillStyle=wg; ctx.fillRect(-10,BASE+26,VW+20,VH);
     ctx.fillStyle='rgba(255,255,255,.55)';
     for(let row=0,y=BASE+34;y<VH;y+=9,row++){ const dir=row%2?1:-1; for(let i=0;i<8;i++){ const x=(((i*131+row*57)+tt*28*dir-(off%400))%(VW+80)+VW+80)%(VW+80)-40; ctx.fillRect(x,y,14,1.6); } }
     for(const b of R2.backs){ const x=b.x-G.cam; if(x>VW||x+b.w<0) continue; if(!b.img) b.img=backImg(b); ctx.drawImage(b.img,x,b.top-RH,b.w,BASE-b.top+RH);
-      if(b.chim&&G.state!=='pause'&&Math.random()<.45){ const fl=b.seed%2===0;
+      if(b.chim&&G.state!=='pause'&&Math.random()<.4){ const fl=b.fl;
         parts.push({x:b.x+b.chim.dx+rand(-3,3),y:b.top+b.chim.dy,vx:rand(-45,-15),vy:rand(-85,-50),l:0,m:rand(1.6,2.4),s:rand(6,10),
           c:fl?(Math.random()<.5?'rgba(235,60,66,.55)':'rgba(60,105,235,.55)'):'rgba(245,245,250,.7)',g:-12,round:1}); } }
   },
@@ -197,8 +211,11 @@ const LV2={
       return true;
     }
     if(o.type==='banc'){
-      ctx.fillStyle='#2e5d4b'; ctx.fillRect(x+4,T-16,4,16); ctx.fillRect(x+44,T-16,4,16); ctx.fillRect(x+6,T-30,3,14); ctx.fillRect(x+43,T-30,3,14);
-      ctx.fillStyle='#c98e4f'; for(let i=0;i<2;i++) ctx.fillRect(x,T-18-i*5,52,3.5); for(let i=0;i<2;i++) ctx.fillRect(x+2,T-30+i*5,48,3);
+      const a=.35+.25*Math.sin(t*6); ctx.fillStyle=`rgba(255,215,70,${a*.55})`; rr(ctx,x-6,T-40,74,44,10); ctx.fill();
+      ctx.fillStyle='#10183a'; ctx.fillRect(x+3,T-18,6,18); ctx.fillRect(x+53,T-18,6,18); ctx.fillRect(x+5,T-36,4,18); ctx.fillRect(x+53,T-36,4,18);
+      for(let i=0;i<2;i++){ ctx.fillStyle='#e0393e'; ctx.fillRect(x,T-22-i*6,62,5); ctx.strokeStyle='#10183a'; ctx.lineWidth=1.2; ctx.strokeRect(x,T-22-i*6,62,5); }
+      for(let i=0;i<2;i++){ ctx.fillStyle='#1b2a5c'; ctx.fillRect(x+2,T-38+i*6,58,4.5); }
+      ctx.fillStyle='#fff'; ctx.fillRect(x+28,T-38,6,10);
       return true;
     }
     if(o.type==='velo'){
@@ -231,7 +248,7 @@ const LV2={
     }
     for(const p of plats){ if(p.deco||p.kind==='lift'||p.kind==='bridge') continue; const x=p.x-cam; if(x<PX+30||x>VW) continue;
       marker(x+p.w/2,p.y-(p.kind==='balcony'?30:20),t,p.kind==='awning'?'REBOND':p.kind==='rail'?'ÉQUILIBRE':null); }
-    for(const o of obst){ if(!o.vault) continue; const x=o.x-cam; if(x<PX+30||x>VW) continue; marker(x+26,S-42,t,'SAUT DE CHAT'); }
+    for(const o of obst){ if(!o.vault) continue; const x=o.x-cam; if(x<PX+30||x>VW) continue; marker(x+31,S-48,t,'SAUT DE CHAT'); }
   },
   drawPlat(p,x,t){
     const y=p.y, S=BASE;
@@ -354,7 +371,7 @@ function backImg(b){
   const r=rng(b.seed);
   colomb(c,r,0,0,b.w,h,b.pal,true);
   const hR=Math.min(RH-8,b.w*.3);
-  if(b.seed%4!==3){ const cx=b.w*.7, cy=-hR*.6; c.fillStyle='#a4533a'; c.fillRect(cx,cy-18,11,22); c.fillStyle='#6d3526'; c.fillRect(cx-2,cy-20,15,4); b.chim={dx:cx+5.5,dy:cy-22}; }
+  if(b.ch){ const cx=b.w*.7, cy=-hR*.6; c.fillStyle='#a4533a'; c.fillRect(cx,cy-18,11,22); c.fillStyle='#6d3526'; c.fillRect(cx-2,cy-20,15,4); b.chim={dx:cx+5.5,dy:cy-22}; }
   c.fillStyle=['#4d5f86','#7a4a3a','#3f5f5a'][b.seed%3]; c.beginPath(); c.moveTo(-2,2); c.lineTo(b.w/2,-hR); c.lineTo(b.w+2,2); c.fill();
   c.fillStyle='rgba(255,255,255,.15)'; for(let y=-6;y>-hR;y-=6){ const k=(-y)/hR; c.fillRect(b.w/2-(1-k)*b.w/2,y,(1-k)*b.w,1); }
   c.fillStyle='#2f3a55'; c.fillRect(-2,0,b.w+4,4);
@@ -367,6 +384,29 @@ function backImg(b){
     c.strokeText(txt,mx+bw/2,my+20); c.fillText(txt,mx+bw/2,my+20); }
   c.fillStyle='rgba(40,30,70,.08)'; c.fillRect(-2,-RH,b.w+4,h+RH);
   return cvs;
+}
+function buildStOuen(){ // Abbatiale Saint-Ouen: long gothic nave and its crowned lantern tower
+  const W=440,H=340,R=Math.min(DPR,1.5);
+  const cvs=document.createElement('canvas'); cvs.width=Math.ceil(W*S*R); cvs.height=Math.ceil(H*S*R);
+  const c=cvs.getContext('2d'); c.scale(S*R,S*R);
+  const g=H, st='#eadfc9', sh='#d2c4a8', dk='#b3a488', gl='#6f82ad', rf='#8e9ab8';
+  c.fillStyle=sh; c.fillRect(30,g-105,390,105);
+  c.fillStyle=st; c.fillRect(50,g-150,350,150);
+  c.fillStyle=rf; c.beginPath(); c.moveTo(46,g-150); c.lineTo(60,g-176); c.lineTo(392,g-176); c.lineTo(404,g-150); c.fill();
+  for(let x=58;x<400;x+=34){ c.fillStyle=dk; c.fillRect(x,g-120,6,120); tri(c,x-2,g-120,x+8,g-120,x+3,g-142);
+    c.fillStyle=gl; c.beginPath(); c.moveTo(x+12,g-60); c.lineTo(x+12,g-132); c.lineTo(x+18,g-140); c.lineTo(x+24,g-132); c.lineTo(x+24,g-60); c.fill();
+    c.fillStyle=st; c.fillRect(x+17,g-136,2,76); }
+  for(const x of [30,70]){ c.fillStyle=st; c.fillRect(x,g-210,26,210); c.fillStyle=sh; tri(c,x-2,g-210,x+28,g-210,x+13,g-262); c.fillStyle=gl; c.fillRect(x+10,g-190,6,30); }
+  c.fillStyle=gl; c.beginPath(); c.arc(63,g-118,12,0,TAU); c.fill(); c.strokeStyle=st; c.lineWidth=1.5; for(let i=0;i<8;i++){ const a=i/8*TAU; c.beginPath(); c.moveTo(63,g-118); c.lineTo(63+Math.cos(a)*12,g-118+Math.sin(a)*12); c.stroke(); }
+  const tx=205;
+  c.fillStyle=st; c.fillRect(tx,g-270,64,100); c.fillStyle=sh; c.fillRect(tx+48,g-270,16,100);
+  for(const k of [0,1]){ c.fillStyle=gl; c.beginPath(); c.moveTo(tx+12+k*26,g-185); c.lineTo(tx+12+k*26,g-250); c.lineTo(tx+18+k*26,g-258); c.lineTo(tx+24+k*26,g-250); c.lineTo(tx+24+k*26,g-185); c.fill(); }
+  for(const x of [tx-4,tx+60]){ c.fillStyle=dk; c.fillRect(x,g-282,8,112); tri(c,x-2,g-282,x+10,g-282,x+4,g-306); }
+  c.fillStyle=st; c.fillRect(tx+12,g-312,40,42); c.fillStyle=sh; c.fillRect(tx+40,g-312,12,42);
+  c.fillStyle=gl; for(let i=0;i<3;i++){ c.beginPath(); c.moveTo(tx+16+i*12,g-276); c.lineTo(tx+16+i*12,g-300); c.arc(tx+20+i*12,g-300,4,Math.PI,0); c.lineTo(tx+24+i*12,g-276); c.fill(); }
+  c.fillStyle=dk; for(let i=0;i<6;i++) tri(c,tx+10+i*7.6,g-312,tx+16+i*7.6,g-312,tx+13+i*7.6,g-332);
+  c.fillStyle='rgba(140,170,220,.22)'; c.fillRect(0,0,W,H);
+  stOuen={img:cvs,w:W,h:H};
 }
 function buildMid2(){
   const MW=1400,MH=300,R=Math.min(DPR,1.5);

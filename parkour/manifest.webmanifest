@@ -1,0 +1,12 @@
+{
+  "name": "Parkour",
+  "short_name": "Parkour",
+  "description": "Parkour sur les toits de Rouen",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#08102a",
+  "theme_color": "#08102a",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

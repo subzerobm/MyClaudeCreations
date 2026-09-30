@@ -19,7 +19,7 @@ A double flip gives x2 coins for 8 seconds; a triple flip gives x3. On a compute
 - Rouen at dusk: half-timbered rooftops, the Cathedral spire, Saint-Ouen, Saint-Maclou, and the Gros-Horloge to slide under
 - Obstacles: chimneys, "ICI C'EST PARIS" banners, pigeons
 - Power-ups: Paris ball (coin magnet), Disque d'Or (shield), OVNI (flight), loot chests
-- Locker (Casier) with outfits, hats and trails by rarity; 15 challenges (Défis); saved record and coins
+- Style screen with outfits, hats and trails by rarity; 15 challenges (Défis); saved record and coins
 - Snow and a birthday message in December
 
 Progress is saved in the browser (`localStorage`), so it stays on the device.

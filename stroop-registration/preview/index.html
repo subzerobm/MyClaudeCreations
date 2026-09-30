@@ -5,65 +5,70 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Étude Stroop — Inscription (aperçu)</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
     :root {
-      --bg: #faf8f4; --card: #ffffff; --text: #2b2b2b; --muted: #6b6b6b;
-      --accent: #1d4ed8; --accent-dark: #1739a6; --border: #ece8e0;
-      --stroop-red: #e5484d; --stroop-blue: #2563eb; --stroop-green: #22a35d; --stroop-yellow: #eab308;
+      --bg: #1a130d; --bg2: #120d09; --card: #241a12; --text: #f3ece2; --muted: #a89886;
+      --accent: #b8860b; --accent-dark: #8f6a08; --border: #3a2c1f;
+      --stroop-red: #ff6b6b; --stroop-blue: #6d9bff; --stroop-green: #4ade80; --stroop-yellow: #fbbf24;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
-      background: var(--bg);
+      background: radial-gradient(circle at 15% 0%, #2b1d12 0%, transparent 45%),
+                  radial-gradient(circle at 100% 20%, #241509 0%, transparent 50%),
+                  linear-gradient(160deg, var(--bg2) 0%, var(--bg) 45%, #241a12 100%);
+      background-attachment: fixed;
       color: var(--text);
       line-height: 1.55;
       -webkit-font-smoothing: antialiased;
       position: relative;
       overflow-x: hidden;
     }
-    /* playful blurred background blobs */
+    /* warm glow blobs */
     body::before, body::after {
       content: '';
       position: fixed;
       border-radius: 50%;
-      filter: blur(70px);
-      opacity: 0.22;
+      filter: blur(90px);
+      opacity: 0.16;
       z-index: 0;
       pointer-events: none;
     }
-    body::before { width: 420px; height: 420px; top: -140px; left: -140px; background: var(--stroop-blue); }
-    body::after { width: 460px; height: 460px; bottom: -160px; right: -160px; background: var(--stroop-yellow); }
+    body::before { width: 460px; height: 460px; top: -160px; left: -160px; background: var(--stroop-blue); }
+    body::after { width: 480px; height: 480px; bottom: -180px; right: -160px; background: var(--accent); opacity: 0.14; }
     .blob3 {
-      position: fixed; width: 360px; height: 360px; border-radius: 50%;
-      background: var(--stroop-red); filter: blur(70px); opacity: 0.16;
-      top: 40%; right: -120px; z-index: 0; pointer-events: none;
+      position: fixed; width: 380px; height: 380px; border-radius: 50%;
+      background: var(--stroop-red); filter: blur(90px); opacity: 0.12;
+      top: 40%; right: -130px; z-index: 0; pointer-events: none;
     }
 
     .page { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 0 20px 64px; }
-    .badge { display: inline-block; background: #fff3cd; color: #7a5b00; border: 1px solid #f1d68a; border-radius: 6px; padding: 4px 10px; font-size: 12px; margin: 16px 0; }
+    .badge { display: inline-block; background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); border-radius: 6px; padding: 4px 10px; font-size: 12px; margin: 16px 0; }
 
     .stroop-bar { height: 5px; margin: 0 -20px 32px; border-radius: 0 0 6px 6px; background: linear-gradient(90deg, var(--stroop-red), var(--stroop-yellow), var(--stroop-green), var(--stroop-blue)); }
 
-    .stroop-logo { display: flex; flex-wrap: wrap; justify-content: center; text-align: center; font-family: 'Baloo 2', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; gap: 4px 14px; }
-    .stroop-logo span { display: inline-block; transition: transform 0.15s ease; }
-    .stroop-logo span:hover { transform: translateY(-4px) scale(1.08); }
-    .stroop-logo .c1 { color: var(--stroop-blue); transform: rotate(-4deg); }
-    .stroop-logo .c2 { color: var(--stroop-green); transform: rotate(3deg); }
-    .stroop-logo .c3 { color: var(--stroop-yellow); transform: rotate(-3deg); }
-    .stroop-logo .c4 { color: var(--stroop-red); transform: rotate(4deg); }
+    /* cycling single-word Stroop animation: one word, one color, at a time */
+    .stroop-logo { display: flex; justify-content: center; margin-bottom: 8px; height: 40px; align-items: center; }
+    .stroop-logo #stroopWord {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
 
     .hero { text-align: center; margin-bottom: 28px; }
-    .hero h1 { font-family: 'Baloo 2', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 8px; }
+    .hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 8px; }
     .subtitle { color: var(--muted); font-size: 16px; font-weight: 400; }
 
-    h1 { font-family: 'Baloo 2', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.2px; }
-    h2 { font-family: 'Baloo 2', sans-serif; font-size: 19px; font-weight: 600; margin-top: 0; display: flex; align-items: center; gap: 8px; }
+    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.2px; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-size: 19px; font-weight: 600; margin-top: 0; display: flex; align-items: center; gap: 8px; }
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px; margin-bottom: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-    .card.tint-blue { background: linear-gradient(180deg, rgba(37,99,235,0.05), var(--card) 55%); }
-    .card.tint-yellow { background: linear-gradient(180deg, rgba(234,179,8,0.07), var(--card) 55%); }
+    .card.tint-blue { background: linear-gradient(180deg, rgba(109,155,255,0.10), var(--card) 55%); }
+    .card.tint-yellow { background: linear-gradient(180deg, rgba(251,191,36,0.10), var(--card) 55%); }
 
     .facts { list-style: none; padding: 0; margin: 16px 0 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .facts li { display: flex; align-items: center; gap: 10px; background: var(--bg); border-radius: 12px; padding: 12px 14px; font-size: 14px; font-weight: 500; }
@@ -75,12 +80,12 @@
       display: flex; align-items: center; justify-content: center; gap: 8px;
       background: var(--accent); color: #fff; border: none; text-decoration: none;
       padding: 15px 24px; border-radius: 14px; font-weight: 700; font-size: 16px;
-      font-family: 'Baloo 2', sans-serif; margin: 26px 0; width: 100%; cursor: pointer;
-      box-shadow: 0 6px 0 var(--accent-dark), 0 8px 18px rgba(29,78,216,0.25);
+      font-family: 'Space Grotesk', sans-serif; margin: 26px 0; width: 100%; cursor: pointer;
+      box-shadow: 0 6px 0 var(--accent-dark), 0 8px 18px rgba(184,134,11,0.3);
       transition: transform 0.12s ease, box-shadow 0.12s ease;
     }
-    .cta:hover { transform: translateY(-2px); box-shadow: 0 8px 0 var(--accent-dark), 0 12px 20px rgba(29,78,216,0.3); }
-    .cta:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark), 0 4px 10px rgba(29,78,216,0.25); }
+    .cta:hover { transform: translateY(-2px); box-shadow: 0 8px 0 var(--accent-dark), 0 12px 22px rgba(184,134,11,0.35); }
+    .cta:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark), 0 4px 10px rgba(184,134,11,0.3); }
     .cta .icon-svg { color: #fff; width: 18px; height: 18px; }
 
     footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 24px; }
@@ -89,7 +94,8 @@
     .label-icon { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
     label.checkbox { display: flex; align-items: flex-start; gap: 8px; font-weight: 400; }
     label.checkbox input { margin-top: 3px; }
-    input[type="text"], input[type="email"], select { display: block; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-weight: 400; font-family: inherit; }
+    input[type="text"], input[type="email"], select { display: block; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-weight: 400; font-family: inherit; background: var(--bg2); color: var(--text); }
+    select option { background: var(--bg2); color: var(--text); }
     fieldset { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
     legend { font-weight: 600; font-size: 14px; padding: 0 6px; display: flex; align-items: center; gap: 6px; }
     .small { font-size: 12.5px; color: var(--muted); }
@@ -107,7 +113,7 @@
     @media (min-width: 860px) {
       .page { max-width: 920px; padding: 0 40px 80px; }
       .stroop-bar { margin: 0 -40px 40px; }
-      .stroop-logo { font-size: 34px; gap: 6px 20px; }
+      .stroop-logo #stroopWord { font-size: 36px; }
       .hero h1 { font-size: 42px; }
       .subtitle { font-size: 18px; }
 
@@ -132,12 +138,12 @@
     <div id="landingView">
       <div class="stroop-bar"></div>
       <div class="stroop-logo">
-        <span class="c1">ROUGE</span><span class="c2">BLEU</span><span class="c3">VERT</span><span class="c4">JAUNE</span>
+        <span id="stroopWord" style="color: var(--stroop-blue);">ROUGE</span>
       </div>
 
       <header class="hero">
         <h1>Inscription — Étude Stroop</h1>
-        <p class="subtitle">[Accroche courte — à remplacer]</p>
+        <p class="subtitle">Toi aussi,<br>tu peux aider avancer la science !</p>
       </header>
 
       <div class="content-grid">
@@ -153,19 +159,19 @@
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><rect x="2" y="4" width="20" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Sur ordinateur</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="10"/><line x1="10" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="14" y2="10"/><line x1="18" y1="10" x2="18" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/></svg> Réponses manuelles</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg> Durée : 45 minutes</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.3"/></svg> Lieu : [à préciser]</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.3"/></svg> Lieu : Bât. Freinet, Campus Mont-Saint-Aignan</li>
           </ul>
         </section>
 
         <section class="card tint-yellow">
           <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16 9.5"/></svg> Éligibilité</h2>
-          <p>[Ligne d'éligibilité — à remplacer. Exemple : avoir entre 18 et 35 ans, aucun antécédent neurologique ou psychiatrique.]</p>
+          <p>Avoir entre 18 et 35 ans, aucun antécédent neurologique ou psychiatrique.</p>
         </section>
       </div>
 
       <button class="cta" onclick="showRegister()">S'inscrire <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></button>
 
-      <footer><p>Contact : [email de contact à préciser]</p></footer>
+      <footer><p>Contact : opticog@gmail.com</p></footer>
     </div>
 
     <!-- ===== Register ===== -->
@@ -208,9 +214,9 @@
           <p class="small">
             Les données recueillies (nom, email, affiliation, créneau) sont utilisées
             uniquement pour l'organisation de cette étude et seront conservées
-            [durée à préciser] après la fin de l'étude, puis supprimées. Conformément
+            15 ans après la fin de l'étude, puis supprimées. Conformément
             au RGPD, vous disposez d'un droit d'accès, de rectification et de
-            suppression de vos données, à exercer auprès de [contact à préciser].
+            suppression de vos données, à exercer auprès de opticog@gmail.com.
           </p>
           <label class="checkbox"><input type="checkbox" required> J'ai lu et j'accepte ces conditions</label>
         </fieldset>
@@ -223,6 +229,26 @@
   </div>
 
   <script>
+    var stroopWords = [
+      { text: 'ROUGE', color: 'var(--stroop-blue)' },
+      { text: 'BLEU', color: 'var(--stroop-green)' },
+      { text: 'VERT', color: 'var(--stroop-yellow)' },
+      { text: 'JAUNE', color: 'var(--stroop-red)' }
+    ];
+    var stroopIdx = 0;
+    var stroopEl = document.getElementById('stroopWord');
+    setInterval(function () {
+      stroopEl.style.opacity = 0;
+      stroopEl.style.transform = 'translateY(6px)';
+      setTimeout(function () {
+        stroopIdx = (stroopIdx + 1) % stroopWords.length;
+        stroopEl.textContent = stroopWords[stroopIdx].text;
+        stroopEl.style.color = stroopWords[stroopIdx].color;
+        stroopEl.style.opacity = 1;
+        stroopEl.style.transform = 'translateY(0)';
+      }, 300);
+    }, 1600);
+
     function showRegister() {
       document.getElementById('landingView').style.display = 'none';
       document.getElementById('registerView').style.display = 'block';

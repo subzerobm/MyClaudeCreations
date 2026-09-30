@@ -9,40 +9,64 @@
     <div class="stroop-bar"></div>
 
     <div class="stroop-logo">
-      <span class="c1">ROUGE</span><span class="c2">BLEU</span><span class="c3">VERT</span><span class="c4">JAUNE</span>
+      <span id="stroopWord" style="color: var(--stroop-blue);">ROUGE</span>
     </div>
 
     <header class="hero">
       <h1>Inscription — Étude Stroop</h1>
-      <p class="subtitle">[Accroche courte — à remplacer]</p>
+      <p class="subtitle">Toi aussi,<br>tu peux aider avancer la science !</p>
     </header>
 
-    <section class="card">
-      <h2><?!= svgIcon('info') ?> À propos de l'étude</h2>
-      <p>
-        Vous réaliserez une tâche de dénomination de couleurs sur ordinateur
-        (tâche de Stroop) ainsi qu'un questionnaire sur l'anxiété (STAI-Y).
-        Aucun dispositif physiologique n'est utilisé — seulement vos réponses
-        comportementales.
-      </p>
-      <ul class="facts">
-        <li><?!= svgIcon('monitor') ?> Sur ordinateur</li>
-        <li><?!= svgIcon('keyboard') ?> Réponses manuelles</li>
-        <li><?!= svgIcon('clock') ?> Durée : 45 minutes</li>
-        <li><?!= svgIcon('mapPin') ?> Lieu : [à préciser]</li>
-      </ul>
-    </section>
+    <div class="content-grid">
+      <section class="card">
+        <h2><?!= svgIcon('info') ?> À propos de l'étude</h2>
+        <p>
+          Vous réaliserez une tâche de dénomination de couleurs sur ordinateur
+          (tâche de Stroop) ainsi qu'un questionnaire sur l'anxiété (STAI-Y).
+          Aucun dispositif physiologique n'est utilisé — seulement vos réponses
+          comportementales.
+        </p>
+        <ul class="facts">
+          <li><?!= svgIcon('monitor') ?> Sur ordinateur</li>
+          <li><?!= svgIcon('keyboard') ?> Réponses manuelles</li>
+          <li><?!= svgIcon('clock') ?> Durée : 45 minutes</li>
+          <li><?!= svgIcon('mapPin') ?> Lieu : Bât. Freinet, Campus Mont-Saint-Aignan</li>
+        </ul>
+      </section>
 
-    <section class="card">
-      <h2><?!= svgIcon('checkCircle') ?> Éligibilité</h2>
-      <p>[Ligne d'éligibilité — à remplacer. Exemple : avoir entre 18 et 35 ans, aucun antécédent neurologique ou psychiatrique.]</p>
-    </section>
+      <section class="card">
+        <h2><?!= svgIcon('checkCircle') ?> Éligibilité</h2>
+        <p>Avoir entre 18 et 35 ans, aucun antécédent neurologique ou psychiatrique.</p>
+      </section>
+    </div>
 
     <a class="cta" href="<?= registerUrl ?>">S'inscrire <?!= svgIcon('arrowRight') ?></a>
 
     <footer>
-      <p>Contact : [email de contact à préciser]</p>
+      <p>Contact : opticog@gmail.com</p>
     </footer>
   </div>
+
+  <script>
+    var stroopWords = [
+      { text: 'ROUGE', color: 'var(--stroop-blue)' },
+      { text: 'BLEU', color: 'var(--stroop-green)' },
+      { text: 'VERT', color: 'var(--stroop-yellow)' },
+      { text: 'JAUNE', color: 'var(--stroop-red)' }
+    ];
+    var stroopIdx = 0;
+    var stroopEl = document.getElementById('stroopWord');
+    setInterval(function () {
+      stroopEl.style.opacity = 0;
+      stroopEl.style.transform = 'translateY(6px)';
+      setTimeout(function () {
+        stroopIdx = (stroopIdx + 1) % stroopWords.length;
+        stroopEl.textContent = stroopWords[stroopIdx].text;
+        stroopEl.style.color = stroopWords[stroopIdx].color;
+        stroopEl.style.opacity = 1;
+        stroopEl.style.transform = 'translateY(0)';
+      }, 300);
+    }, 1600);
+  </script>
 </body>
 </html>

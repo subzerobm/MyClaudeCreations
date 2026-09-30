@@ -39,6 +39,7 @@ const LV2={
   init(){
     const v=260, S=BASE; R2.acts=[]; R2.ai=0; R2.hi=0; R2.backs=[]; R2.lastCh=-9;
     const act=(x,a,c,h)=>R2.acts.push({x,a,c,h}), hint=(x,h)=>act(x,null,null,h);
+    const jersey=(x,y,h)=>{ items.push({type:'maillot',x,y,t:false}); if(h) hint(x-v*.6,h); };
     const plat=(x,w,h,kind,o)=>{ const p=Object.assign({x,w,y:S-h,kind},o||{}); plats.push(p); return p; };
     const back=(x,w,h)=>{ const i=R2.backs.length, ch=i-R2.lastCh>=3&&Math.random()<.45; if(ch) R2.lastCh=i; R2.backs.push({x,w,top:S-h,pal:R2PAL[i%R2PAL.length],seed:i*7+3+(i%3),ch,fl:ch&&Math.random()<.35}); };
     const row=(x1,x2,y)=>{ for(let x=x1;x<x2;x+=26) coins.push({x,y,t:false}); };
@@ -100,7 +101,8 @@ const LV2={
     // 5b. the golden record's bubble protects him from a bike
     items.push({type:'disque',x:p1+530,y:S-48,t:false}); act(p1+500,null,'Disque d’or : une bulle de protection !','Attrape le disque d’or : la bulle te protège !');
     const bk=p1+780; obs('velo',bk,48,[bk+2,S-32,bk+46,S]);
-    act(bk-90,null,'Pas besoin de sauter : la bulle le protège !','Sans bulle ? Saute par-dessus le vélo !');
+    hint(bk-44,'Saute par-dessus le vélo pour garder ta bulle (★★) !');
+    jumpFrom(bk-44,0,0,'Il garde sa bulle : saut par-dessus le vélo !');
 
     // 5c. the Paris ball pulls in the coins; a washing line of jerseys to slide under
     items.push({type:'ballon',x:bk+230,y:S-48,t:false}); act(bk+200,null,'Le ballon aimant attire les pièces !');
@@ -115,7 +117,8 @@ const LV2={
     // 6. Spider-Man: climb a house wall, run on the roof, jump down with flips and roll
     const hx=uf+1750; houses.push({x:hx,w:300,h:190}); hint(hx-10,'Cours vers le mur : tu grimpes tout seul !');
     row(hx+40,hx+270,S-212);
-    items.push({type:'chest',x:hx+160,y:S-202,t:false});
+    items.push({type:'chest',x:hx+262,y:S-202,t:false});
+    jumpFrom(hx+60,190,190,'Un maillot d’or tout là-haut !'); jersey(hx+60+v*.345,S-190-127,'Un maillot d’or au-dessus du toit : saute !');
     hint(hx+300-14,'Du toit : 2 ou 3 TAPES pour des SALTOS !');
     const l5=jumpFrom(hx+300-14,190,0,'Il saute du toit : DOUBLE SALTO !',.3,.66);
 
@@ -131,6 +134,7 @@ const LV2={
     act(g3-420,null,'Le grand pont s’ouvre !');
     const jx=g3-18, land3=jx+v*simT(-JUMPV,0,.345,.345+.36);
     hint(jx,'Le grand pont : 2 TAPES, puis une 3e pour un salto !');
+    jersey(jx+v*.663,S-238);
     jumpFrom(jx,0,0,'Double saut + salto au-dessus du pont !',.345,.345+.36);
 
     // 8. second terrace: two tables, awning, high balcony, onto a roof
@@ -142,6 +146,7 @@ const LV2={
     let m3=jumpFrom(m2+10,30,70);
     plat(m3-22,86,70,'awning',{bounce:1050});
     let m4=m3+v*simT(-1050,110); arcCoins(m3,S-70,-1050,110,0,0,v);
+    jersey(m3+v*.477,S-70-246,'Rebondis bien haut : un maillot d’or !');
     const b2=plat(m4-30,140,180,'balcony'); act(m4+2,null,'Encore un balcon !');
     const jr=b2.x+b2.w-12;
     act(jr,'jump','Il saute sur le toit !');

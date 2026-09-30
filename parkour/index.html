@@ -1978,7 +1978,7 @@ function resize(){
   LV.build(); snow=[];
 }
 window.addEventListener('resize',resize);
-LV=LEVELS[save.level]||LV1;
+LV=LV1; save.level=1; // always open on level 1
 resize(); reset(); refreshMenu(); show('menu');
 if(document.fonts&&document.fonts.load) document.fonts.load('20px "Lilita One"').then(()=>{ for(const b of buildings) b.img=null; if(!scr.shop.hidden) renderShop(); }).catch(()=>{});
 

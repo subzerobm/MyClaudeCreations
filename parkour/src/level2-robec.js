@@ -112,16 +112,6 @@ const LV2={
     act(uf-30,null,'MODE OVNI : il vole au-dessus de la Robec !','Attrape l’OVNI… ou passe par la passerelle !');
     gaps.push([uf+380,uf+1000]); plat(uf+374,632,0,'bridge');
 
-    // 5c. the Paris ball pulls in the coins; a washing line of jerseys to slide under
-    items.push({type:'ballon',x:bk+230,y:S-48,t:false}); act(bk+200,null,'Le ballon aimant attire les pièces !');
-    for(let i=0;i<14;i++) coins.push({x:bk+300+i*22,y:S-60-Math.sin(i*.7)*50,t:false});
-    const lg=bk+520; makeObst('linge',lg,S); act(lg-32,'slide','Il glisse sous les maillots');
-
-    // 5d. the UFO carries him over a wide stretch of the Robec
-    const uf=lg+300; items.push({type:'ovni',x:uf,y:S-48,t:false});
-    act(uf-30,null,'MODE OVNI : il vole au-dessus de la Robec !');
-    gaps.push([uf+380,uf+1000]);
-
     // 6. Spider-Man: climb a house wall, run on the roof, jump down with flips and roll
     const hx=uf+1750; houses.push({x:hx,w:300,h:190}); hint(hx-10,'Cours vers le mur : tu grimpes tout seul !');
     row(hx+40,hx+270,S-212);

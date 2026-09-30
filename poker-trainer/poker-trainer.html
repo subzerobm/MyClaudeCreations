@@ -1,0 +1,1309 @@
+<title>Table du Vendredi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=Barlow:wght@400;600;700&display=swap">
+<style>
+/* Single deliberate look: a dim card room around a green felt table */
+:root{
+  color-scheme:dark;
+  --room:#0d1612; --panel:#15221b; --line:#253a2e; --ink:#eaf3ee; --muted:#8fa89a;
+  --felt:#127341; --felt-2:#0a4b2a; --rail:#3d2616; --rail-2:#2a190e;
+  --gold:#f2c14e; --fold:#d9463e; --call:#1f9d55; --raise:#e39b2d; --allin:#0f7a3b; --check:#7fb3f5;
+  --card:#fbfbf8; --card-ink:#15171a; --card-red:#cc1f1f;
+  --cond:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{background:var(--room);color:var(--ink)}
+body{font-family:var(--body);-webkit-tap-highlight-color:transparent}
+.app{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:10px 24px;display:flex;flex-direction:column;gap:10px}
+button,select{font:inherit}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* header */
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-family:var(--cond);font-weight:800;font-size:22px;letter-spacing:.5px;text-transform:uppercase;margin:0}
+.brand span{color:var(--gold)}
+.stats{display:flex;gap:14px;font-family:var(--cond);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.stats b{display:block;font-size:18px;color:var(--ink);letter-spacing:0;font-variant-numeric:tabular-nums}
+.pos{color:#5ee08f!important}.neg{color:#ff7b72!important}
+
+/* table */
+.table{position:relative;container-type:inline-size;aspect-ratio:.66;margin-inline:auto;
+  width:min(100%,max(300px,calc((100dvh - 250px) * .66)))}
+.felt{position:absolute;inset:5% 3%;border-radius:46% / 30%;
+  background:radial-gradient(ellipse at 50% 45%,#1a8a50 0%,var(--felt) 45%,var(--felt-2) 100%);
+  border:3cqw solid var(--rail);box-shadow:0 0 0 1cqw var(--rail-2),inset 0 0 8cqw rgba(0,0,0,.45),0 3cqw 6cqw rgba(0,0,0,.5)}
+
+.center{position:absolute;left:26%;right:26%;top:19.5%;display:flex;flex-direction:column;align-items:center;gap:1.5cqw}
+.pot-row{display:flex;align-items:flex-end;gap:2.4cqw}
+.streets{display:flex;gap:.8cqw}
+.streets span{font-family:var(--cond);font-weight:700;font-size:2.6cqw;letter-spacing:.4cqw;padding:.6cqw 1.4cqw;border-radius:9cqw;background:rgba(0,0,0,.28);color:rgba(255,255,255,.4)}
+.streets span.on{background:var(--gold);color:#2a1d00}
+.streets span.done{color:rgba(255,255,255,.85)}
+.pot{text-align:center;line-height:1}
+.pot small{display:block;font-family:var(--cond);font-size:3cqw;letter-spacing:.5cqw;color:#cfeedd}
+.pot b{font-family:var(--cond);font-weight:800;font-size:8cqw;color:var(--gold);font-variant-numeric:tabular-nums;text-shadow:0 .5cqw 1.5cqw rgba(0,0,0,.45)}
+
+.board{position:absolute;left:0;right:0;top:40%;display:flex;justify-content:center;gap:1.4cqw}
+.lower{position:absolute;left:27%;right:27%;top:59.5%;display:flex;flex-direction:column;align-items:center;gap:1.2cqw;text-align:center}
+.badge{font-family:var(--cond);font-weight:800;font-size:3.2cqw;letter-spacing:.4cqw;padding:.6cqw 2cqw;border-radius:1.2cqw}
+.cat-premium{background:var(--gold);color:#2a1d00}.cat-medium{background:#34c26f;color:#03240f}
+.cat-weak{background:#6aa8f7;color:#061b3a}.cat-trash{background:#6b7770;color:#fff}
+.made{font-weight:700;font-size:3.6cqw;line-height:1.15;color:#fff}
+
+/* cards */
+.card{--w:16cqw;width:var(--w);aspect-ratio:5/7;background:var(--card);border-radius:calc(var(--w)*.12);color:var(--card-ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:.95;font-family:var(--cond);font-weight:800;
+  box-shadow:0 .8cqw 1.8cqw rgba(0,0,0,.4);outline:.8cqw solid transparent}
+.card .r{font-size:calc(var(--w)*.5)}
+.card .s{font-size:calc(var(--w)*.42)}
+.card.red{color:var(--card-red)}
+.card.back{background:repeating-linear-gradient(45deg,#8a1c1c 0 1.2cqw,#6a1212 1.2cqw 2.4cqw);border:calc(var(--w)*.06) solid var(--card)}
+.card.slot{background:rgba(255,255,255,.06);border:.4cqw dashed rgba(255,255,255,.25);box-shadow:none}
+.card.used{outline-color:var(--gold);transform:translateY(-1cqw)}
+.card.dim{opacity:.42}
+.card.mini{--w:7.4cqw;border-radius:.9cqw;outline-width:.5cqw}
+.card.hc{--w:15cqw}
+.review{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.rv .rk{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--gold)}
+.rv p{margin:2px 0 0;font-size:14px;line-height:1.5;color:#dcebe2}
+.rv .good{color:#5ee08f}.rv .bad{color:#ff7b72}.rv .even{color:var(--gold)}
+.evo{display:inline-block;margin-top:4px;font-size:13px;color:var(--muted)}
+
+/* seats */
+.pod{position:absolute;width:24cqw;transform:translateX(-50%);background:rgba(10,18,14,.88);border:.5cqw solid var(--line);
+  border-radius:2.4cqw;padding:1cqw 1.2cqw;display:flex;flex-direction:column;align-items:center;gap:.5cqw;text-align:center}
+.pod .nm{display:flex;align-items:center;gap:1cqw;font-weight:700;font-size:3.3cqw;max-width:100%;white-space:nowrap}
+.pos-chip{font-family:var(--cond);font-weight:700;font-size:2.7cqw;letter-spacing:.2cqw;padding:.1cqw 1cqw;border-radius:.8cqw;background:#2f4a3b;color:#d9f2e3}
+.pos-chip.blind{background:#4b3c16;color:var(--gold)}
+.stk{font-family:var(--cond);font-weight:800;font-size:4.8cqw;line-height:1;font-variant-numeric:tabular-nums}
+.act{font-family:var(--cond);font-weight:800;font-size:3.1cqw;letter-spacing:.2cqw;min-height:4.4cqw;padding:0 1.2cqw;border-radius:9cqw;line-height:4.4cqw;white-space:nowrap}
+.a-fold{color:#b8c2bd;background:rgba(255,255,255,.08)}.a-call{color:#062d15;background:#5ee08f}.a-check{color:#08203f;background:var(--check)}
+.a-raise{color:#2e1c00;background:var(--raise)}.a-allin{color:#fff;background:var(--fold)}.a-blind{color:var(--gold);background:rgba(242,193,78,.14)}
+.a-won{color:#2a1d00;background:var(--gold)}
+.frc{font-family:var(--cond);font-size:2.7cqw;letter-spacing:.2cqw;color:var(--muted);white-space:nowrap}
+.minis{display:flex;gap:.8cqw}
+.pod.folded{opacity:.45}
+.pod.out{opacity:.25}
+.pod.turn{border-color:var(--gold);box-shadow:0 0 0 .6cqw rgba(242,193,78,.35)}
+.pod.winner{border-color:var(--gold);background:rgba(58,44,10,.92)}
+.dealer{position:absolute;top:-2cqw;right:-2cqw;width:5.4cqw;height:5.4cqw;border-radius:50%;background:#fff;color:#111;
+  font-family:var(--cond);font-weight:800;font-size:3.2cqw;display:flex;align-items:center;justify-content:center;box-shadow:0 .4cqw 1cqw rgba(0,0,0,.5)}
+.pod.hero{width:42cqw;background:rgba(20,34,26,.94);border-color:#4f7a62}
+.pod.hero .nm{font-size:3.6cqw}
+.pod.hero .cards{display:flex;gap:1.6cqw}
+.pod.hero.turn{border-color:var(--gold)}
+.p0{left:50%;top:72%}.p1{left:13%;top:80%}.p2{left:13%;top:58.5%}.p3{left:13%;top:19.5%}.p4{left:31%;top:1.5%}
+.p5{left:69%;top:1.5%}.p6{left:87%;top:19.5%}.p7{left:87%;top:58.5%}.p8{left:87%;top:80%}
+
+/* chips */
+.chiprow{display:flex;gap:.5cqw;justify-content:center;min-height:4.4cqw}
+.cp{display:inline-flex;align-items:center;justify-content:center;width:4.4cqw;height:4.4cqw;border-radius:50%;background:var(--c);color:var(--t);
+  font-family:var(--cond);font-weight:800;font-size:2.6cqw;border:.5cqw dashed rgba(255,255,255,.6);box-shadow:0 .3cqw .6cqw rgba(0,0,0,.4)}
+.cp.light,.cstack i.light{border-color:rgba(0,0,0,.3)}
+.stacks{display:flex;gap:1.4cqw;align-items:flex-end;min-height:8cqw}
+.cstack{display:flex;flex-direction:column-reverse;align-items:center}
+.cstack i{display:block;width:6.4cqw;height:1.8cqw;border-radius:50%;background:var(--c);border:.35cqw dashed rgba(255,255,255,.65);margin-top:-.7cqw;box-shadow:0 .3cqw .4cqw rgba(0,0,0,.35)}
+.cstack b{font-family:var(--cond);font-size:2.6cqw;color:#fff;margin-top:.5cqw}
+.legend{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:18px;height:18px;border-radius:50%;background:var(--c);border:2px dashed rgba(255,255,255,.65)}
+.legend i.light{border-color:rgba(0,0,0,.3)}
+
+/* odds */
+.odds{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px 10px}
+.odds h2,.coach h2{grid-column:1/-1;margin:0;font-family:var(--cond);font-size:15px;letter-spacing:.8px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.odds h2 small{font-family:var(--body);font-size:12px;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:400}
+.odds .k{font-family:var(--cond);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.odds .v{font-family:var(--cond);font-weight:800;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.meter{grid-column:1/-1;height:10px;border-radius:5px;background:#2a3b31;position:relative}
+.meter .eq{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:#5ee08f}
+.meter .need{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--gold)}
+.verdict{grid-column:1/-1;font-size:14px;line-height:1.45;color:#d2e4da}
+.good{color:#5ee08f}.bad{color:#ff7b72}
+
+/* coach */
+.coach{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.coach h2 label{font-family:var(--body);font-size:13px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400;display:flex;gap:6px;align-items:center}
+.msgs{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow:auto}
+.msgs:empty{display:none}
+.msg{padding:8px 11px;border-radius:12px;font-size:14px;line-height:1.45;white-space:pre-wrap;max-width:92%}
+.msg.me{align-self:flex-end;background:#2f6fd6;color:#fff}
+.msg.bot{align-self:flex-start;background:#20352a;color:var(--ink);border:1px solid var(--line)}
+.msg.auto{border-color:#6b5a26}
+.msg .tag{display:block;font-family:var(--cond);font-size:11px;letter-spacing:.8px;color:var(--gold);margin-bottom:2px}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+.quick button{background:#20352a;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer}
+.ask{display:flex;gap:6px}
+.ask input{flex:1;min-width:0;background:#0f1a15;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:16px}
+.ask button{background:var(--gold);color:#2a1d00;border:0;border-radius:10px;padding:0 16px;font-weight:700;cursor:pointer}
+.coach button:disabled{opacity:.45;cursor:not-allowed}
+.coach-off{font-size:13px;color:var(--muted);margin:0}
+
+/* controls */
+.prompt{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;color:var(--muted);min-height:20px;flex-wrap:wrap}
+.prompt b{color:var(--ink)}
+.timer{font-family:var(--cond);font-weight:800;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.controls button,.big-btn{border:0;border-radius:14px;min-height:62px;padding:6px 4px;color:#fff;cursor:pointer;touch-action:manipulation;user-select:none;
+  font-family:var(--cond);font-weight:800;font-size:clamp(17px,5vw,21px);letter-spacing:.5px;line-height:1.05;box-shadow:0 4px 0 rgba(0,0,0,.4)}
+.controls button small{display:block;font-size:14px;font-weight:700;opacity:.9;margin-top:2px}
+.controls button:active:not(:disabled),.big-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.4)}
+.controls button:disabled{opacity:.28;cursor:not-allowed}
+.b-fold{background:var(--fold)}.b-call{background:var(--call)}.b-raise{background:var(--raise);color:#2e1c00!important}
+.b-allin{background:var(--allin);box-shadow:inset 0 0 0 3px #5ee08f,0 4px 0 rgba(0,0,0,.4)!important}
+.b-allin.armed{background:var(--fold);box-shadow:inset 0 0 0 3px #fff,0 4px 0 rgba(0,0,0,.4)!important}
+
+.result{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.res-big{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1}
+.res-big.win{color:#5ee08f}.res-big.lose{color:#ff7b72}.res-big.even{color:var(--gold)}
+.res-lines{font-size:14px;line-height:1.45;color:#d2e4da;margin:0;padding-left:18px}
+.res-cf{font-size:14px;color:var(--gold)}
+.btn-row{display:flex;gap:8px}
+.big-btn{flex:1;background:#2f6fd6;position:relative;overflow:hidden}
+.big-btn.alt{background:#3a4a41}
+.big-btn.go{background:var(--raise);color:#2e1c00}
+
+/* raise sizing panel */
+.sizer{background:var(--panel);border:2px solid var(--raise);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.sizer h3{margin:0;font-family:var(--cond);font-size:16px;letter-spacing:.8px;text-transform:uppercase;color:var(--raise)}
+.presets{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:6px}
+.presets button{background:#20352a;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 6px;cursor:pointer;touch-action:manipulation;
+  font-family:var(--cond);font-weight:800;font-size:17px;line-height:1.1}
+.presets button small{display:block;font-family:var(--body);font-weight:600;font-size:13px;color:var(--muted)}
+.presets button.sel{border:2px solid var(--raise);background:#3a2c12}
+.presets button.rec em{display:block;font-style:normal;font-family:var(--body);font-size:10px;letter-spacing:.6px;color:var(--gold);text-transform:uppercase}
+.range-row{display:flex;align-items:center;gap:10px}
+.range-row input{flex:1;min-width:0;accent-color:var(--raise);height:34px}
+.amt{font-family:var(--cond);font-weight:800;font-size:28px;min-width:84px;text-align:right;font-variant-numeric:tabular-nums;color:var(--raise)}
+.size-info{font-size:14px;color:#d2e4da;line-height:1.45}
+.size-tip{font-size:13px;color:var(--gold);line-height:1.45}
+
+.settings{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:14px;color:var(--muted)}
+.settings label{display:flex;align-items:center;gap:6px}
+.settings select{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 6px}
+details.log{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+details.log summary{cursor:pointer;font-family:var(--cond);font-weight:700;letter-spacing:.6px;text-transform:uppercase;font-size:14px}
+.log ol{margin:6px 0 0;padding-left:22px;max-height:170px;overflow:auto;font-size:13px;line-height:1.5;color:#cfe0d6}
+.log li.street{color:var(--gold);font-weight:700;list-style:none;margin-left:-22px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.players label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.players .row{display:flex;gap:4px}
+.players input,.players select{min-width:0;background:#0f1a15;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:16px}
+.players input{flex:1.2}.players select{flex:1;font-size:14px}
+@media (max-width:420px){.players{grid-template-columns:1fr}}
+.pn{overflow:hidden;text-overflow:ellipsis;max-width:15.5cqw}
+.pod.hero .pn{max-width:none}
+.log li.me{color:#9fd0ff;font-weight:600}
+.hint{font-size:12px;color:#6f8a7b;line-height:1.5}
+.hint kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--ink);font-family:var(--cond)}
+</style>
+
+<div class="app">
+  <header class="top">
+    <h1 class="brand">Table du <span>Vendredi</span></h1>
+    <div class="stats">
+      <div>Main<b id="sHand">1</b></div>
+      <div>Joueurs<b id="sAlive">9/9</b></div>
+      <div>Net<b id="sNet">0€</b></div>
+      <div>Décision moy.<b id="sAvg">–</b></div>
+    </div>
+  </header>
+
+  <div class="table" id="table">
+    <div class="felt"></div>
+    <div class="center">
+      <div class="streets" id="streets"></div>
+      <div class="pot-row"><div class="stacks" id="potChips"></div><div class="pot"><small id="potLabel">POT</small><b id="pot">0€</b></div></div>
+    </div>
+    <div class="board" id="board"></div>
+    <div class="lower"><span class="badge" id="cat"></span><span class="made" id="made"></span></div>
+    <div id="seats"></div>
+  </div>
+
+  <div class="prompt"><span id="promptText"></span><span>Temps : <span class="timer" id="dTime">0.0s</span></span></div>
+
+  <div class="controls" id="controls">
+    <button class="b-fold" id="bFold" type="button">FOLD</button>
+    <button class="b-call" id="bCall" type="button">CALL</button>
+    <button class="b-raise" id="bRaise" type="button">RAISE</button>
+    <button class="b-allin" id="bAllin" type="button">ALL-IN</button>
+  </div>
+  <div class="sizer" id="sizer" hidden>
+    <h3 id="sizerTitle">Choisis ta relance</h3>
+    <div class="presets" id="presets"></div>
+    <div class="range-row">
+      <input type="range" id="raiseRange" step="50" aria-label="Montant de la relance">
+      <span class="amt" id="raiseAmt"></span>
+    </div>
+    <div class="size-info" id="sizeInfo"></div>
+    <div class="size-tip" id="sizeTip"></div>
+    <div class="btn-row">
+      <button class="big-btn alt" id="bSizeCancel" type="button">ANNULER</button>
+      <button class="big-btn go" id="bSizeGo" type="button">RELANCER</button>
+    </div>
+  </div>
+  <div class="btn-row" id="stepRow" hidden>
+    <button class="big-btn" id="bStep" type="button">VOIR LE FLOP ▶</button>
+    <button class="big-btn alt" id="bSkip" type="button">RÉSULTAT ▶▶</button>
+  </div>
+  <div class="result" id="result" hidden></div>
+
+  <section class="odds" id="odds" aria-live="polite"></section>
+
+  <section class="coach" id="coach">
+    <h2>Coach <label><input type="checkbox" id="coachAuto" checked> Commente tout seul</label></h2>
+    <p class="coach-off" id="coachOff">Le coach se connecte…</p>
+    <div id="coachBody" hidden>
+      <div class="msgs" id="msgs"></div>
+      <div class="quick">
+        <button type="button" data-q="Qu'est-ce que je devrais faire ici, et pourquoi ?">Je fais quoi ?</button>
+        <button type="button" data-q="Explique-moi simplement la cote du pot et mon équité sur ce coup.">Explique les cotes</button>
+        <button type="button" data-q="Analyse cette main : qu'est-ce que j'ai bien ou mal fait ?">Revois la main</button>
+      </div>
+      <form class="ask" id="askForm">
+        <input id="askInput" autocomplete="off" placeholder="Pose ta question au coach…" aria-label="Question au coach">
+        <button type="submit" id="askBtn">Envoyer</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="settings">
+    <label>Ma position
+      <select id="posPref">
+        <option value="auto">Rotation normale</option>
+        <option value="UTG">UTG (premier)</option>
+        <option value="MP">Milieu (MP)</option>
+        <option value="CO">Cut-off</option>
+        <option value="BTN">Bouton</option>
+        <option value="SB">Petite blind</option>
+        <option value="BB">Grosse blind</option>
+      </select>
+    </label>
+  </div>
+
+  <details class="log" id="playersBox">
+    <summary>Joueurs : noms et styles</summary>
+    <div class="players" id="players"></div>
+    <p class="hint">Les noms changent tout de suite. Un style fixé s'applique aussi tout de suite ; « Au hasard » tire un style à chaque nouvelle partie.</p>
+  </details>
+
+  <details class="log" id="logBox" open>
+    <summary>Déroulé de la main</summary>
+    <ol id="log"></ol>
+  </details>
+
+  <p class="hint">Blinds 0,50€ / 1€ · tapis de départ 20€. Si tu perds tout, ton tapis se recharge automatiquement à 20€ (le Net compte quand même tes pertes). On mise à chaque street : préflop, flop, turn et river. Sous chaque joueur, <b>F / C / R</b> = sa fréquence habituelle de fold / call / raise en %.
+    Clavier : <kbd>F</kbd> fold · <kbd>C</kbd> call/check · <kbd>R</kbd> choisir sa relance/mise · <kbd>A</kbd> all-in · <kbd>Espace</kbd> dévoiler la suite / main suivante.</p>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const SB = 50, BB = 100, START = 2000; // all money in cents
+const SYM = {s:'♠', h:'♥', d:'♦', c:'♣'};
+const RL = r => r <= 10 ? String(r) : 'JQKA'[r - 11];
+const NOM = {2:'Deux',3:'Trois',4:'Quatre',5:'Cinq',6:'Six',7:'Sept',8:'Huit',9:'Neuf',10:'Dix',11:'Valet',12:'Dame',13:'Roi',14:'As'};
+const PL = r => ({11:'Valets',12:'Dames',13:'Rois'})[r] || NOM[r];
+const DE = r => r === 14 ? "d'As" : 'de ' + PL(r);
+const STREETS = ['PRÉFLOP', 'FLOP', 'TURN', 'RIVER', 'SHOWDOWN'];
+const STREET_FR = ['Préflop', 'Flop', 'Turn', 'River'];
+const rnd = n => Math.random() * n | 0;
+const fmt = c => { const v = Math.abs(c) / 100; return (Number.isInteger(v) ? v : v.toFixed(2).replace('.', ',')) + '€'; };
+const sfmt = c => (c > 0 ? '+' : c < 0 ? '−' : '') + fmt(c);
+
+const NAMES = ['Paul', 'Ellie', 'Mathilde', 'Anaïs', 'Gatou', 'Bertrand', 'Renaud', 'Victor'];
+const HERO_NAME = 'Mariana';
+const PROFILES = [
+  {name:'Serré',    f:.68, c:.22, r:.09, a:.01},
+  {name:'Suiveur',  f:.28, c:.62, r:.08, a:.02},
+  {name:'Agressif', f:.30, c:.25, r:.35, a:.10},
+  {name:'Solide',   f:.52, c:.26, r:.20, a:.02},
+  {name:'Loose',    f:.35, c:.50, r:.12, a:.03},
+];
+// Chip set: edit here if your real chips differ
+const CHIPS = [
+  {v:5000, name:'Bleu',  c:'#1f5fd6', t:'#fff'},
+  {v:1000, name:'Noir',  c:'#1d1d1f', t:'#fff'},
+  {v:500,  name:'Vert',  c:'#178a44', t:'#fff'},
+  {v:100,  name:'Rouge', c:'#c62828', t:'#fff'},
+  {v:50,   name:'Blanc', c:'#f3f1ea', t:'#222', light:true},
+];
+function breakdown(c) {
+  const out = [];
+  for (const ch of CHIPS) { const n = Math.floor(c / ch.v); if (n) { out.push([ch, n]); c -= n * ch.v; } }
+  return out;
+}
+const chipStyle = ch => `--c:${ch.c};--t:${ch.t}`;
+const chipRow = c => `<div class="chiprow">${breakdown(c).map(([ch, n]) => `<span class="cp${ch.light ? ' light' : ''}" style="${chipStyle(ch)}" title="${n} × ${ch.name}">${n}</span>`).join('')}</div>`;
+const chipStacks = c => breakdown(c).map(([ch, n]) =>
+  `<div class="cstack"><b>×${n}</b>${`<i class="${ch.light ? 'light' : ''}" style="${chipStyle(ch)}"></i>`.repeat(Math.min(n, 6))}</div>`).join('');
+const pct = x => x == null ? '…' : Math.round(x * 100) + '%';
+
+// Opponent names and styles chosen by the viewer, remembered in this browser
+const SEAT_CFG = (() => {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('ptPlayersV3')); } catch {}
+  return NAMES.map((n, i) => ({name:saved?.[i]?.name || n, style:saved?.[i]?.style ?? 'random'}));
+})();
+const cleanName = s => s.replace(/[<>&"'`]/g, '').trim().slice(0, 12);
+const seatName = i => SEAT_CFG[i].name || NAMES[i];
+const seatProfile = i => SEAT_CFG[i].style === 'random' ? PROFILES[rnd(PROFILES.length)] : PROFILES[+SEAT_CFG[i].style];
+function saveSeats() { try { localStorage.setItem('ptPlayersV3', JSON.stringify(SEAT_CFG)); } catch {} }
+
+const frc = p => `F${Math.round(p.f*100)} C${Math.round(p.c*100)} R${Math.round((p.r+p.a)*100)}`;
+
+let G, H, decStart = 0, decTick = null;
+const P = () => G.players;
+
+/* ---------- deck & hand categories ---------- */
+function newDeck() {
+  const d = [];
+  for (const s of 'shdc') for (let r = 2; r <= 14; r++) d.push({r, s});
+  for (let i = d.length - 1; i > 0; i--) { const j = rnd(i + 1); [d[i], d[j]] = [d[j], d[i]]; }
+  return d;
+}
+function classify(a, b) {
+  const hi = Math.max(a.r, b.r), lo = Math.min(a.r, b.r), suited = a.s === b.s, gap = hi - lo;
+  if (hi === lo) return hi >= 10 ? 'premium' : hi >= 6 ? 'medium' : 'weak';
+  if (hi === 14 && lo === 13) return 'premium';
+  if (hi === 14 && lo === 12) return suited ? 'premium' : 'medium';
+  if (hi === 14 && lo >= 10) return 'medium';
+  if (hi === 13 && lo === 12) return 'medium';
+  if (suited && lo >= 10) return 'medium';
+  if (suited && hi >= 13) return 'weak';
+  if (suited && gap <= 2 && lo >= 4) return 'weak';
+  if (lo >= 10) return 'weak';
+  return 'trash';
+}
+// Your hand is drawn from a random category so premium/medium/weak/trash all come up often
+function dealHero(deck) {
+  const want = ['premium', 'medium', 'weak', 'trash'][rnd(4)];
+  for (let t = 0; t < 3000; t++) {
+    const i = rnd(deck.length); let j = rnd(deck.length - 1); if (j >= i) j++;
+    if (classify(deck[i], deck[j]) === want) {
+      const hand = [deck[i], deck[j]];
+      deck.splice(Math.max(i, j), 1); deck.splice(Math.min(i, j), 1);
+      return hand;
+    }
+  }
+  return [deck.pop(), deck.pop()];
+}
+
+/* ---------- hand evaluation ---------- */
+function eval5(c) {
+  const rs = c.map(x => x.r).sort((a, b) => b - a);
+  const flush = c.length === 5 && c.every(x => x.s === c[0].s);
+  const cnt = {}; rs.forEach(r => cnt[r] = (cnt[r] || 0) + 1);
+  const g = Object.entries(cnt).map(([r, n]) => [+r, n]).sort((a, b) => b[1] - a[1] || b[0] - a[0]);
+  const kick = g.map(x => x[0]);
+  let straight = 0;
+  if (g.length === 5) {
+    if (rs[0] - rs[4] === 4) straight = rs[0];
+    else if (rs[0] === 14 && rs[1] === 5) straight = 5;
+  }
+  if (straight && flush) return [8, straight];
+  if (g[0][1] === 4) return [7, ...kick];
+  if (g[0][1] === 3 && g[1][1] === 2) return [6, ...kick];
+  if (flush) return [5, ...rs];
+  if (straight) return [4, straight];
+  if (g[0][1] === 3) return [3, ...kick];
+  if (g[0][1] === 2 && g[1][1] === 2) return [2, ...kick];
+  if (g[0][1] === 2) return [1, ...kick];
+  return [0, ...rs];
+}
+function cmp(a, b) {
+  for (let i = 0; i < Math.max(a.length, b.length); i++) { const d = (a[i] || 0) - (b[i] || 0); if (d) return d; }
+  return 0;
+}
+function best(cards) {
+  let top = null;
+  const n = cards.length;
+  const rec = (start, pick) => {
+    if (pick.length === Math.min(5, n)) {
+      const five = pick.map(i => cards[i]), score = eval5(five);
+      if (!top || cmp(score, top.score) > 0) top = {score, cards: five};
+      return;
+    }
+    for (let i = start; i <= n - (Math.min(5, n) - pick.length); i++) rec(i + 1, [...pick, i]);
+  };
+  rec(0, []);
+  top.name = handName(top.score);
+  return top;
+}
+function handName(s) {
+  switch (s[0]) {
+    case 8: return s[1] === 14 ? 'Quinte flush royale' : `Quinte flush hauteur ${NOM[s[1]]}`;
+    case 7: return `Carré ${DE(s[1])}`;
+    case 6: return `Full aux ${PL(s[1])} par les ${PL(s[2])}`;
+    case 5: return `Couleur hauteur ${NOM[s[1]]}`;
+    case 4: return `Quinte hauteur ${NOM[s[1]]}`;
+    case 3: return `Brelan ${DE(s[1])}`;
+    case 2: return `Double paire ${PL(s[1])} et ${PL(s[2])}`;
+    case 1: return `Paire ${DE(s[1])}`;
+    default: return `Hauteur ${NOM[s[1]]}`;
+  }
+}
+
+/* ---------- positions ---------- */
+const POS = {
+  9:['BTN','SB','BB','UTG','UTG+1','MP','LJ','HJ','CO'], 8:['BTN','SB','BB','UTG','UTG+1','MP','HJ','CO'],
+  7:['BTN','SB','BB','UTG','MP','HJ','CO'], 6:['BTN','SB','BB','UTG','HJ','CO'], 5:['BTN','SB','BB','UTG','CO'],
+  4:['BTN','SB','BB','UTG'], 3:['BTN','SB','BB'], 2:['BTN/SB','BB'],
+};
+function prefIndex(labels, pref) {
+  const want = pref === 'MP' ? ['MP','UTG+1','LJ','HJ'] : pref === 'SB' ? ['SB','BTN/SB'] : pref === 'BTN' ? ['BTN','BTN/SB'] : [pref];
+  return labels.findIndex(l => want.includes(l));
+}
+const nextSeat = (from, pred) => { for (let k = 1; k <= 9; k++) { const s = (from + k) % 9; if (pred(P()[s])) return s; } return from; };
+
+/* ---------- game setup ---------- */
+function newGame() {
+  clearInterval(decTick);
+  const players = [{seat:0, name:HERO_NAME, hero:true, stack:START, out:false}];
+  NAMES.forEach((_, i) => players.push({seat:i + 1, name:seatName(i), hero:false, stack:START, out:false, prof:seatProfile(i)}));
+  G = {players, button:-1, handNo:0, decisions:[], invested:START, rebuyUsed:false, over:false};
+  newHand();
+}
+
+function newHand() {
+  clearInterval(decTick);
+  const A = P().filter(p => !p.out).map(p => p.seat), n = A.length;
+  G.button = G.button < 0 ? A[rnd(n)] : nextSeat(G.button, p => !p.out);
+  const labels = POS[n];
+  const pref = $('posPref').value;
+  if (pref !== 'auto') {
+    const idx = prefIndex(labels, pref);
+    if (idx >= 0) G.button = A[(A.indexOf(0) - idx + n) % n];
+  }
+  const bi = A.indexOf(G.button), ord = A.map((_, k) => A[(bi + k) % n]);
+  P().forEach(p => Object.assign(p, {bet:0, total:0, folded:p.out, allin:false, act:null, cards:[], won:0, pos:''}));
+  ord.forEach((s, k) => P()[s].pos = labels[k]);
+
+  const deck = newDeck();
+  P()[0].cards = dealHero(deck);
+  ord.forEach(s => { if (s !== 0) P()[s].cards = [deck.pop(), deck.pop()]; });
+
+  H = {board:deck.splice(0, 5), shown:0, stage:0, street:0, currentBet:BB, minRaise:BB, raises:0,
+       toAct:new Set(), turn:-1, awaiting:false, runout:false, over:false, log:[], used:null, reveal:false,
+       decisions:[], odds:null};
+  G.handNo++;
+  log(`Main #${G.handNo} · bouton : ${P()[G.button].name}`);
+  const sbS = n === 2 ? ord[0] : ord[1], bbS = n === 2 ? ord[1] : ord[2];
+  post(P()[sbS], SB, 'SB'); post(P()[bbS], BB, 'BB');
+  A.forEach(s => { if (!P()[s].allin) H.toAct.add(s); });
+  H.turn = nextSeat(bbS, p => !p.out);
+  render();
+  step();
+}
+
+/* ---------- betting engine: a round on every street ---------- */
+function move(p, a) {
+  p.stack -= a; p.bet += a; p.total += a;
+  if (p.stack === 0) { p.allin = true; H.toAct.delete(p.seat); }
+}
+function post(p, amt, label) {
+  const a = Math.min(amt, p.stack); move(p, a);
+  p.act = [`${label} ${fmt(a)}`, 'blind'];
+  log(`${p.pos} · ${p.name} poste ${label} ${fmt(a)}`);
+}
+const potTotal = () => P().reduce((a, p) => a + p.total, 0);
+const round50 = x => Math.round(x / 50) * 50;
+// Preflop: open to 3 BB, re-raise 3x. After the flop: bet half the pot, raise 3x.
+function raiseTarget() {
+  if (H.street === 0) return round50(H.currentBet <= BB ? 3 * BB : 3 * H.currentBet);
+  if (H.currentBet === 0) return Math.max(BB, round50(potTotal() / 2));
+  return Math.max(round50(3 * H.currentBet), H.currentBet + H.minRaise);
+}
+const canRaise = p => H.raises < 4 && p.stack > H.currentBet - p.bet && P().some(q => q !== p && !q.folded && !q.allin);
+
+function apply(p, kind, to) {
+  const toCall = H.currentBet - p.bet;
+  if (kind === 'fold') {
+    p.folded = true; H.toAct.delete(p.seat); p.act = ['FOLD', 'fold'];
+  } else if (kind === 'call') {
+    const a = Math.min(toCall, p.stack); move(p, a); H.toAct.delete(p.seat);
+    p.act = toCall <= 0 ? ['CHECK', 'check'] : p.allin ? [`ALL-IN ${fmt(p.bet)}`, 'allin'] : [`CALL ${fmt(a)}`, 'call'];
+  } else {
+    to = Math.min(to, p.bet + p.stack);
+    if (to <= H.currentBet) return apply(p, 'call');
+    const opening = H.currentBet === 0;
+    move(p, to - p.bet);
+    const inc = to - H.currentBet;
+    if (inc >= H.minRaise) H.minRaise = inc;
+    H.currentBet = to; H.raises++;
+    H.toAct = new Set(P().filter(q => q !== p && !q.folded && !q.allin).map(q => q.seat));
+    p.act = p.allin ? [`ALL-IN ${fmt(to)}`, 'allin'] : [`${opening ? 'MISE' : 'RAISE'} ${fmt(to)}`, 'raise'];
+  }
+  log(`${p.pos} · ${p.name}${p.hero ? '' : ` (${p.prof.name} ${frc(p.prof)})`} : ${p.act[0]}`, p.hero);
+}
+
+// Bots act instantly until it is your turn or the betting round is over
+function step() {
+  for (;;) {
+    const inHand = P().filter(p => !p.folded);
+    if (inHand.length === 1) return finishHand();
+    const live = inHand.filter(p => !p.allin);
+    if (!H.toAct.size || !live.length || (live.length === 1 && live[0].bet >= H.currentBet)) return endRound();
+    let s = H.turn;
+    for (let k = 0; k < 9 && !H.toAct.has(s); k++) s = (s + 1) % 9;
+    H.turn = s;
+    const p = P()[s];
+    if (p.hero) {
+      H.awaiting = true;
+      startOdds();
+      render();
+      startDecisionTimer();
+      return;
+    }
+    if (H.street === 0) botPreflop(p); else botPostflop(p);
+    H.turn = (s + 1) % 9;
+  }
+}
+
+// Preflop bots: random by personality, nudged by starting hand and the price to call
+function botPreflop(p) {
+  const toCall = H.currentBet - p.bet;
+  const cat = classify(p.cards[0], p.cards[1]);
+  const w = {...p.prof};
+  const M = {premium:[.15, 1, 2.5, 3], medium:[.6, 1.1, 1.3, 1], weak:[1, 1, .8, .6], trash:[1.6, .8, .5, .4]}[cat];
+  w.f *= M[0]; w.c *= M[1]; w.r *= M[2]; w.a *= M[3];
+  if (toCall <= 0) { w.c += w.f; w.f = 0; }
+  else {
+    const pr = toCall / BB;
+    if (pr > 1) { w.f *= 1 + pr / 4; w.c /= 1 + pr / 12; w.r /= 1 + pr / 6; }
+    if (toCall >= p.stack) { w.c += w.r * .5; w.r = 0; w.a = 0; }
+    else if (toCall / p.stack > .4) { w.a += w.r; w.r = 0; }
+  }
+  if (!canRaise(p)) { w.c += w.r + w.a; w.r = 0; w.a = 0; }
+  const tot = w.f + w.c + w.r + w.a;
+  let x = Math.random() * tot, pick;
+  for (const k of ['f', 'c', 'r', 'a']) { x -= w[k]; if (x <= 0) { pick = k; break; } }
+  pick = pick || 'c';
+  if (pick === 'r' && raiseTarget() >= p.bet + p.stack) pick = 'a';
+  if (pick === 'f') apply(p, 'fold');
+  else if (pick === 'c') apply(p, 'call');
+  else if (pick === 'r') apply(p, 'raise', raiseTarget());
+  else apply(p, 'raise', p.bet + p.stack);
+}
+
+// Postflop bots: estimate their own chance to win (they never see other cards), then act by style
+function botPostflop(p) {
+  const toCall = Math.min(H.currentBet - p.bet, p.stack);
+  const board = H.board.slice(0, H.shown);
+  const nOpp = Math.max(1, Math.min(3, P().filter(q => q !== p && !q.folded).length));
+  const eq = equityRun(p.cards, board, nOpp, 120) / 120;
+  const agg = p.prof.r + p.prof.a, loose = p.prof.c;
+  const can = canRaise(p), r = Math.random();
+  const raise = () => apply(p, 'raise', Math.min(raiseTarget(), p.bet + p.stack));
+  if (toCall <= 0) {
+    const betChance = eq > 0.6 ? 0.45 + agg : eq > 0.4 ? agg : agg * 0.4;
+    return can && r < betChance ? raise() : apply(p, 'call');
+  }
+  const need = toCall / (potTotal() + toCall);
+  if (eq > 0.7 && can && r < 0.25 + agg) return raise();
+  if (eq >= need) return r < 0.06 ? apply(p, 'fold') : apply(p, 'call');
+  if (eq >= need - loose * 0.3 && r < loose) return apply(p, 'call');
+  if (can && r < agg * 0.15) return raise();
+  apply(p, 'fold');
+}
+
+function heroAct(kind, raiseTo) {
+  if (!H || !H.awaiting) return;
+  const btn = {fold:'bFold', call:'bCall', raise:'bRaise', allin:'bAllin'}[kind];
+  if ($(btn).disabled) return;
+  if (kind === 'raise' && raiseTo == null) return openSizer();
+  const S = kind === 'raise' ? sizingContext() : null; // what a standard size would have been, for the review
+  H.awaiting = false;
+  stopDecisionTimer();
+  const me = P()[0], O = H.odds;
+  const board = H.board.slice(0, H.shown);
+  if (O && O.eq == null && O.opp) O.eq = equityRun(me.cards, board, O.opp, 300) / 300; // clicked before the estimate finished
+  H.decisions.push({kind, street:H.street, eq:O ? O.eq : null, need:O ? O.need : 0, toCall:O ? O.toCall : 0, pot:O ? O.pot : 0,
+    opp:O ? O.opp : 0, outs:O ? O.outs : 0, raised:H.street === 0 ? H.currentBet > BB : H.currentBet > 0,
+    cat:classify(me.cards[0], me.cards[1]), made:H.shown ? best([...me.cards, ...board]).name : '', pos:me.pos, stack:me.stack,
+    size:S ? raiseTo : null, sizeRec:S ? S.rec : null, cb:S ? S.cb : 0, potBefore:S ? S.pot : 0, opening:S ? S.opening : false});
+  if (kind === 'fold') apply(me, 'fold');
+  else if (kind === 'call') apply(me, 'call');
+  else if (kind === 'raise') apply(me, 'raise', raiseTo);
+  else apply(me, 'raise', me.bet + me.stack);
+  H.turn = 1;
+  render();
+  step();
+}
+
+// Betting round over: wait for a tap to reveal the next street
+function endRound() {
+  H.awaiting = false; H.turn = -1;
+  const inHand = P().filter(p => !p.folded);
+  if (inHand.filter(p => !p.allin).length <= 1) H.reveal = true; // all-in: cards go face up
+  log(`${inHand.length} joueurs encore dans la main · pot ${fmt(potTotal())}`);
+  H.runout = true;
+  render();
+}
+
+function advanceStreet() {
+  if (!H || !H.runout) return;
+  H.runout = false;
+  if (H.street === 3) return finishHand();
+  H.street++; H.stage = H.street; H.shown = [0, 3, 4, 5][H.street];
+  log(`${STREETS[H.street]} : ${cardText(H.board.slice(0, H.shown))} · pot ${fmt(potTotal())}`, 'street');
+  const live = P().filter(p => !p.folded && !p.allin);
+  if (live.length >= 2) {
+    P().forEach(p => { p.bet = 0; if (!p.folded && !p.allin) p.act = null; });
+    H.currentBet = 0; H.minRaise = BB; H.raises = 0;
+    H.toAct = new Set(live.map(p => p.seat));
+    H.turn = (G.button + 1) % 9; // first player still in after the button speaks first
+    render();
+    step();
+  } else {
+    H.reveal = true; H.runout = true;
+    render();
+  }
+}
+// Only offered once you are out of the hand or all-in: play the rest without stopping
+function skipToEnd() { for (let i = 0; i < 12 && H.runout; i++) advanceStreet(); }
+
+function finishHand() {
+  const inHand = P().filter(p => !p.folded);
+  const me = P()[0];
+  const lines = [];
+  let cf = '';
+  H.runout = false;
+  if (inHand.length === 1) {
+    const w = inHand[0], pot = potTotal();
+    w.stack += pot; w.won = pot;
+    lines.push(`${w.hero ? 'Tu remportes' : w.name + ' remporte'} ${fmt(pot)}, tout le monde a foldé.`);
+  } else {
+    H.stage = 4; H.reveal = true; H.shown = 5;
+    inHand.forEach(p => p.best = best([...p.cards, ...H.board]));
+    const levels = [...new Set(inHand.map(p => p.total))].sort((a, b) => a - b);
+    let prev = 0, potNo = 0;
+    for (const L of levels) {
+      const amount = P().reduce((a, p) => a + Math.max(0, Math.min(p.total, L) - prev), 0);
+      const elig = inHand.filter(p => p.total >= L);
+      prev = L;
+      if (!amount) continue;
+      if (elig.length === 1) { elig[0].stack += amount; elig[0].won += amount; continue; } // uncalled chips go back
+      const top = elig.reduce((b, p) => !b || cmp(p.best.score, b) > 0 ? p.best.score : b, null);
+      const winners = elig.filter(p => cmp(p.best.score, top) === 0);
+      const share = Math.floor(amount / winners.length);
+      winners.forEach((w, i) => { const g = share + (i === 0 ? amount - share * winners.length : 0); w.stack += g; w.won += g; });
+      if (!H.used) H.used = new Set(winners.flatMap(w => w.best.cards));
+      lines.push(`${potNo++ ? 'Pot secondaire' : 'Pot principal'} ${fmt(amount)} : ${winners.map(w => w.hero ? 'toi' : w.name).join(' & ')} (${winners[0].best.name})`);
+    }
+    if (me.won > 0) H.used = new Set(best([...me.cards, ...H.board]).cards);
+    inHand.filter(p => !p.hero).forEach(p => log(`${p.name} montre ${cardText(p.cards)} : ${p.best.name}`));
+    if (me.folded && !me.out) {
+      const mb = best([...me.cards, ...H.board]);
+      const topAll = inHand.reduce((b, p) => !b || cmp(p.best.score, b) > 0 ? p.best.score : b, null);
+      const c = cmp(mb.score, topAll);
+      cf = `Si tu étais allé·e jusqu'au bout : ${mb.name}, tu aurais ${c > 0 ? 'gagné' : c < 0 ? 'perdu' : 'partagé'}.`;
+    }
+  }
+  lines.forEach(l => log(l));
+
+  // You never run out: a busted stack is refilled so training continues (the net stat still counts it)
+  let refilled = false;
+  if (me.stack === 0) {
+    me.stack = START; G.invested += START; G.refills = (G.refills || 0) + 1; refilled = true;
+    log(`Tapis vide : tu recaves ${fmt(START)} (recave n°${G.refills})`, true);
+  }
+  // eliminations for the other players (no re-buy for them)
+  P().forEach(p => {
+    if (!p.out && p.stack === 0) { p.out = true; log(`${p.hero ? 'Tu es éliminé·e' : p.name + ' est éliminé·e'}`); }
+  });
+  const alive = P().filter(p => !p.out);
+  const delta = me.won - me.total;
+  if (refilled) lines.push(`Tapis rechargé à ${fmt(START)} pour continuer l'entraînement. Recaves jusqu'ici : ${G.refills}.`);
+  H.result = {delta, lines, cf, heroOut:me.out, champion:alive.length === 1 && !me.out};
+  if (me.out) H.result.place = alive.length + 1;
+  H.over = true; H.awaiting = false; H.turn = -1;
+  H.review = buildReview(inHand);
+  render();
+  if (!me.out) maybeAutoCoach();
+}
+
+/* ---------- hand review: each decision, the odds, why the winner won ---------- */
+const CATN = ['Hauteur', 'Paire', 'Double paire', 'Brelan', 'Quinte', 'Couleur', 'Full', 'Carré', 'Quinte flush'];
+const MADE_RANKS = {1:1, 2:2, 3:1, 6:2, 7:1}; // tie-break slots that belong to the combination itself
+const actFR = (k, d) => ({fold:'folder', call:d.toCall > 0 ? 'suivre (call)' : 'checker',
+  raise:d.toCall > 0 || d.street === 0 ? 'relancer' : 'miser', allin:'faire tapis (all-in)'})[k];
+const family = k => k === 'allin' ? 'raise' : k;
+
+function recommend(d) {
+  if (d.street > 0) {
+    const eq = d.eq == null ? null : d.raised ? d.eq * 0.85 : d.eq;
+    const outs = d.outs ? ` (dont ${d.outs} outs pour t'améliorer)` : '';
+    if (d.toCall <= 0) {
+      if (eq != null && eq >= 0.6) return {act:'raise', why:`Avec ${d.made} et environ ${pct(eq)} de chances de gagner, tu es sûrement devant : mise pour faire payer les mains plus faibles.`};
+      return {act:'call', why:`Avec ${d.made} (environ ${pct(eq)} de chances), le check est gratuit : pas besoin de gonfler le pot avec une main moyenne.`};
+    }
+    if (eq != null && eq >= 0.7) return {act:'raise', why:`${d.made} te donne environ ${pct(eq)} : tu es devant, relance pour grossir le pot.`};
+    if (eq != null && eq >= d.need + 0.03) return {act:'call', why:`Il te faut ${pct(d.need)} et tu as environ ${pct(eq)}${outs} : suivre est rentable.`};
+    return {act:'fold', why:`Il te faut ${pct(d.need)} et tu n'as qu'environ ${pct(eq)} avec ${d.made}${outs} : folder économise tes jetons.`};
+  }
+  const eq = d.eq == null ? null : d.raised ? d.eq * 0.8 : d.eq;
+  const late = ['CO', 'BTN', 'BTN/SB', 'HJ'].includes(d.pos);
+  if (d.toCall <= 0) {
+    if (d.cat === 'premium') return {act:'raise', why:'Avec une main premium, on relance pour faire grossir le pot et avoir moins d\'adversaires.'};
+    if (d.cat === 'medium' && late) return {act:'raise', why:'Main correcte en fin de parole : une relance peut prendre les blinds tout de suite.'};
+    return {act:'call', why:'Le check est gratuit : on ne folde jamais, et la main ne mérite pas de relance.'};
+  }
+  if (d.cat === 'premium') {
+    return d.toCall >= d.stack * 0.4
+      ? {act:'allin', why:'Main premium face à une grosse mise : tu es souvent devant, donc tu mets tout.'}
+      : {act:'raise', why:'Main premium : on relance plutôt que de juste suivre, pour faire payer les mains moins fortes.'};
+  }
+  if (eq != null && eq >= d.need + 0.03) {
+    if (d.cat === 'medium' && !d.raised && late) return {act:'raise', why:'Bonne cote et main correcte en position : relancer met la pression et peut gagner le pot tout de suite.'};
+    return {act:'call', why:`Ton équité (${pct(eq)}${d.raised ? ', revue à la baisse à cause de la relance' : ''}) dépasse ce qu'il te faut (${pct(d.need)}) : suivre est rentable à long terme.`};
+  }
+  return {act:'fold', why:`Il te faut ${pct(d.need)} d'équité et tu en as environ ${pct(eq)}${d.raised ? ' (face à une relance, ta vraie équité est plus basse que contre des mains au hasard)' : ''} : payer te fait perdre de l'argent à long terme.`};
+}
+
+function judge(d) {
+  const rec = recommend(d), did = family(d.kind), bestAct = family(rec.act);
+  let verdict, cls;
+  if (did === bestAct) { verdict = 'Bonne décision ✓'; cls = 'good'; }
+  else if (did === 'fold' && d.toCall <= 0) { verdict = 'Erreur : le check était gratuit ✗'; cls = 'bad'; }
+  else if (did === 'fold') { verdict = 'Fold trop prudent ✗'; cls = 'bad'; }
+  else if (bestAct === 'fold') { verdict = did === 'call' ? 'Mauvais call ✗' : 'Trop de jetons avec cette main ✗'; cls = 'bad'; }
+  else if (did === 'call' && bestAct === 'raise') { verdict = d.toCall > 0 ? 'Correct, mais une relance était meilleure' : 'Correct, mais une mise était meilleure'; cls = 'even'; }
+  else { verdict = 'Agressif, mais défendable'; cls = 'even'; }
+  return {rec, verdict, cls};
+}
+
+function whyWin(w, r) {
+  const W = w.best, who = w.hero ? 'Tu gagnes' : `${w.name} gagne`;
+  const lines = [];
+  if (!r) return [`${who} avec ${W.name}.`];
+  const R = r.best, rname = r.hero ? 'toi' : r.name, rhad = r.hero ? 'tu avais' : `${r.name} avait`;
+  if (W.score[0] !== R.score[0]) {
+    lines.push(`${who} avec ${W.name}. Au classement, « ${CATN[W.score[0]]} » bat « ${CATN[R.score[0]]} » (${rhad} ${R.name}).`);
+  } else {
+    const i = W.score.findIndex((v, k) => v !== R.score[k]);
+    const kicker = MADE_RANKS[W.score[0]] != null && i > MADE_RANKS[W.score[0]];
+    lines.push(`${who} avec ${W.name}. Même combinaison que ${rname} (${R.name}), mais ${kicker ? 'le kicker' : 'la carte qui départage'} ${NOM[W.score[i]]} bat ${NOM[R.score[i]]}.`);
+  }
+  const used = w.cards.filter(c => W.cards.includes(c)).length;
+  const how = w.hero
+    ? (used === 2 ? 'tu utilises tes deux cartes' : used === 1 ? 'tu utilises une de tes cartes' : 'tu joues le board seul')
+    : (used === 2 ? 'utilise ses deux cartes' : used === 1 ? 'utilise une de ses cartes' : 'joue le board seul');
+  lines.push(`${w.hero ? 'Tu avais' : w.name + ' avait'} ${cardText(w.cards)} (${classify(w.cards[0], w.cards[1])} avant le flop) et ${how} : ${cardText(W.cards)}.`);
+  return lines;
+}
+
+function streetLeaders(inHand) {
+  return [[3, 'Flop'], [4, 'Turn'], [5, 'River']].map(([n, label]) => {
+    let top = null, lead = [];
+    for (const p of inHand) {
+      const b = best([...p.cards, ...H.board.slice(0, n)]);
+      const c = top ? cmp(b.score, top.score) : 1;
+      if (c > 0) { top = b; lead = [p]; } else if (c === 0) lead.push(p);
+    }
+    return `${label} : ${lead.map(p => p.hero ? 'toi' : p.name).join(' & ')} devant (${top.name})`;
+  }).join(' · ');
+}
+
+function buildReview(inHand) {
+  const me = P()[0];
+  const decisions = H.decisions.map(d => ({d, ...judge(d)}));
+  let why = [], evo = '';
+  if (inHand.length === 1) {
+    const w = inHand[0];
+    why = [`${w.hero ? 'Tu gagnes' : w.name + ' gagne'} sans showdown : tout le monde a foldé face à ${w.hero ? 'toi' : 'sa mise'}.`];
+  } else {
+    const ranked = [...inHand].sort((a, b) => cmp(b.best.score, a.best.score));
+    const w = ranked[0], r = ranked.find(p => cmp(p.best.score, w.best.score) < 0);
+    const tied = ranked.filter(p => cmp(p.best.score, w.best.score) === 0);
+    why = tied.length > 1
+      ? [`Égalité : ${tied.map(p => p.hero ? 'toi' : p.name).join(' & ')} ont la même main (${w.best.name}), le pot est partagé.`]
+      : whyWin(w, r);
+    evo = streetLeaders(inHand);
+  }
+  return {decisions, why, evo, noDecision:!H.decisions.length && !me.out};
+}
+
+function rebuy() {
+  const me = P()[0];
+  me.stack = START; me.out = false; G.rebuyUsed = true; G.invested += START;
+  newHand();
+}
+
+/* ---------- decision timer ---------- */
+function startDecisionTimer() {
+  clearInterval(decTick);
+  decStart = performance.now();
+  $('dTime').textContent = '0.0s';
+  decTick = setInterval(() => { $('dTime').textContent = ((performance.now() - decStart) / 1000).toFixed(1) + 's'; }, 100);
+}
+function stopDecisionTimer() {
+  clearInterval(decTick);
+  const t = (performance.now() - decStart) / 1000;
+  G.decisions.push(t);
+  $('dTime').textContent = t.toFixed(1) + 's';
+}
+
+/* ---------- rendering ---------- */
+function log(text, kind = false) { H.log.push([text, kind]); }
+const cardText = cs => cs.map(c => RL(c.r) + SYM[c.s]).join(' ');
+function cardHTML(c, cls = '', {back = false} = {}) {
+  if (!c) return `<div class="card slot ${cls}"></div>`;
+  if (back) return `<div class="card back ${cls}"></div>`;
+  let k = `card ${cls}` + ('hd'.includes(c.s) ? ' red' : '');
+  if (H.used) k += H.used.has(c) ? ' used' : ' dim';
+  return `<div class="${k}"><span class="r">${RL(c.r)}</span><span class="s">${SYM[c.s]}</span></div>`;
+}
+
+function podHTML(p) {
+  const cls = ['pod', 'p' + p.seat];
+  if (p.hero) cls.push('hero');
+  if (p.out) cls.push('out'); else if (p.folded) cls.push('folded');
+  if (H.turn === p.seat && !H.over) cls.push('turn');
+  if (H.over && p.won > p.total) cls.push('winner');
+  const dealer = G.button === p.seat && !p.out ? '<span class="dealer">D</span>' : '';
+  const blind = p.pos === 'SB' || p.pos === 'BB' || p.pos === 'BTN/SB';
+  const posChip = p.out ? '' : `<span class="pos-chip${blind ? ' blind' : ''}">${p.pos}</span>`;
+  let act = p.act;
+  if (H.over && p.won > p.total) act = [`+${fmt(p.won - p.total)}`, 'won'];
+  if (p.out) act = ['ÉLIMINÉ', 'fold'];
+  const actHTML = `<span class="act${act ? ' a-' + act[1] : ''}">${act ? act[0] : ''}</span>`;
+  if (p.hero) {
+    return `<div class="${cls.join(' ')}">${dealer}${actHTML}
+      <div class="nm">${HERO_NAME.toUpperCase()} ${posChip} <span class="stk">${fmt(p.stack)}</span></div>${p.out ? '' : chipRow(p.stack)}
+      <div class="cards">${p.out ? '' : p.cards.map(c => cardHTML(c, 'hc')).join('')}</div></div>`;
+  }
+  const showCards = H.reveal && !p.folded && !p.out;
+  const low = showCards ? `<div class="minis">${p.cards.map(c => cardHTML(c, 'mini')).join('')}</div>` : `<span class="frc">${frc(p.prof)}</span>`;
+  return `<div class="${cls.join(' ')}">${dealer}<div class="nm"><span class="pn">${p.name}</span> ${posChip}</div>
+    <span class="stk">${fmt(p.stack)}</span>${p.out ? '' : chipRow(p.stack)}${actHTML}${low}</div>`;
+}
+
+function render() {
+  const me = P()[0];
+  $('seats').innerHTML = P().map(podHTML).join('');
+  $('board').innerHTML = [0, 1, 2, 3, 4].map(i => cardHTML(i < H.shown ? H.board[i] : null)).join('');
+  $('streets').innerHTML = STREETS.map((s, i) => `<span class="${i === H.stage ? 'on' : i < H.stage ? 'done' : ''}">${s}</span>`).join('');
+  $('pot').textContent = fmt(potTotal());
+  $('potChips').innerHTML = chipStacks(potTotal());
+  renderOdds();
+  $('potLabel').textContent = H.over ? 'POT DISTRIBUÉ' : 'POT';
+
+  const cat = me.out ? null : classify(me.cards[0], me.cards[1]);
+  $('cat').hidden = !cat;
+  if (cat) { $('cat').className = 'badge cat-' + cat; $('cat').textContent = cat.toUpperCase(); }
+  $('made').textContent = !me.out && H.shown >= 3 ? best([...me.cards, ...H.board.slice(0, H.shown)]).name : '';
+
+  // prompt + buttons
+  const toCall = H.currentBet - me.bet;
+  let prompt = '';
+  if (H.awaiting) prompt = `<b>À toi (${me.pos}) · ${STREET_FR[H.street]}</b> · ${toCall > 0 ? `${fmt(Math.min(toCall, me.stack))} pour suivre` : 'check possible'}`;
+  else if (H.runout) prompt = me.folded ? 'Tu as foldé. Touche le bouton pour voir la suite.' : 'Tour de mises terminé. Touche le bouton pour voir la suite.';
+  $('promptText').innerHTML = prompt;
+  $('stepRow').hidden = !H.runout;
+  if (H.runout) {
+    $('bStep').textContent = ['VOIR LE FLOP ▶', 'VOIR LE TURN ▶', 'VOIR LA RIVER ▶', 'SHOWDOWN ▶'][H.street];
+    $('bSkip').hidden = !(me.folded || me.allin) || H.street === 3;
+  }
+
+  const allInAmt = me.bet + me.stack, rt = raiseTarget();
+  $('bFold').disabled = !H.awaiting;
+  $('bCall').disabled = !H.awaiting;
+  $('bCall').innerHTML = toCall <= 0 ? 'CHECK' : toCall >= me.stack ? `CALL<small>all-in ${fmt(me.stack)}</small>` : `CALL<small>${fmt(toCall)}</small>`;
+  const minTo = H.street > 0 && H.currentBet === 0 ? BB : H.currentBet + H.minRaise;
+  $('bRaise').disabled = !H.awaiting || !canRaise(me) || minTo >= allInAmt;
+  $('bRaise').innerHTML = `${H.street > 0 && H.currentBet === 0 ? 'MISE' : 'RAISE'}<small>choisir…</small>`;
+  if (sizing && !H.awaiting) closeSizer();
+  $('bAllin').disabled = !H.awaiting || toCall >= me.stack || !canRaise(me);
+  if (allinArmed && !H.awaiting) disarmAllin();
+  if (!allinArmed) $('bAllin').innerHTML = `ALL-IN<small>${fmt(allInAmt)}</small>`;
+
+  $('controls').hidden = H.over || H.runout || !!sizing;
+  $('result').hidden = !H.over;
+  if (H.over) renderResult();
+
+  // stats
+  const alive = P().filter(p => !p.out).length;
+  $('sHand').textContent = G.handNo;
+  $('sAlive').textContent = `${alive}/9`;
+  const net = me.stack - G.invested + (H.over ? 0 : me.total);
+  $('sNet').textContent = sfmt(net);
+  $('sNet').className = net > 0 ? 'pos' : net < 0 ? 'neg' : '';
+  $('sAvg').textContent = G.decisions.length ? (G.decisions.reduce((a, b) => a + b, 0) / G.decisions.length).toFixed(1) + 's' : '–';
+
+  $('log').innerHTML = H.log.map(([t, k]) => `<li${k === 'street' ? ' class="street"' : k ? ' class="me"' : ''}>${t}</li>`).join('');
+  $('log').scrollTop = $('log').scrollHeight;
+}
+
+function renderResult() {
+  const R = H.result;
+  const cls = R.delta > 0 ? 'win' : R.delta < 0 ? 'lose' : 'even';
+  const me = P()[0];
+  let head = R.delta > 0 ? `Tu gagnes ${sfmt(R.delta)}` : R.delta < 0 ? `Tu perds ${fmt(R.delta)}` : me.folded ? 'Fold sans rien miser' : 'Égalité';
+  let buttons = `<button class="big-btn" id="bNext" type="button">MAIN SUIVANTE ▶</button>`;
+  if (R.champion) {
+    head = `Tu remportes la table ! ${sfmt(me.stack - G.invested)}`;
+    buttons = `<button class="big-btn" id="bNew" type="button">NOUVELLE PARTIE</button>`;
+  } else if (R.heroOut) {
+    head = `Éliminé·e · ${R.place}e sur 9`;
+    buttons = (G.rebuyUsed ? '' : `<button class="big-btn" id="bRebuy" type="button">RE-BUY 20€</button>`) +
+      `<button class="big-btn alt" id="bNew" type="button">NOUVELLE PARTIE</button>`;
+  }
+  $('result').innerHTML = `<div class="res-big ${cls}">${head}</div>
+    <ul class="res-lines">${R.lines.map(l => `<li>${l}</li>`).join('')}</ul>
+    ${R.cf ? `<div class="res-cf">${R.cf}</div>` : ''}
+    ${reviewHTML(H.review)}
+    <div class="btn-row">${buttons}</div>`;
+  bind('bNext', () => H.over && newHand());
+  bind('bRebuy', rebuy);
+  bind('bNew', newGame);
+}
+
+function reviewHTML(V) {
+  if (!V) return '';
+  const blocks = [];
+  if (V.noDecision) blocks.push(['Ta décision', 'Tu n\'as pas eu à jouer : la main s\'est décidée sans toi.']);
+  const seen = {};
+  V.decisions.forEach(({d, rec, verdict, cls}) => {
+    seen[d.street] = (seen[d.street] || 0) + 1;
+    const again = V.decisions.filter(x => x.d.street === d.street).length > 1 ? ` (${seen[d.street]})` : '';
+    const ctx = d.street === 0 ? `${d.pos}, main ${d.cat}` : `avec ${d.made}`;
+    const odds = d.toCall > 0
+      ? `Payer ${fmt(d.toCall)} pour un pot de ${fmt(d.pot + d.toCall)} : il fallait ${pct(d.need)}. Ton équité : ${pct(d.eq)} contre ${d.opp} adversaire${d.opp > 1 ? 's' : ''}${d.raised ? `, plutôt ${pct(d.eq * (d.street ? 0.85 : 0.8))} face à ${d.street ? 'une mise' : 'une relance'}` : ''}.`
+      : `Rien à payer. Ton équité : ${pct(d.eq)} contre ${d.opp} adversaire${d.opp > 1 ? 's' : ''}.`;
+    const outs = d.street > 0 && d.street < 3 && d.outs ? ` ${d.outs} outs pour t'améliorer.` : '';
+    blocks.push([`${STREET_FR[d.street]}${again}`,
+      `<b class="${cls}">${verdict}</b> Tu as choisi de ${actFR(d.kind, d)} (${ctx}). Meilleur choix : <b>${actFR(rec.act, d)}</b>. ${rec.why}<br><span class="evo">${odds}${outs}</span>${sizeVerdict(d)}`]);
+  });
+  if (V.why.length) blocks.push(['Pourquoi cette main gagne', V.why.join(' ') + (V.evo ? `<br><span class="evo">${V.evo}</span>` : '')]);
+  return `<div class="review">${blocks.map(([k, v]) => `<div class="rv"><div class="rk">${k}</div><p>${v}</p></div>`).join('')}</div>`;
+}
+
+/* ---------- choosing your raise size ---------- */
+let sizing = null;
+const xfmt = m => String(Math.round(m * 10) / 10).replace('.', ',');
+function sizingContext() {
+  const me = P()[0], pot = potTotal(), cb = H.currentBet;
+  const maxTo = me.bet + me.stack;
+  const minTo = H.street > 0 && cb === 0 ? BB : cb + H.minRaise;
+  const opening = H.street === 0 && H.raises === 0;
+  let opts, rec, tip;
+  if (opening) {
+    const limpers = P().filter(p => !p.hero && !p.folded && p.bet === BB && p.pos !== 'BB').length;
+    opts = [2, 2.5, 3, 4].map(m => ({to:round50(m * BB), label:`${xfmt(m)} BB`}));
+    rec = round50((3 + limpers) * BB);
+    if (limpers) opts.push({to:rec, label:`3 BB + ${limpers}`});
+    tip = limpers
+      ? `Ouverture standard : 3 BB, plus 1 BB par joueur qui a juste payé (${limpers} ici). Trop petit, tout le monde suit ; trop gros, tu risques beaucoup pour gagner peu.`
+      : 'Ouverture standard : 3 BB. En fin de parole (cut-off, bouton), 2 à 2,5 BB suffisent ; depuis les premières places ou contre une table qui paie tout, monte à 4 BB.';
+  } else if (cb > 0) {
+    opts = [2, 2.5, 3, 4].map(m => ({to:round50(m * cb), label:`${xfmt(m)}×`}));
+    rec = round50(3 * cb);
+    tip = H.street === 0
+      ? 'Face à une relance, la sur-relance (3-bet) standard est d\'environ 3× sa mise ; plutôt 4× si tu parles avant lui après le flop ou si d\'autres joueurs ont déjà suivi.'
+      : 'Relance après le flop : 2,5 à 3× la mise adverse. Plus petit, tu donnes une bonne cote aux tirages ; plus gros, tu engages une grosse partie de ton tapis.';
+  } else {
+    const eq = H.odds && H.odds.eq, strong = eq != null && eq >= 0.6;
+    opts = [[1 / 3, '⅓ pot'], [1 / 2, '½ pot'], [2 / 3, '⅔ pot'], [1, 'Pot']].map(([f, l]) => ({to:Math.max(BB, round50(f * pot)), label:l}));
+    rec = Math.max(BB, round50((strong ? 2 / 3 : 1 / 2) * pot));
+    tip = `Mise après le flop : ½ à ⅔ du pot en général. ⅓ quand le board est calme, ⅔ ou le pot quand il offre des tirages (couleur, quinte) à faire payer. ${strong ? 'Ta main est forte ici : ⅔ du pot fait payer les mains plus faibles.' : 'Main moyenne : ½ pot reste raisonnable.'}`;
+  }
+  const clamp = t => Math.min(maxTo, Math.max(minTo, t));
+  const seen = new Set();
+  opts = opts.map(o => ({...o, to:clamp(o.to)})).filter(o => !seen.has(o.to) && seen.add(o.to));
+  return {opts, rec:clamp(rec), tip, minTo, maxTo, pot, cb, opening};
+}
+function openSizer() {
+  if (!H || !H.awaiting || $('bRaise').disabled) return;
+  const C = sizingContext();
+  sizing = {...C, to:C.rec};
+  const bet = H.street > 0 && C.cb === 0;
+  $('sizerTitle').textContent = bet ? 'Choisis ta mise' : 'Choisis ta relance';
+  $('presets').innerHTML = C.opts.map(o => `<button type="button" data-to="${o.to}" class="${o.to === C.rec ? 'rec' : ''}">${o.label}<small>${fmt(o.to)}</small>${o.to === C.rec ? '<em>conseillé</em>' : ''}</button>`).join('');
+  $('presets').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setSize(+b.dataset.to)));
+  const r = $('raiseRange');
+  r.min = C.minTo; r.max = C.maxTo; r.value = C.rec;
+  $('sizeTip').textContent = C.tip;
+  $('sizer').hidden = false;
+  render();
+  updateSizer();
+}
+function setSize(to) { sizing.to = to; $('raiseRange').value = to; updateSizer(); }
+function updateSizer() {
+  if (!sizing) return;
+  const me = P()[0], S = sizing, to = S.to, add = to - me.bet;
+  const bet = H.street > 0 && S.cb === 0;
+  $('raiseAmt').textContent = fmt(to);
+  $('presets').querySelectorAll('button').forEach(b => b.classList.toggle('sel', +b.dataset.to === to));
+  const scale = S.opening ? `${xfmt(to / BB)} BB` : S.cb > 0 ? `${xfmt(to / S.cb)}× la mise de ${fmt(S.cb)}` : `${Math.round(add / S.pot * 100)}% du pot`;
+  $('sizeInfo').innerHTML = `${bet ? 'Miser' : 'Relancer à'} <b>${fmt(to)}</b> = ${scale}. Tu ajoutes ${fmt(add)} ; le pot passe à ${fmt(S.pot + add)}.`
+    + (bet ? '' : ' <span class="evo">« Relancer à » = ton total sur ce tour, pas un montant en plus.</span>')
+    + (to >= S.maxTo ? ' <b class="bad">C\'est tout ton tapis (all-in).</b>' : '');
+  $('bSizeGo').textContent = `${bet ? 'MISER' : 'RELANCER À'} ${fmt(to)}`;
+}
+function closeSizer() { sizing = null; $('sizer').hidden = true; }
+$('raiseRange').addEventListener('input', e => { if (sizing) { sizing.to = +e.target.value; updateSizer(); } });
+$('bSizeCancel').addEventListener('click', () => { closeSizer(); render(); });
+$('bSizeGo').addEventListener('click', () => { if (!sizing) return; const to = sizing.to; closeSizer(); heroAct('raise', to); });
+
+// Review line for a raise or bet you sized yourself
+function sizeVerdict(d) {
+  if (d.size == null || !d.sizeRec) return '';
+  const r = d.size / d.sizeRec;
+  const scale = d.opening ? `${xfmt(d.size / BB)} BB` : d.cb > 0 ? `${xfmt(d.size / d.cb)}× la mise` : `${Math.round(d.size / d.potBefore * 100)}% du pot`;
+  const v = r < 0.8 ? '<b class="even">Un peu petit</b> : les adversaires paient facilement et les tirages ont une bonne cote.'
+    : r > 1.35 ? '<b class="even">Un peu gros</b> : les mains plus faibles se couchent, et tu risques beaucoup quand on te paie.'
+    : '<b class="good">Bonne taille ✓</b>';
+  return `<br><span class="evo">Taille : ${fmt(d.size)} (${scale}) · conseillé ${fmt(d.sizeRec)}.</span> ${v}`;
+}
+
+/* ---------- input ---------- */
+// click only fires on a real tap (finger down and up without moving), never when a scroll starts on the button.
+// touch-action: manipulation on the buttons removes the old tap delay on phones.
+function bind(id, fn) {
+  const el = $(id); if (!el) return;
+  el.addEventListener('click', fn);
+}
+bind('bFold', () => heroAct('fold'));
+bind('bCall', () => heroAct('call'));
+bind('bRaise', () => heroAct('raise'));
+// All-in needs a second tap within 3 seconds
+let allinArmed = null;
+function disarmAllin() { clearTimeout(allinArmed); allinArmed = null; $('bAllin').classList.remove('armed'); }
+bind('bAllin', () => {
+  if (!H || !H.awaiting || $('bAllin').disabled) return;
+  if (allinArmed) { disarmAllin(); return heroAct('allin'); }
+  allinArmed = setTimeout(() => { disarmAllin(); render(); }, 3000);
+  $('bAllin').classList.add('armed');
+  $('bAllin').innerHTML = `CONFIRMER ?<small>all-in ${fmt(P()[0].bet + P()[0].stack)}</small>`;
+});
+bind('bStep', () => advanceStreet());
+bind('bSkip', skipToEnd);
+document.addEventListener('keydown', e => {
+  if (e.repeat || ['SELECT', 'INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+  const k = e.key.toLowerCase();
+  if (k === 'f') heroAct('fold');
+  else if (k === 'c') heroAct('call');
+  else if (k === 'r') openSizer();
+  else if (k === 'escape' && sizing) { closeSizer(); render(); }
+  else if (k === 'a') heroAct('allin');
+  else if (k === ' ' || k === 'n') {
+    if (H.runout) { e.preventDefault(); advanceStreet(); }
+    else if (H.over && !H.result.heroOut && !H.result.champion) { e.preventDefault(); newHand(); }
+  }
+});
+
+/* ---------- odds: Monte Carlo equity vs random hands ---------- */
+function equityRun(heroCards, board, nOpp, iters) {
+  const used = new Set([...heroCards, ...board].map(c => c.r + c.s));
+  const deck = [];
+  for (const s of 'shdc') for (let r = 2; r <= 14; r++) if (!used.has(r + s)) deck.push({r, s});
+  const need = nOpp * 2 + 5 - board.length;
+  let score = 0;
+  for (let it = 0; it < iters; it++) {
+    for (let i = 0; i < need; i++) { const j = i + rnd(deck.length - i); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+    const b = [...board, ...deck.slice(nOpp * 2, need)];
+    const hs = best([...heroCards, ...b]).score;
+    let win = true, ties = 0;
+    for (let o = 0; o < nOpp && win; o++) {
+      const c = cmp(best([deck[2 * o], deck[2 * o + 1], ...b]).score, hs);
+      if (c > 0) win = false; else if (c === 0) ties++;
+    }
+    if (win) score += 1 / (ties + 1);
+  }
+  return score;
+}
+// Outs: unseen cards that lift you to a better combination using your own cards
+function countOuts(cards, board) {
+  if (board.length < 3 || board.length > 4) return 0;
+  const used = new Set([...cards, ...board].map(c => c.r + c.s));
+  const cur = best([...cards, ...board]).score[0];
+  let outs = 0;
+  for (const s of 'shdc') for (let r = 2; r <= 14; r++) {
+    if (used.has(r + s)) continue;
+    const c = {r, s};
+    const mine = best([...cards, ...board, c]).score[0];
+    // A card that only pairs the board helps everyone: not a real out unless it completes a straight or better
+    if (mine < 4 && board.some(b => b.r === r) && !cards.some(h => h.r === r)) continue;
+    if (mine > cur && mine > best([...board, c]).score[0]) outs++;
+  }
+  return outs;
+}
+let oddsJob = 0;
+function startOdds() {
+  const me = P()[0], job = ++oddsJob;
+  const board = H.board.slice(0, H.shown);
+  const opp = P().filter(p => !p.hero && !p.folded).length;
+  const toCall = Math.min(H.currentBet - me.bet, me.stack);
+  const pot = potTotal();
+  const outs = countOuts(me.cards, board);
+  const O = H.odds = {opp, toCall, pot, need:toCall > 0 ? toCall / (pot + toCall) : 0, eq:null, street:H.street,
+    raised:H.raises > 0, outs, unseen:52 - 2 - board.length, made:board.length ? best([...me.cards, ...board]).name : ''};
+  const total = opp >= 5 ? 700 : 1200;
+  let wins = 0, n = 0;
+  const chunk = () => {
+    if (job !== oddsJob || !opp) return;
+    const k = Math.min(100, total - n);
+    wins += equityRun(me.cards, board, opp, k); n += k;
+    O.eq = wins / n;
+    renderOdds();
+    if (n < total) setTimeout(chunk, 0);
+  };
+  setTimeout(chunk, 0);
+}
+function renderOdds() {
+  const O = H && H.odds, el = $('odds');
+  if (!O) {
+    el.innerHTML = `<h2>Tes cotes</h2><div class="verdict">Ton équité et la cote du pot s'affichent ici quand c'est à toi de jouer.</div>`;
+    return;
+  }
+  const good = O.eq != null && O.eq >= O.need;
+  let verdict = O.made ? `Ta main : <b>${O.made}</b>. ` : '';
+  if (O.eq == null) verdict += 'Calcul en cours…';
+  else if (O.toCall <= 0) verdict += `Rien à payer. Tu gagnes environ ${pct(O.eq)} du temps contre ${O.opp} adversaire${O.opp > 1 ? 's' : ''}.`;
+  else verdict += `Tu paies ${fmt(O.toCall)} pour un pot de ${fmt(O.pot + O.toCall)} : il te faut gagner ${pct(O.need)} du temps. `
+    + (good ? `<span class="good">Tu gagnes environ ${pct(O.eq)}, donc suivre est rentable sur le papier.</span>`
+            : `<span class="bad">Tu gagnes environ ${pct(O.eq)}, pas assez pour suivre.</span>`);
+  if (O.outs) verdict += ` <b>${O.outs} outs</b> : environ ${pct(O.outs / O.unseen)} de toucher à la prochaine carte (règle rapide : outs × 2).`;
+  if (O.raised && O.eq != null) verdict += O.street ? ' Attention : quelqu\'un a misé, sa main est souvent meilleure qu\'une main au hasard.' : ' Attention : quelqu\'un a relancé, sa main est souvent meilleure qu\'une main au hasard.';
+  el.innerHTML = `<h2>Tes cotes · ${STREET_FR[O.street]} <small>${H.awaiting ? `contre ${O.opp} adversaire${O.opp > 1 ? 's' : ''}` : 'ta dernière décision'}</small></h2>
+    <div><div class="k">Équité</div><div class="v ${O.eq == null ? '' : good ? 'good' : 'bad'}">${pct(O.eq)}</div></div>
+    <div><div class="k">Il te faut</div><div class="v">${O.toCall > 0 ? pct(O.need) : '0%'}</div></div>
+    <div><div class="k">À payer</div><div class="v">${fmt(O.toCall)}</div></div>
+    <div class="meter"><div class="eq" style="width:${O.eq == null ? 0 : Math.round(O.eq * 100)}%"></div>${O.toCall > 0 ? `<div class="need" style="left:${Math.round(O.need * 100)}%"></div>` : ''}</div>
+    <div class="verdict">${verdict}</div>`;
+}
+
+/* ---------- coach (asks Claude on the viewer's account) ---------- */
+const RULES = `Tu es le coach de poker d'un joueur qui s'entraîne avant une partie entre amis vendredi : Texas Hold'em, 9 joueurs, blinds 0,50€/1€, tapis de départ 20€, un re-buy possible.
+Le joueur apprend visuellement et veut des conseils concrets. Réponds en 2 à 5 phrases courtes, dans la langue de sa question (français par défaut).
+Donne des chiffres : cote du pot (combien il faut payer pour gagner combien, et le % d'équité nécessaire), équité approximative, outs quand il y en a, position, et l'action conseillée (fold, check, call, mise ou relance avec un montant).
+Dans ce trainer, on mise à chaque street (préflop, flop, turn, river), comme au vrai Hold'em. Les adversaires sont des bots dont le style est indiqué (F/C/R = % habituel de fold/call/raise).
+Pendant une main en cours, tu ne connais pas les cartes des adversaires. Texte simple, pas de titres ni de tableaux.`;
+let sampleFn = null, coachTurns = [], coachBusy = false;
+
+function stateText() {
+  const me = P()[0], L = [];
+  const alive = P().filter(p => !p.out).length;
+  L.push(`Main #${G.handNo}, ${alive}/9 joueurs encore en course. Street : ${H.over ? 'main terminée' : STREET_FR[H.street]}.`);
+  if (!me.out) L.push(`Moi : position ${me.pos}, cartes ${cardText(me.cards)} (catégorie ${classify(me.cards[0], me.cards[1])}), tapis ${fmt(me.stack)}, déjà misé ${fmt(me.total)} dans cette main${me.folded ? ', j\'ai foldé' : ''}.`);
+  const opp = P().filter(p => !p.hero && !p.folded && !p.out);
+  L.push('Adversaires encore dans la main : ' + (opp.map(p => `${p.name} (${p.pos}, ${p.prof.name} ${frc(p.prof)}, tapis ${fmt(p.stack)}, misé ${fmt(p.total)})`).join(' ; ') || 'aucun'));
+  L.push(`Pot : ${fmt(potTotal())}.`);
+  if (H.shown) L.push(`Board : ${cardText(H.board.slice(0, H.shown))}. Ma main actuelle : ${best([...me.cards, ...H.board.slice(0, H.shown)]).name}.`);
+  if (H.awaiting) {
+    const toCall = Math.min(H.currentBet - me.bet, me.stack);
+    L.push(`C'est à moi de jouer : ${toCall > 0 ? 'il faut payer ' + fmt(toCall) : 'je peux checker'} ; ${H.street > 0 && H.currentBet === 0 ? 'mise' : 'relance'} possible à ${fmt(raiseTarget())}, all-in ${fmt(me.stack + me.bet)}.`);
+  }
+  if (H.odds && H.odds.eq != null) L.push(`Équité estimée par simulation contre ${H.odds.opp} mains au hasard : ${pct(H.odds.eq)} ; équité nécessaire selon la cote du pot : ${pct(H.odds.need)}${H.odds.outs ? ` ; ${H.odds.outs} outs` : ''}.`);
+  L.push('Déroulé de la main : ' + H.log.map(x => x[0]).join(' | '));
+  if (H.decisions.length) L.push('Mes décisions : ' + H.decisions.map(d => `${STREET_FR[d.street]} ${actFR(d.kind, d)} (équité ${pct(d.eq)}, il fallait ${pct(d.need)})`).join(', ') + '.');
+  if (H.over) L.push(`Résultat : ${H.result.lines.join(' ')} Pour moi : ${sfmt(H.result.delta)}.`);
+  if (H.over && H.review) {
+    H.review.decisions.forEach(({d, rec, verdict}) => L.push(`Analyse automatique du trainer (${STREET_FR[d.street]}) : ${verdict.replace(/[✓✗]/g, '').trim()} ; j'ai choisi de ${actFR(d.kind, d)}, conseillé : ${actFR(rec.act, d)}.`));
+    L.push('Pourquoi le gagnant gagne : ' + H.review.why.join(' ') + (H.review.evo ? ' ' + H.review.evo : ''));
+  }
+  L.push(`Session : net ${sfmt(me.stack - G.invested + (H.over ? 0 : me.total))}.`);
+  return L.join('\n');
+}
+
+function addMsg(who, text, auto = false) {
+  const m = document.createElement('div');
+  m.className = `msg ${who}${auto ? ' auto' : ''}`;
+  if (auto) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'LE COACH REMARQUE'; m.append(t); }
+  const body = document.createElement('span'); body.textContent = text; m.append(body);
+  $('msgs').append(m); $('msgs').scrollTop = $('msgs').scrollHeight;
+  return body;
+}
+function setCoachBusy(b) {
+  coachBusy = b;
+  document.querySelectorAll('#coachBody button').forEach(x => x.disabled = b);
+}
+const COACH_ERR = {
+  rate_limited:'Trop de questions d\'un coup. Réessaie dans un moment.',
+  session_expired:'Reconnecte-toi à Claude pour continuer avec le coach.',
+  refused:'Le coach ne peut pas répondre à ça. Reformule ta question.',
+};
+async function askCoach(question, auto = false) {
+  if (!sampleFn || coachBusy || !H) return;
+  setCoachBusy(true);
+  if (!auto) addMsg('me', question);
+  const bubble = addMsg('bot', 'Réflexion…', auto);
+  const content = `${question}\n\n--- Situation actuelle ---\n${stateText()}`;
+  try {
+    const {text} = await sampleFn([{role:'user', content:RULES}, ...coachTurns.slice(-8), {role:'user', content}], {
+      cache:false, modelTier:auto ? 'quick' : 'default',
+      onText:({text}) => { bubble.textContent = text; $('msgs').scrollTop = $('msgs').scrollHeight; },
+    });
+    bubble.textContent = text;
+    coachTurns.push({role:'user', content:question}, {role:'assistant', content:text});
+  } catch (e) {
+    if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'].includes(e.code)) {
+      bubble.textContent = 'Le coach n\'est pas autorisé sur cette page. Les cotes et le bilan restent affichés.';
+      sampleFn = null;
+    } else {
+      bubble.textContent = (e.text ? e.text + '\n\n' : '') + (COACH_ERR[e.code] || 'Le coach n\'a pas pu répondre. Réessaie.');
+    }
+  } finally {
+    setCoachBusy(false);
+    if (!sampleFn) document.querySelectorAll('#coachBody button, #askInput').forEach(x => x.disabled = true);
+  }
+}
+// Speak up unasked only on hands worth a comment
+function maybeAutoCoach() {
+  if (!sampleFn || coachBusy || !$('coachAuto').checked || !H.review) return false;
+  const me = P()[0];
+  const bad = H.review.decisions.find(x => x.cls === 'bad');
+  let why = null;
+  if (bad) why = `au ${STREET_FR[bad.d.street].toLowerCase()}, le trainer juge ma décision mauvaise (${bad.verdict.replace(/[✓✗]/g, '').trim()})`;
+  else if (H.decisions.length && Math.abs(H.result.delta) >= 800) why = 'gros pot';
+  else if (H.decisions.length && classify(me.cards[0], me.cards[1]) === 'premium' && !H.decisions.some(d => family(d.kind) === 'raise')) why = 'main premium jouée sans jamais relancer';
+  if (!why) return false;
+  askCoach(`Commente ma façon de jouer cette main en 2-4 phrases : ce qui était bien, ce qu'il fallait faire autrement, chiffres à l'appui. (Point à regarder : ${why}.)`, true);
+  return true;
+}
+
+document.querySelectorAll('.quick button').forEach(b => b.addEventListener('click', () => askCoach(b.dataset.q)));
+$('askForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const q = $('askInput').value.trim();
+  if (!q || coachBusy) return;
+  $('askInput').value = '';
+  askCoach(q);
+});
+(async () => {
+  try { sampleFn = window.claude ? await window.claude.use('sample') : null; } catch { sampleFn = null; }
+  $('coachBody').hidden = !sampleFn;
+  $('coachOff').hidden = !!sampleFn;
+  $('coachOff').textContent = 'Le coach fonctionne sur la page publiée dans Claude. Les cotes et le bilan marchent partout.';
+})();
+
+function buildPlayers() {
+  const opts = `<option value="random">Au hasard</option>` + PROFILES.map((p, i) => `<option value="${i}">${p.name} (${frc(p)})</option>`).join('');
+  $('players').innerHTML = NAMES.map((_, i) => `<label>Siège ${i + 1}
+      <span class="row"><input id="pName${i}" maxlength="12" autocomplete="off" aria-label="Nom du joueur ${i + 1}">
+      <select id="pStyle${i}" aria-label="Style du joueur ${i + 1}">${opts}</select></span></label>`).join('');
+  NAMES.forEach((_, i) => {
+    const inp = $('pName' + i), sel = $('pStyle' + i);
+    inp.value = SEAT_CFG[i].name; sel.value = SEAT_CFG[i].style;
+    inp.addEventListener('input', () => {
+      SEAT_CFG[i].name = cleanName(inp.value);
+      P()[i + 1].name = seatName(i);
+      saveSeats(); render();
+    });
+    sel.addEventListener('change', () => {
+      SEAT_CFG[i].style = sel.value;
+      if (sel.value !== 'random') P()[i + 1].prof = PROFILES[+sel.value];
+      saveSeats(); render();
+    });
+  });
+}
+
+$('legend').innerHTML = 'Jetons : ' + [...CHIPS].reverse().map(ch => `<span><i class="${ch.light ? 'light' : ''}" style="${chipStyle(ch)}"></i>${ch.name} ${fmt(ch.v)}</span>`).join('');
+
+newGame();
+buildPlayers();
+</script>

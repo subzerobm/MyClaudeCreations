@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+  <div class="page">
+    <div class="stroop-bar"></div>
+
+    <div class="stroop-logo">
+      <span class="c1">ROUGE</span><span class="c2">BLEU</span><span class="c3">VERT</span><span class="c4">JAUNE</span>
+    </div>
+
+    <header class="hero">
+      <h1>Inscription — Étude Stroop</h1>
+      <p class="subtitle">[Accroche courte — à remplacer]</p>
+    </header>
+
+    <section class="card">
+      <h2><?!= svgIcon('info') ?> À propos de l'étude</h2>
+      <p>
+        Vous réaliserez une tâche de dénomination de couleurs sur ordinateur
+        (tâche de Stroop) ainsi qu'un questionnaire sur l'anxiété (STAI-Y).
+        Aucun dispositif physiologique n'est utilisé — seulement vos réponses
+        comportementales.
+      </p>
+      <ul class="facts">
+        <li><?!= svgIcon('monitor') ?> Sur ordinateur</li>
+        <li><?!= svgIcon('keyboard') ?> Réponses manuelles</li>
+        <li><?!= svgIcon('clock') ?> Durée : 45 minutes</li>
+        <li><?!= svgIcon('mapPin') ?> Lieu : [à préciser]</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2><?!= svgIcon('checkCircle') ?> Éligibilité</h2>
+      <p>[Ligne d'éligibilité — à remplacer. Exemple : avoir entre 18 et 35 ans, aucun antécédent neurologique ou psychiatrique.]</p>
+    </section>
+
+    <a class="cta" href="<?= registerUrl ?>">S'inscrire <?!= svgIcon('arrowRight') ?></a>
+
+    <footer>
+      <p>Contact : [email de contact à préciser]</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+  <div class="page">
+    <div class="stroop-bar"></div>
+    <a class="home-link" href="<?= landingUrl ?>"><?!= svgIcon('home') ?> Accueil</a>
+    <h1>Inscription — Étude Stroop</h1>
+
+    <form id="regForm" class="card">
+      <label>
+        <span class="label-icon"><?!= svgIcon('user') ?> Nom complet</span>
+        <input type="text" name="name" required>
+      </label>
+
+      <label>
+        <span class="label-icon"><?!= svgIcon('mail') ?> Email</span>
+        <input type="email" name="email" required>
+      </label>
+
+      <label>
+        <span class="label-icon"><?!= svgIcon('tag') ?> Affiliation (étudiant·e, personnel, autre)</span>
+        <input type="text" name="affiliation">
+      </label>
+
+      <label>
+        <span class="label-icon"><?!= svgIcon('calendar') ?> Créneau souhaité</span>
+        <select name="slotId" required>
+          <option value="" disabled selected>Choisissez un créneau</option>
+          <? for (var i = 0; i < slots.length; i++) { ?>
+            <option value="<?= slots[i].id ?>"><?= slots[i].label ?> — <?= slots[i].remaining ?> place(s) restante(s)</option>
+          <? } ?>
+        </select>
+      </label>
+
+      <fieldset>
+        <legend><?!= svgIcon('checkCircle') ?> Éligibilité</legend>
+        <label class="checkbox"><input type="checkbox" name="elig_age" required> J'ai entre 18 et 35 ans</label>
+        <label class="checkbox"><input type="checkbox" name="elig_health" required> Je n'ai pas d'antécédents neurologiques ou psychiatriques</label>
+      </fieldset>
+
+      <fieldset>
+        <legend><?!= svgIcon('lock') ?> Consentement (RGPD)</legend>
+        <p class="small">
+          Les données recueillies (nom, email, affiliation, créneau) sont utilisées
+          uniquement pour l'organisation de cette étude et seront conservées
+          [durée à préciser] après la fin de l'étude, puis supprimées. Conformément
+          au RGPD, vous disposez d'un droit d'accès, de rectification et de
+          suppression de vos données, à exercer auprès de [contact à préciser].
+        </p>
+        <label class="checkbox"><input type="checkbox" name="consent" required> J'ai lu et j'accepte ces conditions</label>
+      </fieldset>
+
+      <button type="submit">Confirmer mon inscription</button>
+    </form>
+
+    <div id="result" class="card" style="display:none;"></div>
+  </div>
+
+  <script>
+    document.getElementById('regForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var f = e.target;
+      var payload = {
+        name: f.name.value,
+        email: f.email.value,
+        affiliation: f.affiliation.value,
+        slotId: f.slotId.value,
+        eligibility: {
+          age: f.elig_age.checked,
+          health: f.elig_health.checked
+        },
+        consent: f.consent.checked
+      };
+      var btn = f.querySelector('button');
+      btn.disabled = true;
+      btn.textContent = 'Envoi en cours...';
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          var result = document.getElementById('result');
+          f.style.display = 'none';
+          result.style.display = 'block';
+          var homeButton = '<a class="cta" href="<?= landingUrl ?>"><?!= svgIcon("home") ?> Retour à l\'accueil</a>';
+          if (res.ok) {
+            result.innerHTML = '<div class="icon-circle"><?!= svgIcon("checkCircle") ?></div><h2 style="justify-content:center;">Inscription confirmée !</h2><p style="text-align:center; font-weight:600;">' + res.slotLabel + '</p><p style="text-align:center;">Un email de confirmation a aussi été envoyé — pensez à vérifier vos courriers indésirables si vous ne le voyez pas. Vous recevrez un rappel la veille de votre créneau.</p>' + homeButton;
+          } else if (res.error === 'slot_full') {
+            result.innerHTML = '<h2>Ce créneau vient d\'être complet</h2><p>Merci de recharger la page et de choisir un autre créneau.</p>' + homeButton;
+          } else {
+            result.innerHTML = '<h2>Une erreur est survenue</h2><p>Merci de vérifier les champs et de réessayer.</p>' + homeButton;
+          }
+        })
+        .withFailureHandler(function (err) {
+          btn.disabled = false;
+          btn.textContent = 'Confirmer mon inscription';
+          alert('Erreur : ' + err.message);
+        })
+        .submitRegistration(payload);
+    });
+  </script>
+</body>
+</html>

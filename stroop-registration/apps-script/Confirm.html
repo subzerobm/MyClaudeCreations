@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+  <div class="page">
+    <div class="stroop-bar"></div>
+    <a class="home-link" href="<?= landingUrl ?>"><?!= svgIcon('home') ?> Accueil</a>
+    <div class="card" style="text-align:center;">
+      <? if (success) { ?>
+        <div class="icon-circle"><?!= svgIcon('checkCircle') ?></div>
+        <h1 style="justify-content:center;">Merci !</h1>
+        <p>Votre présence est confirmée. À bientôt !</p>
+      <? } else { ?>
+        <div class="icon-circle"><?!= svgIcon('alertCircle') ?></div>
+        <h1 style="justify-content:center;">Lien invalide</h1>
+        <p>Ce lien de confirmation n'est plus valide. Merci de nous contacter directement si besoin.</p>
+      <? } ?>
+    </div>
+  </div>
+</body>
+</html>

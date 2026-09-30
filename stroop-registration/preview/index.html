@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Étude Stroop — Inscription (aperçu)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --bg: #faf8f4; --card: #ffffff; --text: #2b2b2b; --muted: #6b6b6b;
+      --accent: #1d4ed8; --accent-dark: #1739a6; --border: #ece8e0;
+      --stroop-red: #e5484d; --stroop-blue: #2563eb; --stroop-green: #22a35d; --stroop-yellow: #eab308;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+      overflow-x: hidden;
+    }
+    /* playful blurred background blobs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: 0.22;
+      z-index: 0;
+      pointer-events: none;
+    }
+    body::before { width: 420px; height: 420px; top: -140px; left: -140px; background: var(--stroop-blue); }
+    body::after { width: 460px; height: 460px; bottom: -160px; right: -160px; background: var(--stroop-yellow); }
+    .blob3 {
+      position: fixed; width: 360px; height: 360px; border-radius: 50%;
+      background: var(--stroop-red); filter: blur(70px); opacity: 0.16;
+      top: 40%; right: -120px; z-index: 0; pointer-events: none;
+    }
+
+    .page { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 0 20px 64px; }
+    .badge { display: inline-block; background: #fff3cd; color: #7a5b00; border: 1px solid #f1d68a; border-radius: 6px; padding: 4px 10px; font-size: 12px; margin: 16px 0; }
+
+    .stroop-bar { height: 5px; margin: 0 -20px 32px; border-radius: 0 0 6px 6px; background: linear-gradient(90deg, var(--stroop-red), var(--stroop-yellow), var(--stroop-green), var(--stroop-blue)); }
+
+    .stroop-logo { display: flex; flex-wrap: wrap; justify-content: center; text-align: center; font-family: 'Baloo 2', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; gap: 4px 14px; }
+    .stroop-logo span { display: inline-block; transition: transform 0.15s ease; }
+    .stroop-logo span:hover { transform: translateY(-4px) scale(1.08); }
+    .stroop-logo .c1 { color: var(--stroop-blue); transform: rotate(-4deg); }
+    .stroop-logo .c2 { color: var(--stroop-green); transform: rotate(3deg); }
+    .stroop-logo .c3 { color: var(--stroop-yellow); transform: rotate(-3deg); }
+    .stroop-logo .c4 { color: var(--stroop-red); transform: rotate(4deg); }
+
+    .hero { text-align: center; margin-bottom: 28px; }
+    .hero h1 { font-family: 'Baloo 2', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 8px; }
+    .subtitle { color: var(--muted); font-size: 16px; font-weight: 400; }
+
+    h1 { font-family: 'Baloo 2', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.2px; }
+    h2 { font-family: 'Baloo 2', sans-serif; font-size: 19px; font-weight: 600; margin-top: 0; display: flex; align-items: center; gap: 8px; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px; margin-bottom: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    .card.tint-blue { background: linear-gradient(180deg, rgba(37,99,235,0.05), var(--card) 55%); }
+    .card.tint-yellow { background: linear-gradient(180deg, rgba(234,179,8,0.07), var(--card) 55%); }
+
+    .facts { list-style: none; padding: 0; margin: 16px 0 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .facts li { display: flex; align-items: center; gap: 10px; background: var(--bg); border-radius: 12px; padding: 12px 14px; font-size: 14px; font-weight: 500; }
+    .icon-svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--accent); }
+    .icon-circle { width: 56px; height: 56px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+    .icon-circle .icon-svg { width: 28px; height: 28px; }
+
+    .cta {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--accent); color: #fff; border: none; text-decoration: none;
+      padding: 15px 24px; border-radius: 14px; font-weight: 700; font-size: 16px;
+      font-family: 'Baloo 2', sans-serif; margin: 26px 0; width: 100%; cursor: pointer;
+      box-shadow: 0 6px 0 var(--accent-dark), 0 8px 18px rgba(29,78,216,0.25);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .cta:hover { transform: translateY(-2px); box-shadow: 0 8px 0 var(--accent-dark), 0 12px 20px rgba(29,78,216,0.3); }
+    .cta:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark), 0 4px 10px rgba(29,78,216,0.25); }
+    .cta .icon-svg { color: #fff; width: 18px; height: 18px; }
+
+    footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 24px; }
+
+    label { display: block; font-weight: 500; font-size: 13px; margin-bottom: 14px; }
+    .label-icon { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    label.checkbox { display: flex; align-items: flex-start; gap: 8px; font-weight: 400; }
+    label.checkbox input { margin-top: 3px; }
+    input[type="text"], input[type="email"], select { display: block; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-weight: 400; font-family: inherit; }
+    fieldset { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+    legend { font-weight: 600; font-size: 14px; padding: 0 6px; display: flex; align-items: center; gap: 6px; }
+    .small { font-size: 12.5px; color: var(--muted); }
+    button { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--accent); color: #fff; border: none; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; }
+    button:hover { background: var(--accent-dark); }
+
+    button.back { display: inline-flex; align-items: center; gap: 4px; margin-bottom: 8px; color: var(--accent); text-decoration: none; font-size: 14px; font-weight: 500; background: none; border: none; box-shadow: none; width: auto; cursor: pointer; font-family: inherit; padding: 0; }
+    button.back:hover { background: none; color: var(--accent-dark); }
+    .home-link { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); background: var(--card); border: 1px solid var(--border); font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 20px; margin-bottom: 16px; cursor: pointer; font-family: inherit; }
+    .home-link:hover { color: var(--accent-dark); border-color: var(--accent); }
+    .home-link .icon-svg { width: 15px; height: 15px; }
+    #registerView { display: none; }
+
+    /* ===== Desktop layout ===== */
+    @media (min-width: 860px) {
+      .page { max-width: 920px; padding: 0 40px 80px; }
+      .stroop-bar { margin: 0 -40px 40px; }
+      .stroop-logo { font-size: 34px; gap: 6px 20px; }
+      .hero h1 { font-size: 42px; }
+      .subtitle { font-size: 18px; }
+
+      #landingView .content-grid {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+      #landingView .content-grid .card:first-child { grid-row: span 2; }
+      .facts { grid-template-columns: repeat(2, 1fr); }
+      .cta { max-width: 360px; margin-left: auto; margin-right: auto; font-size: 17px; padding: 16px 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="blob3"></div>
+  <div class="page">
+    <p class="badge">Aperçu statique — la vraie page sera servie par Google Apps Script</p>
+
+    <!-- ===== Landing ===== -->
+    <div id="landingView">
+      <div class="stroop-bar"></div>
+      <div class="stroop-logo">
+        <span class="c1">ROUGE</span><span class="c2">BLEU</span><span class="c3">VERT</span><span class="c4">JAUNE</span>
+      </div>
+
+      <header class="hero">
+        <h1>Inscription — Étude Stroop</h1>
+        <p class="subtitle">[Accroche courte — à remplacer]</p>
+      </header>
+
+      <div class="content-grid">
+        <section class="card tint-blue">
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8"/></svg> À propos de l'étude</h2>
+          <p>
+            Vous réaliserez une tâche de dénomination de couleurs sur ordinateur
+            (tâche de Stroop) ainsi qu'un questionnaire sur l'anxiété (STAI-Y).
+            Aucun dispositif physiologique n'est utilisé — seulement vos réponses
+            comportementales.
+          </p>
+          <ul class="facts">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><rect x="2" y="4" width="20" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Sur ordinateur</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="10"/><line x1="10" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="14" y2="10"/><line x1="18" y1="10" x2="18" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/></svg> Réponses manuelles</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg> Durée : 45 minutes</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.3"/></svg> Lieu : [à préciser]</li>
+          </ul>
+        </section>
+
+        <section class="card tint-yellow">
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16 9.5"/></svg> Éligibilité</h2>
+          <p>[Ligne d'éligibilité — à remplacer. Exemple : avoir entre 18 et 35 ans, aucun antécédent neurologique ou psychiatrique.]</p>
+        </section>
+      </div>
+
+      <button class="cta" onclick="showRegister()">S'inscrire <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></button>
+
+      <footer><p>Contact : [email de contact à préciser]</p></footer>
+    </div>
+
+    <!-- ===== Register ===== -->
+    <div id="registerView">
+      <div class="stroop-bar"></div>
+      <button class="home-link" onclick="showLanding()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M4 11l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9"/></svg> Accueil</button>
+      <h1>Inscription — Étude Stroop</h1>
+
+      <form id="regForm" class="card">
+        <label>
+          <span class="label-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg> Nom complet</span>
+          <input type="text" required>
+        </label>
+        <label>
+          <span class="label-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg> Email</span>
+          <input type="email" required>
+        </label>
+        <label>
+          <span class="label-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M20 12.5L12.5 20 4 11.5V4h7.5L20 12.5z"/><circle cx="8" cy="8" r="1" fill="currentColor" stroke="none"/></svg> Affiliation (étudiant·e, personnel, autre)</span>
+          <input type="text">
+        </label>
+        <label>
+          <span class="label-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg> Créneau souhaité</span>
+          <select required>
+            <option value="" disabled selected>Choisissez un créneau</option>
+            <option>Mardi 30 septembre à 10h00 — 1 place restante</option>
+            <option>Mardi 30 septembre à 14h00 — 1 place restante</option>
+            <option>Jeudi 2 octobre à 16h00 — 1 place restante</option>
+          </select>
+        </label>
+
+        <fieldset>
+          <legend><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16 9.5"/></svg> Éligibilité</legend>
+          <label class="checkbox"><input type="checkbox" required> J'ai entre 18 et 35 ans</label>
+          <label class="checkbox"><input type="checkbox" required> Je n'ai pas d'antécédents neurologiques ou psychiatriques</label>
+        </fieldset>
+
+        <fieldset>
+          <legend><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> Consentement (RGPD)</legend>
+          <p class="small">
+            Les données recueillies (nom, email, affiliation, créneau) sont utilisées
+            uniquement pour l'organisation de cette étude et seront conservées
+            [durée à préciser] après la fin de l'étude, puis supprimées. Conformément
+            au RGPD, vous disposez d'un droit d'accès, de rectification et de
+            suppression de vos données, à exercer auprès de [contact à préciser].
+          </p>
+          <label class="checkbox"><input type="checkbox" required> J'ai lu et j'accepte ces conditions</label>
+        </fieldset>
+
+        <button type="submit">Confirmer mon inscription</button>
+      </form>
+
+      <div id="result" class="card" style="display:none; text-align:center;"></div>
+    </div>
+  </div>
+
+  <script>
+    function showRegister() {
+      document.getElementById('landingView').style.display = 'none';
+      document.getElementById('registerView').style.display = 'block';
+      window.scrollTo(0, 0);
+    }
+    function showLanding() {
+      document.getElementById('registerView').style.display = 'none';
+      document.getElementById('landingView').style.display = 'block';
+      document.getElementById('regForm').style.display = 'block';
+      document.getElementById('result').style.display = 'none';
+      window.scrollTo(0, 0);
+    }
+    document.getElementById('regForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      document.getElementById('regForm').style.display = 'none';
+      var result = document.getElementById('result');
+      result.style.display = 'block';
+      result.innerHTML = '<div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg" style="width:28px;height:28px;"><circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16 9.5"/></svg></div><h2 style="justify-content:center;">Inscription confirmée ! (aperçu)</h2><p style="font-weight:600;">Mardi 30 septembre à 10h00</p><p>Un email de confirmation a aussi été envoyé — pensez à vérifier vos courriers indésirables si vous ne le voyez pas.</p><button class="cta" onclick="showLanding()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-svg" style="color:#fff;"><path d="M4 11l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9"/></svg> Retour à l\'accueil</button>';
+    });
+  </script>
+</body>
+</html>

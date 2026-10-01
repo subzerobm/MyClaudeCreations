@@ -8,7 +8,7 @@ repository, on the `main` branch.
 | Folder | What it is | How to open it |
 |---|---|---|
 | `parkour/` | **Parkour**, a rooftop runner game through Rouen (2 levels, installable on a phone) | Open `parkour/index.html` in a browser. See `parkour/README.md` |
-| `poker-trainer/` | **Table du Vendredi**, a poker trainer | Open `poker-trainer/poker-trainer.html` in a browser |
+| `poker-trainer/` | **Table du Vendredi**, a poker trainer | Open `poker-trainer/index.html` in a browser (installable as a phone app) |
 | `stroop-registration/` | Registration website for the Stroop study (Google Apps Script + Google Sheet, confirmation and reminder emails) | Follow `stroop-registration/SETUP.md`. `preview/` shows the pages without Google |
 
 ## Working on a project

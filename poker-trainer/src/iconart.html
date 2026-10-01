@@ -1,0 +1,174 @@
+<!doctype html>
+<!-- Logo for "Table du Vendredi", drawn in layers on a canvas.
+     Open with #full (artwork edge to edge) or #safe (shrunk to 80% so round icon masks never crop it).
+     Rendered to PNG with a headless browser at 1024x1024. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=swap">
+<style>
+  html, body { margin: 0; background: #0d1612; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1024" height="1024"></canvas>
+<script>
+const S = 1024;
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+const SAFE = location.hash === '#safe';
+const COND = '"Barlow Condensed", "Arial Narrow", Arial, sans-serif';
+
+// Palette shared with the app
+const C = {
+  room: '#0d1612', felt1: '#22a35f', felt2: '#127341', felt3: '#0a4b2a',
+  rail1: '#6b4426', rail2: '#3d2616', rail3: '#24150b', gold: '#f2c14e',
+  card: '#fbfbf8', ink: '#15171a', red: '#cc1f1f', shadowRed: '#b3261e',
+  chips: { blue: '#1f5fd6', black: '#1d1d1f', green: '#178a44', red: '#c62828', white: '#f3f1ea' },
+};
+
+/* ---------- layer 1: the card room ---------- */
+function room() {
+  g.fillStyle = C.room; g.fillRect(0, 0, S, S);
+  // warm light falling on the table
+  const glow = g.createRadialGradient(512, 560, 40, 512, 560, 620);
+  glow.addColorStop(0, 'rgba(255, 196, 110, 0.34)');
+  glow.addColorStop(0.55, 'rgba(255, 170, 80, 0.10)');
+  glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  g.fillStyle = glow; g.fillRect(0, 0, S, S);
+  // vignette
+  const v = g.createRadialGradient(512, 540, 380, 512, 540, 780);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.55)');
+  g.fillStyle = v; g.fillRect(0, 0, S, S);
+}
+
+/* ---------- layer 2: the table ---------- */
+function table() {
+  const cx = 512, cy = 610;
+  // shadow under the table
+  g.save(); g.filter = 'blur(24px)';
+  g.fillStyle = 'rgba(0,0,0,0.6)';
+  g.beginPath(); g.ellipse(cx, cy + 40, 450, 270, 0, 0, Math.PI * 2); g.fill();
+  g.restore();
+  // wood rail
+  const rail = g.createLinearGradient(0, cy - 280, 0, cy + 280);
+  rail.addColorStop(0, C.rail1); rail.addColorStop(0.5, C.rail2); rail.addColorStop(1, C.rail3);
+  g.fillStyle = rail;
+  g.beginPath(); g.ellipse(cx, cy, 455, 262, 0, 0, Math.PI * 2); g.fill();
+  // rail highlight
+  g.strokeStyle = 'rgba(255, 220, 170, 0.25)'; g.lineWidth = 4;
+  g.beginPath(); g.ellipse(cx, cy - 4, 446, 254, 0, Math.PI * 1.05, Math.PI * 1.95); g.stroke();
+  // felt
+  const felt = g.createRadialGradient(cx, cy - 40, 30, cx, cy, 420);
+  felt.addColorStop(0, C.felt1); felt.addColorStop(0.6, C.felt2); felt.addColorStop(1, C.felt3);
+  g.fillStyle = felt;
+  g.beginPath(); g.ellipse(cx, cy, 405, 216, 0, 0, Math.PI * 2); g.fill();
+  // betting line
+  g.strokeStyle = 'rgba(242, 193, 78, 0.45)'; g.lineWidth = 5;
+  g.beginPath(); g.ellipse(cx, cy, 335, 168, 0, 0, Math.PI * 2); g.stroke();
+}
+
+/* ---------- layer 3: chips ---------- */
+function chip(x, y, color, light) {
+  const rx = 50, ry = 17, h = 13;
+  // side
+  g.fillStyle = shade(color, -0.35);
+  g.beginPath();
+  g.ellipse(x, y + h, rx, ry, 0, 0, Math.PI);
+  g.lineTo(x - rx, y); g.ellipse(x, y, rx, ry, 0, Math.PI, 0, true); g.closePath(); g.fill();
+  // edge stripes on the side
+  g.fillStyle = light ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.85)';
+  for (let k = -2; k <= 2; k++) {
+    const sx = x + k * 21;
+    g.fillRect(sx - 4, y + ry * Math.sqrt(Math.max(0, 1 - ((sx - x) / rx) ** 2)) - 1, 8, h);
+  }
+  // top
+  g.fillStyle = color;
+  g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = light ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.75)';
+  g.lineWidth = 6; g.setLineDash([14, 12]);
+  g.beginPath(); g.ellipse(x, y, rx - 5, ry - 2, 0, 0, Math.PI * 2); g.stroke();
+  g.setLineDash([]);
+  g.strokeStyle = light ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.35)'; g.lineWidth = 2;
+  g.beginPath(); g.ellipse(x, y, rx - 20, ry - 7, 0, 0, Math.PI * 2); g.stroke();
+}
+function stack(x, y, color, n, light) {
+  g.save(); g.filter = 'blur(6px)'; g.fillStyle = 'rgba(0,0,0,0.45)';
+  g.beginPath(); g.ellipse(x + 6, y + 18, 56, 20, 0, 0, Math.PI * 2); g.fill(); g.restore();
+  for (let i = 0; i < n; i++) chip(x + (i % 2 ? 1.5 : -1.5), y - i * 13, color, light);
+}
+function chips() {
+  stack(250, 640, C.chips.blue, 7);
+  stack(330, 700, C.chips.black, 4);
+  stack(770, 655, C.chips.red, 6);
+  stack(690, 712, C.chips.green, 4);
+  stack(520, 742, C.chips.white, 3, true);
+}
+
+/* ---------- layer 4: the cards ---------- */
+function card(x, y, rot, rank, suit, color) {
+  const w = 176, h = 246;
+  g.save(); g.translate(x, y); g.rotate(rot);
+  g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 30; g.shadowOffsetY = 14;
+  g.fillStyle = C.card; roundRect(-w / 2, -h / 2, w, h, 20); g.fill();
+  g.shadowColor = 'transparent';
+  g.fillStyle = color; g.textAlign = 'center';
+  g.font = `800 120px ${COND}`; g.fillText(rank, 0, -8);
+  g.font = '96px Arial, sans-serif'; g.fillText(suit, 0, 92);
+  g.restore();
+}
+function cards() {
+  card(452, 575, -0.2, 'K', '♥', C.red);
+  card(566, 560, 0.14, 'A', '♠', C.ink);
+}
+
+/* ---------- layer 5: title ---------- */
+function title() {
+  g.textAlign = 'center';
+  // "TABLE DU" in gold, spaced out
+  g.font = `700 78px ${COND}`;
+  g.fillStyle = C.gold;
+  spaced('TABLE DU', 512, 128, 14);
+  // "VENDREDI" white with a red drop shadow
+  g.font = `800 196px ${COND}`;
+  g.fillStyle = C.shadowRed; g.fillText('VENDREDI', 512 + 9, 300 + 9);
+  g.fillStyle = '#ffffff'; g.fillText('VENDREDI', 512, 300);
+  // subtitle under the table
+  g.font = `700 64px ${COND}`;
+  g.fillStyle = C.gold;
+  spaced('POKER', 512, 960, 14);
+}
+
+/* ---------- helpers ---------- */
+function roundRect(x, y, w, h, r) {
+  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+function spaced(text, cx, y, gap) {
+  const widths = [...text].map(ch => g.measureText(ch).width);
+  const total = widths.reduce((a, b) => a + b, 0) + gap * (text.length - 1);
+  let x = cx - total / 2;
+  g.textAlign = 'left';
+  [...text].forEach((ch, i) => { g.fillText(ch, x, y); x += widths[i] + gap; });
+  g.textAlign = 'center';
+}
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  const f = v => Math.max(0, Math.min(255, Math.round(v + v * amt)));
+  return `rgb(${f(n >> 16)}, ${f((n >> 8) & 255)}, ${f(n & 255)})`;
+}
+
+/* ---------- compose ---------- */
+async function draw() {
+  try { await Promise.all([document.fonts.load(`800 196px ${COND}`), document.fonts.load(`700 78px ${COND}`)]); } catch {}
+  room(); // the room always fills the whole square, even in the shrunk layout
+  g.save();
+  if (SAFE) { g.translate(512, 512); g.scale(0.8, 0.8); g.translate(-512, -512); }
+  table(); chips(); cards(); title();
+  g.restore();
+  document.title = 'done';
+}
+draw();
+</script>
+</body>
+</html>

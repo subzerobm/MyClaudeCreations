@@ -1,4 +1,22 @@
-<title>Table du Vendredi</title>
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1612">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vendredi">
+<meta name="description" content="Entraînement au poker Texas Hold'em à 9 joueurs.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-size:14px;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+</style><title>Table du Vendredi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=Barlow:wght@400;600;700&display=swap">
@@ -199,6 +217,9 @@ details.log summary{cursor:pointer;font-family:var(--cond);font-weight:700;lette
 .hint{font-size:12px;color:#6f8a7b;line-height:1.5}
 .hint kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--ink);font-family:var(--cond)}
 </style>
+</head>
+<body>
+
 
 <div class="app">
   <header class="top">
@@ -1278,7 +1299,7 @@ $('askForm').addEventListener('submit', e => {
   try { sampleFn = window.claude ? await window.claude.use('sample') : null; } catch { sampleFn = null; }
   $('coachBody').hidden = !sampleFn;
   $('coachOff').hidden = !!sampleFn;
-  $('coachOff').textContent = 'Le coach fonctionne sur la page publiée dans Claude. Les cotes et le bilan marchent partout.';
+  $('coachOff').textContent = 'Le coach Claude ne marche que dans la version Claude du trainer. Ici, les cotes et le bilan de chaque main fonctionnent normalement.';
 })();
 
 function buildPlayers() {
@@ -1307,3 +1328,9 @@ $('legend').innerHTML = 'Jetons : ' + [...CHIPS].reverse().map(ch => `<span><i c
 newGame();
 buildPlayers();
 </script>
+
+<script>
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>

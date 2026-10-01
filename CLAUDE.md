@@ -9,7 +9,7 @@
 All projects live in this one repository, each in its own top-level folder:
 
 - `parkour/`: Parkour, a single-file HTML runner game (PWA). Source parts in `parkour/src/`, rebuilt with `parkour/src/build.sh`
-- `poker-trainer/`: Table du Vendredi, a single-file HTML poker trainer
+- `poker-trainer/`: Table du Vendredi, a single-file HTML poker trainer (PWA: `index.html` + icons; icon drawing page in `poker-trainer/src/iconart.html`)
 - `stroop-registration/`: Stroop study registration site (Google Apps Script in `apps-script/`, static mockups in `preview/`, setup in `SETUP.md`)
 
 A new project gets its own top-level folder and a line in this list and in `README.md`.

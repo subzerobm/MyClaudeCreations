@@ -122,7 +122,59 @@ function cards() {
   card(566, 560, 0.14, 'A', '♠', C.ink);
 }
 
-/* ---------- layer 5: title ---------- */
+/* ---------- layer 5: champagne flutes on the front of the rail ---------- */
+function flute(x, y, rot, s) {
+  g.save(); g.translate(x, y); g.rotate(rot); g.scale(s, s);
+  const bowl = () => {
+    g.beginPath(); g.moveTo(-9, -112);
+    g.bezierCurveTo(-30, -130, -40, -200, -38, -330); g.lineTo(38, -330);
+    g.bezierCurveTo(40, -200, 30, -130, 9, -112); g.closePath();
+  };
+  // shadow on the table
+  g.save(); g.filter = 'blur(8px)'; g.fillStyle = 'rgba(0,0,0,0.5)';
+  g.beginPath(); g.ellipse(8, 6, 58, 15, 0, 0, Math.PI * 2); g.fill(); g.restore();
+  // foot and stem
+  g.fillStyle = 'rgba(255,255,255,0.28)'; g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 4;
+  g.beginPath(); g.ellipse(0, 0, 50, 13, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+  g.fillStyle = 'rgba(255,255,255,0.75)'; g.fillRect(-4, -114, 8, 114);
+  // champagne with bubbles
+  g.save(); bowl(); g.clip();
+  const liq = g.createLinearGradient(0, -290, 0, -110);
+  liq.addColorStop(0, '#fbe08a'); liq.addColorStop(1, '#d9a521');
+  g.fillStyle = liq; g.fillRect(-45, -288, 90, 180);
+  g.fillStyle = 'rgba(255,255,255,0.9)';
+  [[-14, -150, 4], [8, -175, 3.5], [-6, -205, 3], [14, -228, 4], [-18, -246, 3], [4, -262, 3.5], [-2, -135, 3]]
+    .forEach(([bx, by, r]) => { g.beginPath(); g.arc(bx, by, r, 0, Math.PI * 2); g.fill(); });
+  g.fillStyle = '#fff3c4';
+  g.beginPath(); g.ellipse(0, -288, 38, 7, 0, 0, Math.PI * 2); g.fill();
+  g.restore();
+  // glass outline and rim
+  bowl(); g.fillStyle = 'rgba(255,255,255,0.10)'; g.fill();
+  g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 5; g.stroke();
+  g.lineWidth = 4;
+  g.beginPath(); g.ellipse(0, -330, 38, 8, 0, 0, Math.PI * 2); g.stroke();
+  // light reflection
+  g.strokeStyle = 'rgba(255,255,255,0.6)'; g.lineWidth = 6; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(-24, -300); g.bezierCurveTo(-28, -230, -24, -170, -14, -140); g.stroke();
+  g.restore();
+}
+function sparkle(x, y, r) {
+  g.save(); g.translate(x, y); g.fillStyle = '#fff6d6';
+  g.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4, rr = i % 2 ? r * 0.28 : r;
+    g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+  }
+  g.closePath(); g.fill(); g.restore();
+}
+function champagne() {
+  flute(150, 790, 0.12, 0.9);
+  flute(874, 790, -0.12, 0.9);
+  sparkle(212, 480, 22); sparkle(178, 455, 11);
+  sparkle(812, 480, 22); sparkle(848, 455, 11);
+}
+
+/* ---------- layer 6: title ---------- */
 function title() {
   g.textAlign = 'center';
   // "TABLE DU" in gold, spaced out
@@ -164,7 +216,7 @@ async function draw() {
   room(); // the room always fills the whole square, even in the shrunk layout
   g.save();
   if (SAFE) { g.translate(512, 512); g.scale(0.8, 0.8); g.translate(-512, -512); }
-  table(); chips(); cards(); title();
+  table(); chips(); cards(); champagne(); title();
   g.restore();
   document.title = 'done';
 }

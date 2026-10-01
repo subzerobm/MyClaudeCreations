@@ -280,7 +280,7 @@ let save=defSave();
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null'); if(s&&typeof s==='object') save=Object.assign(defSave(),s);}catch(e){}
 /* ---------- online: anonymous statistics (GoatCounter) and the leaderboard (Supabase) ----------
    Both stay off until the codes below are filled in. Only a nickname, best scores and play time are sent. */
-const ONLINE={gc:'', sbUrl:'', sbKey:''};
+const ONLINE={gc:'subzerobm', sbUrl:'', sbKey:''};
 const online=()=>!!(ONLINE.sbUrl&&ONLINE.sbKey);
 if(ONLINE.gc&&/^https?:/.test(location.protocol)){ try{ const sc=document.createElement('script'); sc.async=true; sc.src='https://gc.zgo.at/count.js'; sc.dataset.goatcounter='https://'+ONLINE.gc+'.goatcounter.com/count'; document.head.appendChild(sc); }catch(e){} }
 function track(path){ try{ if(window.goatcounter&&window.goatcounter.count) window.goatcounter.count({path,title:path,event:true}); }catch(e){} }

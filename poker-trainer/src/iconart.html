@@ -218,8 +218,8 @@ async function draw() {
   if (SAFE) { g.translate(512, 512); g.scale(0.8, 0.8); g.translate(-512, -512); }
   frame();
   sunburst(512, 600);
-  card(400, 640, -0.32, 'K', '♥', C.heart, 240, 340, false);
-  card(624, 640, 0.32, 'Q', '♦', C.heart, 240, 340, false);
+  // A Hold'em hand is two cards: the King behind, the Ace (the "face") in front
+  card(420, 645, -0.26, 'K', '♥', C.heart, 250, 352, false);
   flute(178, 862, 0.04, 0.95);
   card(512, 625, -0.05, 'A', '♠', C.ink);
   fedora(500, 448, -0.1);

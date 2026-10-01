@@ -1,46 +1,18 @@
-# MyClaudeCreations - Claude Code Workspace
+# MyClaudeCreations
 
-A dedicated workspace for Claude-assisted projects, experiments, and research tasks.
-
-## Project Structure
-
-```
-MyClaudeCreations/
-├── src/                  # Source code and main implementations
-├── tests/               # Unit tests and test suites
-├── docs/                # Documentation and guides
-├── data/                # Data files, datasets, and outputs
-├── README.md            # This file
-└── CLAUDE.md            # Claude project instructions
-```
-
-## Getting Started
-
-1. Review `CLAUDE.md` for Claude's project guidelines and instructions
-2. Add your code to the `src/` directory
-3. Create tests in `tests/`
-4. Document your work in `docs/`
-5. Store datasets and outputs in `data/`
-
-## Quick Commands
-
-```bash
-# View git status
-git status
-
-# See commit history
-git log --oneline
-
-# Create a new branch for a feature
-git checkout -b feature/your-feature-name
-```
-
-## Notes
-
-- This project is initialized locally and ready for GitHub integration
-- Keep commits focused and descriptive
-- Use branches for feature development and experimentation
+Mariana's workspace for projects built with Claude Code. Everything lives in this one
+repository, on the `main` branch.
 
 ## Projects
 
-- `parkour/`: Parkour, a rooftop runner game through Rouen (open `parkour/index.html`)
+| Folder | What it is | How to open it |
+|---|---|---|
+| `parkour/` | **Parkour**, a rooftop runner game through Rouen (2 levels, installable on a phone) | Open `parkour/index.html` in a browser. See `parkour/README.md` |
+| `poker-trainer/` | **Table du Vendredi**, a poker trainer | Open `poker-trainer/poker-trainer.html` in a browser |
+| `stroop-registration/` | Registration website for the Stroop study (Google Apps Script + Google Sheet, confirmation and reminder emails) | Follow `stroop-registration/SETUP.md`. `preview/` shows the pages without Google |
+
+## Working on a project
+
+Start a Claude Code session on this repository and say which folder you want to work on.
+Claude commits and pushes the changes to GitHub, so they are available everywhere
+(computer, phone, claude.ai/code).

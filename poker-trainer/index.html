@@ -215,6 +215,13 @@ details.log summary{cursor:pointer;font-family:var(--cond);font-weight:700;lette
 .pod.hero .pn{max-width:none}
 .log li.me{color:#9fd0ff;font-weight:600}
 .hint{font-size:12px;color:#6f8a7b;line-height:1.5}
+.restart{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;touch-action:manipulation}
+.restart.armed{border-color:var(--fold);color:#ff7b72;background:rgba(217,70,62,.12)}
+.resume{position:fixed;inset:0;z-index:50;background:rgba(5,9,7,.88);display:flex;align-items:center;justify-content:center;padding:16px}
+.resume-card{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--gold);border-radius:18px;padding:20px 18px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.resume-card h2{margin:0;font-family:var(--cond);font-weight:800;font-size:26px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
+.resume-card p{margin:0;font-size:15px;line-height:1.5;color:#d2e4da}
+.resume-card .big-btn{flex:none}
 .hint kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--ink);font-family:var(--cond)}
 </style>
 </head>
@@ -230,7 +237,17 @@ details.log summary{cursor:pointer;font-family:var(--cond);font-weight:700;lette
       <div>Net<b id="sNet">0€</b></div>
       <div>Décision moy.<b id="sAvg">–</b></div>
     </div>
+    <button class="restart" id="bRestart" type="button">↺ Nouvelle partie</button>
   </header>
+
+  <div class="resume" id="resume" hidden>
+    <div class="resume-card" role="dialog" aria-labelledby="resumeTitle">
+      <h2 id="resumeTitle">Partie en cours</h2>
+      <p id="resumeInfo"></p>
+      <button class="big-btn" id="bContinue" type="button">CONTINUER ▶</button>
+      <button class="big-btn alt" id="bFresh" type="button">NOUVELLE PARTIE</button>
+    </div>
+  </div>
 
   <div class="table" id="table">
     <div class="felt"></div>
@@ -486,7 +503,47 @@ function newGame() {
   const players = [{seat:0, name:HERO_NAME, hero:true, stack:START, out:false}];
   NAMES.forEach((_, i) => players.push({seat:i + 1, name:seatName(i), hero:false, stack:START, out:false, prof:seatProfile(i)}));
   G = {players, button:-1, handNo:0, decisions:[], invested:START, rebuyUsed:false, over:false};
+  clearSave();
   newHand();
+}
+
+/* ---------- saved game: stored after every finished hand, offered again when the app opens ---------- */
+const SAVE_KEY = 'ptGameV1';
+function saveGame() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      v:1, savedAt:Date.now(),
+      G:{button:G.button, handNo:G.handNo, decisions:G.decisions.slice(-200), invested:G.invested, rebuyUsed:G.rebuyUsed, refills:G.refills || 0},
+      players:P().map(p => ({name:p.name, stack:p.stack, out:p.out, prof:p.hero ? -1 : PROFILES.indexOf(p.prof)})),
+    }));
+  } catch {}
+}
+function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch {} }
+function loadSave() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if (!s || s.v !== 1 || !Array.isArray(s.players) || s.players.length !== 9) return null;
+    if (!(s.G.handNo > 0) || s.players.filter(p => !p.out).length < 2) return null;
+    return s;
+  } catch { return null; }
+}
+function resumeGame(s) {
+  clearInterval(decTick);
+  const players = s.players.map((sp, i) => i === 0
+    ? {seat:0, name:HERO_NAME, hero:true, stack:sp.stack, out:false}
+    : {seat:i, name:sp.name, hero:false, stack:sp.stack, out:sp.out, prof:PROFILES[sp.prof] || seatProfile(i - 1)});
+  G = {players, ...s.G, over:false};
+  newHand(); // an unfinished hand from last time is dropped: you restart from the stacks after the last finished hand
+}
+function showResume(s) {
+  const me = s.players[0], net = me.stack - s.G.invested;
+  const alive = s.players.filter(p => !p.out).length;
+  const ago = Math.round((Date.now() - s.savedAt) / 60000);
+  const when = ago < 60 ? `il y a ${ago} min` : ago < 1440 ? `il y a ${Math.round(ago / 60)} h` : `il y a ${Math.round(ago / 1440)} j`;
+  $('resumeInfo').innerHTML = `Main n°${s.G.handNo} · ton tapis <b>${fmt(me.stack)}</b> · net <b class="${net > 0 ? 'good' : net < 0 ? 'bad' : ''}">${sfmt(net)}</b><br>${alive} joueurs encore à table · sauvegardée ${when}`;
+  $('resume').hidden = false;
+  $('bContinue').onclick = () => { $('resume').hidden = true; resumeGame(s); };
+  $('bFresh').onclick = () => { $('resume').hidden = true; newGame(); };
 }
 
 function newHand() {
@@ -743,6 +800,7 @@ function finishHand() {
   if (me.out) H.result.place = alive.length + 1;
   H.over = true; H.awaiting = false; H.turn = -1;
   H.review = buildReview(inHand);
+  if (H.result.champion) clearSave(); else saveGame();
   render();
   if (!me.out) maybeAutoCoach();
 }
@@ -1104,7 +1162,7 @@ bind('bAllin', () => {
 bind('bStep', () => advanceStreet());
 bind('bSkip', skipToEnd);
 document.addEventListener('keydown', e => {
-  if (e.repeat || ['SELECT', 'INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+  if (!H || e.repeat || ['SELECT', 'INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
   const k = e.key.toLowerCase();
   if (k === 'f') heroAct('fold');
   else if (k === 'c') heroAct('call');
@@ -1325,7 +1383,22 @@ function buildPlayers() {
 
 $('legend').innerHTML = 'Jetons : ' + [...CHIPS].reverse().map(ch => `<span><i class="${ch.light ? 'light' : ''}" style="${chipStyle(ch)}"></i>${ch.name} ${fmt(ch.v)}</span>`).join('');
 
-newGame();
+// "Nouvelle partie" needs a second tap within 3 seconds
+let restartArmed = null;
+$('bRestart').addEventListener('click', () => {
+  const b = $('bRestart');
+  if (restartArmed) {
+    clearTimeout(restartArmed); restartArmed = null;
+    b.classList.remove('armed'); b.textContent = '↺ Nouvelle partie';
+    return newGame();
+  }
+  b.classList.add('armed'); b.textContent = 'Confirmer ? Tout recommencer';
+  restartArmed = setTimeout(() => { restartArmed = null; b.classList.remove('armed'); b.textContent = '↺ Nouvelle partie'; }, 3000);
+});
+
+// On opening: offer to continue the saved game, otherwise start a new one
+const saved = loadSave();
+if (saved) showResume(saved); else newGame();
 buildPlayers();
 </script>
 

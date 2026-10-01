@@ -123,6 +123,17 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .lvbtn small{font-family:var(--body);font-weight:800;font-size:11px;color:var(--muted)}
 .lvbtn.on{background:var(--gold);color:#3a2600;border-color:#fff}
 .lvbtn.on small{color:#5a4200}
+.ghost.gold{background:var(--gold);color:#3a2600;border-color:#fff}
+.nickrow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800}
+.nickrow b{color:var(--gold)}
+.nickform .row{flex-wrap:nowrap}
+#nick-in{flex:1;min-width:0;font:800 16px var(--body);padding:8px 10px;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:#fff;user-select:text;-webkit-user-select:text;touch-action:auto}
+.board{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;counter-reset:r}
+.board li{counter-increment:r;display:grid;grid-template-columns:2.2em 1fr auto;gap:8px;align-items:center;background:rgba(8,16,42,.6);border-radius:10px;padding:6px 10px;font-weight:800}
+.board li::before{content:counter(r);font-family:var(--display);color:var(--muted)}
+.board li:nth-child(1)::before{color:#ffcd3c}.board li:nth-child(2)::before{color:#d8dde6}.board li:nth-child(3)::before{color:#e59a5b}
+.board li.me{outline:2px solid var(--gold)}
+.board li b{font-family:var(--display);font-weight:400;font-variant-numeric:tabular-nums}
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);background:var(--red);font-weight:900;padding:8px 16px;border-radius:999px;box-shadow:0 4px 0 rgba(0,0,0,.35)}
 
 @media (orientation:portrait){
@@ -177,7 +188,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div class="lvl" role="group" aria-label="Choisis ton niveau"><button id="lv1" class="lvbtn on">NIVEAU 1<small>Les toits · sans fin : bats ton record !</small></button><button id="lv2" class="lvbtn">NIVEAU 2<small>Rue Eau-de-Robec · le jour</small></button></div>
     <div class="row"><button id="b-play" class="btn btn-gold">JOUER</button><button id="b-demo" class="btn btn-red">DÉMO</button></div>
     <div class="row"><button id="b-shop" class="btn">STYLE</button><button id="b-miss" class="btn">DÉFIS</button><button id="b-savep" class="btn">SAUVEGARDE</button></div>
-    <div class="row"><button id="b-music" class="ghost">Musique : oui</button><button id="b-sfx" class="ghost">Sons : oui</button><button id="b-fs" class="ghost">Plein écran</button></div>
+    <div class="row"><button id="b-music" class="ghost">Musique : oui</button><button id="b-sfx" class="ghost">Sons : oui</button><button id="b-fs" class="ghost">Plein écran</button><button id="b-board" class="ghost gold">🏆 Classement</button></div>
     <p class="howto"><span id="howto-lv"><b>Niveau 1</b> : cours le plus loin possible, une arche tous les 1 000 m !</span> · <b>1 tape</b> : sauter · <b>2 tapes</b> : double saut + salto · <b>3 tapes</b> : salto en plus · <b>Doigt appuyé</b> : glisser au sol, planer en l’air, dribbler le ballon jusqu’au but. Double salto = pièces x2 · Triple salto = pièces x3 !</p>
   </div>
   <p class="rotate">Tourne ton téléphone pour mieux voir !</p>
@@ -207,6 +218,17 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <textarea id="save-code" rows="3" spellcheck="false" autocomplete="off"></textarea>
     <button id="b-load" class="btn btn-red">CHARGER CE CODE</button>
     <p id="save-msg" class="done" hidden></p>
+  </div>
+</section>
+
+<section id="board" class="screen dim" hidden>
+  <div class="panel scroll">
+    <div class="panel-head"><h2>Classement</h2><button class="ghost" data-close>Fermer</button></div>
+    <div class="tabs"><button data-board="1" class="on">Niveau 1</button><button data-board="2">Niveau 2</button></div>
+    <div id="nick-row" class="nickrow"><span>Ton pseudo : <b id="nick-show">—</b></span><button id="b-nick" class="ghost">Changer</button></div>
+    <form id="nick-form" class="nickform" hidden><label for="nick-in" class="lab">Choisis un pseudo (pas ton vrai nom de famille)</label><div class="row"><input id="nick-in" maxlength="16" autocomplete="off" spellcheck="false" placeholder="ex : AbelLeBoss"><button class="btn btn-gold" type="submit">OK</button></div></form>
+    <ol id="board-list" class="board"></ol>
+    <p id="board-msg" class="note" hidden></p>
   </div>
 </section>
 
@@ -256,6 +278,23 @@ const KEY='parkour-v1';
 const defSave=()=>({best:0,coins:0,owned:['abel','none','notrail'],eq:{top:'abel',head:'none',trail:'notrail'},music:true,sfx:true,missions:null,mIdx:0,runs:0,tut:false});
 let save=defSave();
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null'); if(s&&typeof s==='object') save=Object.assign(defSave(),s);}catch(e){}
+/* ---------- online: anonymous statistics (GoatCounter) and the leaderboard (Supabase) ----------
+   Both stay off until the codes below are filled in. Only a nickname, best scores and play time are sent. */
+const ONLINE={gc:'', sbUrl:'', sbKey:''};
+const online=()=>!!(ONLINE.sbUrl&&ONLINE.sbKey);
+if(ONLINE.gc&&/^https?:/.test(location.protocol)){ try{ const sc=document.createElement('script'); sc.async=true; sc.src='https://gc.zgo.at/count.js'; sc.dataset.goatcounter='https://'+ONLINE.gc+'.goatcounter.com/count'; document.head.appendChild(sc); }catch(e){} }
+function track(path){ try{ if(window.goatcounter&&window.goatcounter.count) window.goatcounter.count({path,title:path,event:true}); }catch(e){} }
+const sbHead=()=>({'Content-Type':'application/json',apikey:ONLINE.sbKey,Authorization:'Bearer '+ONLINE.sbKey});
+async function submitScore(){
+  if(!online()||!save.nick) return;
+  try{ await fetch(ONLINE.sbUrl+'/rest/v1/rpc/submit_score',{method:'POST',headers:sbHead(),body:JSON.stringify({p_pid:save.pid,p_nick:save.nick,p_best1:save.best||0,p_best2:save.best2||0,p_dist1:save.bestDist||0,p_stars2:save.stars2||0,p_games:save.games||0,p_seconds:Math.round(save.playSec||0)})}); }catch(e){}
+}
+async function fetchBoard(level){
+  const col=level===2?'best2':'best1';
+  const r=await fetch(ONLINE.sbUrl+'/rest/v1/players?select=nick,best1,best2,stars2,dist1&'+col+'=gt.0&order='+col+'.desc&limit=20',{headers:sbHead()});
+  if(!r.ok) throw new Error('board '+r.status); return r.json();
+}
+const newPid=()=>{ try{ return crypto.randomUUID(); }catch(e){ return 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g,()=>(Math.random()*16|0).toString(16)); } };
 const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(save));return true;}catch(e){return false;}};
 const saveCode=()=>'PK1-'+btoa(unescape(encodeURIComponent(JSON.stringify(save))));
 function loadCode(txt){
@@ -266,6 +305,7 @@ function loadCode(txt){
   ns.best=n(d.best); ns.coins=n(d.coins); ns.runs=n(d.runs); ns.mIdx=n(d.mIdx); ns.tut=!!d.tut; ns.music=d.music!==false; ns.sfx=d.sfx!==false;
   if(Array.isArray(d.owned)) ns.owned=[...new Set(['abel','none','notrail',...d.owned.filter(id=>typeof id==='string'&&item(id))])];
   if(d.eq&&typeof d.eq==='object') for(const k of ['top','head','trail']) if(ns.owned.includes(d.eq[k])) ns.eq[k]=d.eq[k];
+  if(typeof d.nick==='string') ns.nick=d.nick.slice(0,16); if(typeof d.pid==='string'&&/^[0-9a-f-]{36}$/.test(d.pid)) ns.pid=d.pid; ns.games=n(d.games); ns.playSec=n(d.playSec);
   if(Array.isArray(d.missions)) ns.missions=d.missions.filter(x=>x&&typeof x.id==='string').map(x=>({id:x.id,p:n(x.p)}));
   return ns;
 }
@@ -1419,14 +1459,14 @@ function updHud(){
 }
 
 /* ---------- screens ---------- */
-const scr={menu:$('menu'),shop:$('shop'),missions:$('missions'),savep:$('savep'),pause:$('pause'),over:$('over')};
+const scr={menu:$('menu'),shop:$('shop'),missions:$('missions'),savep:$('savep'),board:$('board'),pause:$('pause'),over:$('over')};
 function show(name){ for(const k in scr) scr[k].hidden=k!==name; $('hud').hidden=!(G.state==='play'||G.state==='pause'); }
 function syncToggles(){ $('b-music').textContent='Musique : '+(save.music?'oui':'non'); $('b-sfx').textContent='Sons : '+(save.sfx?'oui':'non'); }
 const bestNow=()=>LV===LV1?save.best:(save.best2||0);
 function refreshMenu(){ $('b-demo').hidden=LV!==LV1; $('howto-lv').innerHTML=LV===LV1?'<b>Niveau 1</b> : cours le plus loin possible, une arche tous les 1 000 m !':'<b>Niveau 2</b> : arrive au bout et gagne ★★★ (bulle gardée + 250 pièces, 2 buts, 3 maillots d’or) !'; const n2=save.stars2||0; $('lv2').querySelector('small').textContent='Rue Eau-de-Robec · '+'★'.repeat(n2)+'☆'.repeat(3-n2); $('lv1').classList.toggle('on',LV===LV1); $('lv2').classList.toggle('on',LV!==LV1); $('m-best').textContent=bestNow().toLocaleString('fr-FR'); $('m-coins').textContent=save.coins.toLocaleString('fr-FR'); $('bday').hidden=!DECEMBER; syncToggles(); }
 function toMenu(){ G.state='menu'; G.demo=false; reset(); refreshMenu(); show('menu'); }
-function startRun(){ initAudio(); SFX.click(); G.demo=false; G.lastDemo=false; reset(); G.state='play'; last={}; show(null); $('hud').hidden=false; $('hud-demo').hidden=true; $('b-again').textContent='REJOUER'; }
-function startDemo(){ initAudio(); SFX.click(); G.demo=true; G.lastDemo=true; reset(); G.state='play'; last={}; show(null); $('hud').hidden=false; $('hud-demo').hidden=false; }
+function startRun(){ initAudio(); SFX.click(); G.demo=false; G.lastDemo=false; reset(); save.games=(save.games||0)+1; track('niveau-'+(LV===LV1?1:2)+'/partie'); G.state='play'; last={}; show(null); $('hud').hidden=false; $('hud-demo').hidden=true; $('b-again').textContent='REJOUER'; }
+function startDemo(){ initAudio(); SFX.click(); track('demo'); G.demo=true; G.lastDemo=true; reset(); G.state='play'; last={}; show(null); $('hud').hidden=false; $('hud-demo').hidden=false; }
 function starsOf(){ // level 2: 1 finish, 2 + 250 coins with the bubble kept, 3 + both goals and the 3 golden jerseys
   const two=G.runCoins>=250&&G.power.shield, three=two&&(G.stats.goals||0)>=2&&(G.stats.jerseys||0)>=3;
   return three?3:two?2:1;
@@ -1439,6 +1479,7 @@ function showStars(n){
 }
 function endRun(win){
   if(G.demo){ endDemo(); return; }
+  setTimeout(()=>{ persist(); submitScore(); },0);
   G.state='over';
   const sc=score(), prev=bestNow(), rec=sc>prev;
   G.stats.dist=Math.floor(G.dist/10);
@@ -1458,6 +1499,7 @@ function endRun(win){
   $('o-done').hidden=!done.length; $('o-done').textContent=done.length?'Défi réussi : '+done.join(' · '):'';
   show('over');
   if(win){} else if(rec) SFX.top1(); else SFX.over();
+  { const m=G.time/60; track('niveau-'+(LV===LV1?1:2)+'/fin/'+(win?'terminee':'perdue')+'/'+(m<1?'moins-1-min':m<5?'1-a-5-min':'plus-5-min')); }
   showStars(win?starsOf():0);
   if(win){ const st=starsOf(); if(st>(save.stars2||0)) save.stars2=st;
     if(st===3&&!save.owned.includes('orrobec')){ save.owned.push('orrobec'); save.eq.top='orrobec'; $('o-done').hidden=false; $('o-done').textContent='3 ÉTOILES ! Nouveau style débloqué : Maillot doré !'+($('o-done').textContent?' · '+$('o-done').textContent:''); }
@@ -1542,6 +1584,25 @@ $('b-resume').onclick=()=>{ SFX.click(); resume(); };
 $('b-pause').onclick=e=>{ e.stopPropagation(); pause(); };
 $('b-shop').onclick=()=>{ initAudio(); SFX.click(); shopTab='top'; renderShop(); show('shop'); };
 function saveMsg(t){ const m=$('save-msg'); m.textContent=t; m.hidden=false; }
+let boardLv=1;
+function nickOk(v){ return /^[A-Za-zÀ-ÿ0-9 _.-]{2,16}$/.test(v)&&/[A-Za-zÀ-ÿ0-9]/.test(v); }
+async function renderBoard(){
+  document.querySelectorAll('[data-board]').forEach(b=>b.classList.toggle('on',+b.dataset.board===boardLv));
+  $('nick-show').textContent=save.nick||'—'; $('nick-form').hidden=!!save.nick; $('nick-row').hidden=!save.nick;
+  const list=$('board-list'), msg=$('board-msg'); list.innerHTML=''; msg.hidden=true;
+  if(!online()){ msg.hidden=false; msg.textContent='Le classement en ligne n’est pas encore activé.'; return; }
+  msg.hidden=false; msg.textContent='Chargement…';
+  try{ const rows=await fetchBoard(boardLv); msg.hidden=!!rows.length; msg.textContent=rows.length?'':'Personne encore : sois le premier !';
+    list.innerHTML=rows.map(r=>{ const v=boardLv===2?r.best2:r.best1, extra=boardLv===2?' '+'★'.repeat(r.stars2||0):' · '+(r.dist1||0).toLocaleString('fr-FR')+' m';
+      return `<li class="${r.nick===save.nick?'me':''}"><span>${String(r.nick).replace(/[<>&]/g,'')}<small style="color:var(--muted)">${extra}</small></span><b>${(v||0).toLocaleString('fr-FR')}</b></li>`; }).join('');
+  }catch(e){ msg.hidden=false; msg.textContent='Pas de connexion : réessaie plus tard.'; }
+}
+$('b-board').onclick=()=>{ initAudio(); SFX.click(); show('board'); renderBoard(); };
+document.querySelectorAll('[data-board]').forEach(b=>b.onclick=()=>{ SFX.click(); boardLv=+b.dataset.board; renderBoard(); });
+$('b-nick').onclick=()=>{ $('nick-form').hidden=false; $('nick-in').value=save.nick||''; $('nick-in').focus(); };
+$('nick-form').addEventListener('submit',e=>{ e.preventDefault(); const v=$('nick-in').value.trim();
+  if(!nickOk(v)){ SFX.nope(); toast('2 à 16 lettres ou chiffres'); return; }
+  save.nick=v; if(!save.pid) save.pid=newPid(); persist(); SFX.buy(); submitScore().then(renderBoard); renderBoard(); });
 $('b-savep').onclick=()=>{ initAudio(); SFX.click(); $('save-code').value=saveCode(); $('save-msg').hidden=true; show('savep'); };
 $('b-save').onclick=()=>{ initAudio(); const ok=persist(); $('save-code').value=saveCode(); if(ok){ SFX.buy(); saveMsg('Sauvegardé ! '+save.coins.toLocaleString('fr-FR')+' pièces, record '+save.best.toLocaleString('fr-FR')+'.'); } else { SFX.nope(); saveMsg('Ce navigateur bloque la sauvegarde. Copie ton code pour ne rien perdre.'); } };
 $('b-copy').onclick=()=>{ initAudio(); const ta=$('save-code'); ta.value=saveCode();
@@ -1577,7 +1638,7 @@ const dc=$('dance').getContext('2d');
 let prev=performance.now();
 function frame(now){
   const dt=Math.min(.033,(now-prev)/1000); prev=now;
-  if(G.state==='play'){ update(dt); updHud(); }
+  if(G.state==='play'){ update(dt); updHud(); if(!G.demo) save.playSec=(save.playSec||0)+dt; }
   else if(G.state==='menu'){ G.bgOff+=40*dt; stepFx(dt); }
   else if(G.state==='over'){ G.bgOff+=20*dt; stepFx(dt); }
   render();

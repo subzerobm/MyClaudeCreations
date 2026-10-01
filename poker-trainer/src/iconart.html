@@ -86,7 +86,12 @@ function card(x, y, rot, rank, suit, color, w = 270, h = 380, big = true) {
   g.fillStyle = color; g.textAlign = 'center';
   g.font = `500 54px ${SERIF}`; g.fillText(rank, -w / 2 + 40, -h / 2 + 66);
   g.font = '40px Georgia, serif'; g.fillText(suit, -w / 2 + 40, -h / 2 + 108);
-  if (big) { g.font = '190px Georgia, serif'; g.fillText(suit, 0, 70); }
+  // same index upside down in the bottom-right corner, like real cards
+  g.save(); g.rotate(Math.PI);
+  g.font = `500 54px ${SERIF}`; g.fillText(rank, -w / 2 + 40, -h / 2 + 66);
+  g.font = '40px Georgia, serif'; g.fillText(suit, -w / 2 + 40, -h / 2 + 108);
+  g.restore();
+  if (big){ g.font = '190px Georgia, serif'; g.fillText(suit, 0, 70); }
   g.restore();
 }
 
@@ -178,7 +183,43 @@ function flute(x, y, rot, s) {
   g.restore();
 }
 
-/* ---------- layer 7: lettering ---------- */
+/* ---------- layer 7: chip stacks in black, red and ivory ---------- */
+const CHIP = {
+  black: {face: '#1b1b1f', side: '#0c0c0e', edge: '#d4af37'},
+  red:   {face: '#8e1b25', side: '#5a0f17', edge: '#f6f1e4'},
+  ivory: {face: '#efe7d2', side: '#b9ad8e', edge: '#8e1b25'},
+};
+function chip(x, y, c) {
+  const rx = 46, ry = 15, h = 12;
+  // side
+  g.fillStyle = c.side;
+  g.beginPath(); g.ellipse(x, y + h, rx, ry, 0, 0, Math.PI);
+  g.lineTo(x - rx, y); g.ellipse(x, y, rx, ry, 0, Math.PI, 0, true); g.closePath(); g.fill();
+  g.fillStyle = c.edge;
+  for (let k = -2; k <= 2; k++) {
+    const sx = x + k * 19;
+    g.fillRect(sx - 3, y + ry * Math.sqrt(Math.max(0, 1 - ((sx - x) / rx) ** 2)) - 1, 6, h);
+  }
+  // face with dashed edge inlay and a thin gold ring
+  g.fillStyle = c.face;
+  g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = c.edge; g.lineWidth = 5; g.setLineDash([12, 11]);
+  g.beginPath(); g.ellipse(x, y, rx - 5, ry - 2, 0, 0, Math.PI * 2); g.stroke();
+  g.setLineDash([]);
+  g.strokeStyle = C.gold2; g.lineWidth = 1.5;
+  g.beginPath(); g.ellipse(x, y, rx - 17, ry - 6, 0, 0, Math.PI * 2); g.stroke();
+}
+function stack(x, y, colors) {
+  g.save(); g.filter = 'blur(6px)'; g.fillStyle = 'rgba(0,0,0,0.6)';
+  g.beginPath(); g.ellipse(x + 6, y + 16, 54, 18, 0, 0, Math.PI * 2); g.fill(); g.restore();
+  colors.forEach((c, i) => chip(x + (i % 2 ? 1.5 : -1.5), y - i * 12, CHIP[c]));
+}
+function chipStacks() {
+  stack(690, 884, ['ivory', 'red', 'ivory']);
+  stack(774, 872, ['black', 'black', 'red', 'black', 'red', 'black', 'black']);
+}
+
+/* ---------- layer 8: lettering ---------- */
 function spaced(text, cx, y, gap) {
   const ws = [...text].map(ch => g.measureText(ch).width);
   const total = ws.reduce((a, b) => a + b, 0) + gap * (text.length - 1);
@@ -218,12 +259,14 @@ async function draw() {
   if (SAFE) { g.translate(512, 512); g.scale(0.8, 0.8); g.translate(-512, -512); }
   frame();
   sunburst(512, 600);
-  // A Hold'em hand is two cards: the King behind, the Ace (the "face") in front
-  card(420, 645, -0.26, 'K', '♥', C.heart, 250, 352, false);
+  // A Hold'em hand is two cards, read "A K": the Ace (the "face") on the left in front, the King behind on the right
+  card(612, 618, 0.26, 'K', '♥', C.heart, 250, 352, true);
   flute(178, 862, 0.04, 0.95);
-  card(512, 625, -0.05, 'A', '♠', C.ink);
-  fedora(500, 448, -0.1);
+  card(478, 625, -0.08, 'A', '♠', C.ink);
+  fedora(462, 450, -0.12);
   cigar(560, 735, -0.32);
+  chipStacks();
+  flute(892, 862, -0.04, 0.95);
   lettering();
   g.restore();
   document.title = 'done';

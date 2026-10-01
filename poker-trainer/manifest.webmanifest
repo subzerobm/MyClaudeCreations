@@ -1,6 +1,6 @@
 {
-  "name": "Table du Vendredi",
-  "short_name": "Vendredi",
+  "name": "Poker trainer",
+  "short_name": "Poker trainer",
   "description": "Entraînement au poker Texas Hold'em à 9 joueurs : cotes, outs et bilan de chaque main.",
   "lang": "fr",
   "start_url": "./",

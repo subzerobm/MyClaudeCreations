@@ -1444,7 +1444,22 @@ buildPlayers();
 </script>
 
 <script>
-if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+if ('serviceWorker' in navigator) {
+  // Check for a new version on every launch and whenever the app comes back to the foreground
+  let reg = null;
+  addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js', {updateViaCache: 'none'}).then(r => { reg = r; r.update(); }).catch(() => {});
+  });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && reg) reg.update().catch(() => {}); });
+  // When an update takes over, reload once so the new version shows (the game is saved after every hand)
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return;
+    reloading = true;
+    location.reload();
+  });
+}
 </script>
 </body>
 </html>

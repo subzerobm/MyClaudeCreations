@@ -1,5 +1,5 @@
 // Offline support: the app shell is cached on first visit; the page itself is refreshed from the network when online.
-const CACHE = 'vendredi-v7';
+const CACHE = 'vendredi-v9';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
   'icon-maskable-512.png', 'apple-touch-icon.png', 'favicon.png'];
 
@@ -17,8 +17,8 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   if (req.mode === 'navigate') {
-    // Newest version when online, cached copy when offline
-    e.respondWith(fetch(req).then(res => {
+    // Newest version when online (skipping the browser's 10-minute HTTP cache), cached copy when offline
+    e.respondWith(fetch(req, {cache: 'no-store'}).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put('index.html', copy));
       return res;

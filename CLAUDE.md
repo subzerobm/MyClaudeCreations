@@ -18,7 +18,7 @@ A new project gets its own top-level folder and a line in this list and in `READ
 
 1. **Version Control**
    - `main` is the single source of truth: finished work ends up on `main`
-   - Commit and push after each meaningful change, with clear messages
+   - Commit and push after each meaningful change, with clear messages. A Stop hook (`.claude/hooks/auto-push.sh`) also commits and pushes anything left over at the end of each reply
    - Delete feature branches once they are merged
    - Include `Co-Authored-By: Claude` footer in commits
 

@@ -1,8 +1,8 @@
 {
   "name": "Poker trainer",
   "short_name": "Poker trainer",
-  "description": "Entraînement au poker Texas Hold'em à 9 joueurs : cotes, outs et bilan de chaque main.",
-  "lang": "fr",
+  "description": "9-player Texas Hold'em poker trainer: pot odds, outs and a review of every hand.",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

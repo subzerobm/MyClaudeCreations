@@ -18,8 +18,8 @@ $bodyPart = $html.Substring($bodyStart, $swStart - $bodyStart)
 
 $page = ($headPart + $bodyPart).
   Replace('<section class="coach" id="coach" hidden>', '<section class="coach" id="coach">').
-  Replace('Le coach Claude ne marche que dans la version Claude du trainer. Ici, les cotes et le bilan de chaque main fonctionnent normalement.',
-          'Le coach fonctionne sur la page publiée dans Claude. Les cotes et le bilan marchent partout.')
+  Replace('The Claude coach only works in the Claude version of the trainer. Here, the odds and the hand review work normally.',
+          'The coach works on the page published in Claude. The odds and the review work everywhere.')
 
 [IO.File]::WriteAllText($Out, $page, (New-Object Text.UTF8Encoding $false))
 Write-Output "Wrote $Out ($((Get-Item $Out).Length) bytes)"

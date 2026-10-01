@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Poker trainer">
-<meta name="description" content="Entraînement au poker Texas Hold'em à 9 joueurs.">
+<meta name="description" content="9-player Texas Hold'em poker trainer.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -222,6 +222,10 @@ details.log summary{cursor:pointer;font-family:var(--cond);font-weight:700;lette
 .resume-card h2{margin:0;font-family:var(--cond);font-weight:800;font-size:26px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
 .resume-card p{margin:0;font-size:15px;line-height:1.5;color:#d2e4da}
 .resume-card .big-btn{flex:none}
+.top-actions{display:flex;gap:6px;flex-wrap:wrap}
+.share-link{width:100%;background:#0f1a15;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:15px;text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:60;
+  background:var(--gold);color:#2a1d00;font-weight:700;padding:10px 18px;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.45)}
 .hint kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--ink);font-family:var(--cond)}
 </style>
 </head>
@@ -232,20 +236,33 @@ details.log summary{cursor:pointer;font-family:var(--cond);font-weight:700;lette
   <header class="top">
     <h1 class="brand">Table du <span>Vendredi</span></h1>
     <div class="stats">
-      <div>Main<b id="sHand">1</b></div>
-      <div>Joueurs<b id="sAlive">9/9</b></div>
-      <div>Net<b id="sNet">0€</b></div>
-      <div>Décision moy.<b id="sAvg">–</b></div>
+      <div>Hand<b id="sHand">1</b></div>
+      <div>Players<b id="sAlive">9/9</b></div>
+      <div>Net<b id="sNet">€0</b></div>
+      <div>Avg decision<b id="sAvg">–</b></div>
     </div>
-    <button class="restart" id="bRestart" type="button">↺ Nouvelle partie</button>
+    <div class="top-actions">
+      <button class="restart" id="bShare" type="button">↗ Share</button>
+      <button class="restart" id="bRestart" type="button">↺ New game</button>
+    </div>
   </header>
+
+  <div class="resume" id="shareBox" hidden>
+    <div class="resume-card" role="dialog" aria-labelledby="shareTitle">
+      <h2 id="shareTitle">Share the app</h2>
+      <p>Copy this link and send it:</p>
+      <input class="share-link" id="shareLink" readonly aria-label="App link">
+      <button class="big-btn alt" id="bShareClose" type="button">CLOSE</button>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" hidden></div>
 
   <div class="resume" id="resume" hidden>
     <div class="resume-card" role="dialog" aria-labelledby="resumeTitle">
-      <h2 id="resumeTitle">Partie en cours</h2>
+      <h2 id="resumeTitle">Game in progress</h2>
       <p id="resumeInfo"></p>
-      <button class="big-btn" id="bContinue" type="button">CONTINUER ▶</button>
-      <button class="big-btn alt" id="bFresh" type="button">NOUVELLE PARTIE</button>
+      <button class="big-btn" id="bContinue" type="button">CONTINUE ▶</button>
+      <button class="big-btn alt" id="bFresh" type="button">NEW GAME</button>
     </div>
   </div>
 
@@ -253,14 +270,14 @@ details.log summary{cursor:pointer;font-family:var(--cond);font-weight:700;lette
     <div class="felt"></div>
     <div class="center">
       <div class="streets" id="streets"></div>
-      <div class="pot-row"><div class="stacks" id="potChips"></div><div class="pot"><small id="potLabel">POT</small><b id="pot">0€</b></div></div>
+      <div class="pot-row"><div class="stacks" id="potChips"></div><div class="pot"><small id="potLabel">POT</small><b id="pot">€0</b></div></div>
     </div>
     <div class="board" id="board"></div>
     <div class="lower"><span class="badge" id="cat"></span><span class="made" id="made"></span></div>
     <div id="seats"></div>
   </div>
 
-  <div class="prompt"><span id="promptText"></span><span>Temps : <span class="timer" id="dTime">0.0s</span></span></div>
+  <div class="prompt"><span id="promptText"></span><span>Time: <span class="timer" id="dTime">0.0s</span></span></div>
 
   <div class="controls" id="controls">
     <button class="b-fold" id="bFold" type="button">FOLD</button>
@@ -269,40 +286,40 @@ details.log summary{cursor:pointer;font-family:var(--cond);font-weight:700;lette
     <button class="b-allin" id="bAllin" type="button">ALL-IN</button>
   </div>
   <div class="sizer" id="sizer" hidden>
-    <h3 id="sizerTitle">Choisis ta relance</h3>
+    <h3 id="sizerTitle">Choose your raise</h3>
     <div class="presets" id="presets"></div>
     <div class="range-row">
-      <input type="range" id="raiseRange" step="50" aria-label="Montant de la relance">
+      <input type="range" id="raiseRange" step="50" aria-label="Raise amount">
       <span class="amt" id="raiseAmt"></span>
     </div>
     <div class="size-info" id="sizeInfo"></div>
     <div class="size-tip" id="sizeTip"></div>
     <div class="btn-row">
-      <button class="big-btn alt" id="bSizeCancel" type="button">ANNULER</button>
-      <button class="big-btn go" id="bSizeGo" type="button">RELANCER</button>
+      <button class="big-btn alt" id="bSizeCancel" type="button">CANCEL</button>
+      <button class="big-btn go" id="bSizeGo" type="button">RAISE</button>
     </div>
   </div>
   <div class="btn-row" id="stepRow" hidden>
-    <button class="big-btn" id="bStep" type="button">VOIR LE FLOP ▶</button>
-    <button class="big-btn alt" id="bSkip" type="button">RÉSULTAT ▶▶</button>
+    <button class="big-btn" id="bStep" type="button">SHOW THE FLOP ▶</button>
+    <button class="big-btn alt" id="bSkip" type="button">RESULT ▶▶</button>
   </div>
   <div class="result" id="result" hidden></div>
 
   <section class="odds" id="odds" aria-live="polite"></section>
 
   <section class="coach" id="coach" hidden>
-    <h2>Coach <label><input type="checkbox" id="coachAuto" checked> Commente tout seul</label></h2>
-    <p class="coach-off" id="coachOff">Le coach se connecte…</p>
+    <h2>Coach <label><input type="checkbox" id="coachAuto" checked> Comments on its own</label></h2>
+    <p class="coach-off" id="coachOff">Connecting to the coach…</p>
     <div id="coachBody" hidden>
       <div class="msgs" id="msgs"></div>
       <div class="quick">
-        <button type="button" data-q="Qu'est-ce que je devrais faire ici, et pourquoi ?">Je fais quoi ?</button>
-        <button type="button" data-q="Explique-moi simplement la cote du pot et mon équité sur ce coup.">Explique les cotes</button>
-        <button type="button" data-q="Analyse cette main : qu'est-ce que j'ai bien ou mal fait ?">Revois la main</button>
+        <button type="button" data-q="What should I do here, and why?">What do I do?</button>
+        <button type="button" data-q="Explain the pot odds and my equity on this hand, simply.">Explain the odds</button>
+        <button type="button" data-q="Review this hand: what did I do well or badly?">Review the hand</button>
       </div>
       <form class="ask" id="askForm">
-        <input id="askInput" autocomplete="off" placeholder="Pose ta question au coach…" aria-label="Question au coach">
-        <button type="submit" id="askBtn">Envoyer</button>
+        <input id="askInput" autocomplete="off" placeholder="Ask the coach…" aria-label="Question for the coach">
+        <button type="submit" id="askBtn">Send</button>
       </form>
     </div>
   </section>
@@ -310,32 +327,32 @@ details.log summary{cursor:pointer;font-family:var(--cond);font-weight:700;lette
   <div class="legend" id="legend"></div>
 
   <div class="settings">
-    <label>Ma position
+    <label>My position
       <select id="posPref">
-        <option value="auto">Rotation normale</option>
-        <option value="UTG">UTG (premier)</option>
-        <option value="MP">Milieu (MP)</option>
+        <option value="auto">Normal rotation</option>
+        <option value="UTG">UTG (first)</option>
+        <option value="MP">Middle (MP)</option>
         <option value="CO">Cut-off</option>
-        <option value="BTN">Bouton</option>
-        <option value="SB">Petite blind</option>
-        <option value="BB">Grosse blind</option>
+        <option value="BTN">Button</option>
+        <option value="SB">Small blind</option>
+        <option value="BB">Big blind</option>
       </select>
     </label>
   </div>
 
   <details class="log" id="playersBox">
-    <summary>Joueurs : noms et styles</summary>
+    <summary>Players: names and styles</summary>
     <div class="players" id="players"></div>
-    <p class="hint">Les noms changent tout de suite. Un style fixé s'applique aussi tout de suite ; « Au hasard » tire un style à chaque nouvelle partie.</p>
+    <p class="hint">Names change right away. A fixed style also applies right away; “Random” picks a new style for each game.</p>
   </details>
 
   <details class="log" id="logBox" open>
-    <summary>Déroulé de la main</summary>
+    <summary>Hand history</summary>
     <ol id="log"></ol>
   </details>
 
-  <p class="hint">Blinds 0,50€ / 1€ · tapis de départ 20€. Si tu perds tout, ton tapis se recharge automatiquement à 20€ (le Net compte quand même tes pertes). On mise à chaque street : préflop, flop, turn et river. Sous chaque joueur, <b>F / C / R</b> = sa fréquence habituelle de fold / call / raise en %.
-    Clavier : <kbd>F</kbd> fold · <kbd>C</kbd> call/check · <kbd>R</kbd> choisir sa relance/mise · <kbd>A</kbd> all-in · <kbd>Espace</kbd> dévoiler la suite / main suivante.</p>
+  <p class="hint">Blinds €0.50 / €1 · starting stack €20. If you lose everything, your stack refills to €20 automatically (Net still counts your losses). There is betting on every street: preflop, flop, turn and river. Under each player, <b>F / C / R</b> = how often they usually fold / call / raise, in %.
+    Keyboard: <kbd>F</kbd> fold · <kbd>C</kbd> call/check · <kbd>R</kbd> choose your raise/bet · <kbd>A</kbd> all-in · <kbd>Space</kbd> reveal the next card / next hand.</p>
 </div>
 
 <script>
@@ -343,31 +360,30 @@ const $ = id => document.getElementById(id);
 const SB = 50, BB = 100, START = 2000; // all money in cents
 const SYM = {s:'♠', h:'♥', d:'♦', c:'♣'};
 const RL = r => r <= 10 ? String(r) : 'JQKA'[r - 11];
-const NOM = {2:'Deux',3:'Trois',4:'Quatre',5:'Cinq',6:'Six',7:'Sept',8:'Huit',9:'Neuf',10:'Dix',11:'Valet',12:'Dame',13:'Roi',14:'As'};
-const PL = r => ({11:'Valets',12:'Dames',13:'Rois'})[r] || NOM[r];
-const DE = r => r === 14 ? "d'As" : 'de ' + PL(r);
-const STREETS = ['PRÉFLOP', 'FLOP', 'TURN', 'RIVER', 'SHOWDOWN'];
-const STREET_FR = ['Préflop', 'Flop', 'Turn', 'River'];
+const NOM = {2:'Two',3:'Three',4:'Four',5:'Five',6:'Six',7:'Seven',8:'Eight',9:'Nine',10:'Ten',11:'Jack',12:'Queen',13:'King',14:'Ace'};
+const PL = r => r === 6 ? 'Sixes' : NOM[r] + 's';
+const STREETS = ['PREFLOP', 'FLOP', 'TURN', 'RIVER', 'SHOWDOWN'];
+const STREET_FR = ['Preflop', 'Flop', 'Turn', 'River'];
 const rnd = n => Math.random() * n | 0;
-const fmt = c => { const v = Math.abs(c) / 100; return (Number.isInteger(v) ? v : v.toFixed(2).replace('.', ',')) + '€'; };
+const fmt = c => { const v = Math.abs(c) / 100; return '€' + (Number.isInteger(v) ? v : v.toFixed(2)); };
 const sfmt = c => (c > 0 ? '+' : c < 0 ? '−' : '') + fmt(c);
 
 const NAMES = ['Paul', 'Ellie', 'Mathilde', 'Anaïs', 'Gatou', 'Bertrand', 'Renaud', 'Victor'];
 const HERO_NAME = 'Mariana';
 const PROFILES = [
-  {name:'Serré',    f:.68, c:.22, r:.09, a:.01},
-  {name:'Suiveur',  f:.28, c:.62, r:.08, a:.02},
-  {name:'Agressif', f:.30, c:.25, r:.35, a:.10},
-  {name:'Solide',   f:.52, c:.26, r:.20, a:.02},
+  {name:'Tight',    f:.68, c:.22, r:.09, a:.01},
+  {name:'Caller',   f:.28, c:.62, r:.08, a:.02},
+  {name:'Aggressive', f:.30, c:.25, r:.35, a:.10},
+  {name:'Solid',    f:.52, c:.26, r:.20, a:.02},
   {name:'Loose',    f:.35, c:.50, r:.12, a:.03},
 ];
 // Chip set: edit here if your real chips differ
 const CHIPS = [
-  {v:5000, name:'Bleu',  c:'#1f5fd6', t:'#fff'},
-  {v:1000, name:'Noir',  c:'#1d1d1f', t:'#fff'},
-  {v:500,  name:'Vert',  c:'#178a44', t:'#fff'},
-  {v:100,  name:'Rouge', c:'#c62828', t:'#fff'},
-  {v:50,   name:'Blanc', c:'#f3f1ea', t:'#222', light:true},
+  {v:5000, name:'Blue',  c:'#1f5fd6', t:'#fff'},
+  {v:1000, name:'Black',  c:'#1d1d1f', t:'#fff'},
+  {v:500,  name:'Green',  c:'#178a44', t:'#fff'},
+  {v:100,  name:'Red', c:'#c62828', t:'#fff'},
+  {v:50,   name:'White', c:'#f3f1ea', t:'#222', light:true},
 ];
 function breakdown(c) {
   const out = [];
@@ -473,15 +489,15 @@ function best(cards) {
 }
 function handName(s) {
   switch (s[0]) {
-    case 8: return s[1] === 14 ? 'Quinte flush royale' : `Quinte flush hauteur ${NOM[s[1]]}`;
-    case 7: return `Carré ${DE(s[1])}`;
-    case 6: return `Full aux ${PL(s[1])} par les ${PL(s[2])}`;
-    case 5: return `Couleur hauteur ${NOM[s[1]]}`;
-    case 4: return `Quinte hauteur ${NOM[s[1]]}`;
-    case 3: return `Brelan ${DE(s[1])}`;
-    case 2: return `Double paire ${PL(s[1])} et ${PL(s[2])}`;
-    case 1: return `Paire ${DE(s[1])}`;
-    default: return `Hauteur ${NOM[s[1]]}`;
+    case 8: return s[1] === 14 ? 'Royal flush' : `Straight flush, ${NOM[s[1]]} high`;
+    case 7: return `Four ${PL(s[1])}`;
+    case 6: return `Full house, ${PL(s[1])} full of ${PL(s[2])}`;
+    case 5: return `Flush, ${NOM[s[1]]} high`;
+    case 4: return `Straight, ${NOM[s[1]]} high`;
+    case 3: return `Three ${PL(s[1])}`;
+    case 2: return `Two pair, ${PL(s[1])} and ${PL(s[2])}`;
+    case 1: return `Pair of ${PL(s[1])}`;
+    default: return `${NOM[s[1]]} high`;
   }
 }
 
@@ -539,8 +555,8 @@ function showResume(s) {
   const me = s.players[0], net = me.stack - s.G.invested;
   const alive = s.players.filter(p => !p.out).length;
   const ago = Math.round((Date.now() - s.savedAt) / 60000);
-  const when = ago < 60 ? `il y a ${ago} min` : ago < 1440 ? `il y a ${Math.round(ago / 60)} h` : `il y a ${Math.round(ago / 1440)} j`;
-  $('resumeInfo').innerHTML = `Main n°${s.G.handNo} · ton tapis <b>${fmt(me.stack)}</b> · net <b class="${net > 0 ? 'good' : net < 0 ? 'bad' : ''}">${sfmt(net)}</b><br>${alive} joueurs encore à table · sauvegardée ${when}`;
+  const when = ago < 60 ? `${ago} min ago` : ago < 1440 ? `${Math.round(ago / 60)} h ago` : `${Math.round(ago / 1440)} days ago`;
+  $('resumeInfo').innerHTML = `Hand #${s.G.handNo} · your stack <b>${fmt(me.stack)}</b> · net <b class="${net > 0 ? 'good' : net < 0 ? 'bad' : ''}">${sfmt(net)}</b><br>${alive} players still at the table · saved ${when}`;
   $('resume').hidden = false;
   $('bContinue').onclick = () => { $('resume').hidden = true; resumeGame(s); };
   $('bFresh').onclick = () => { $('resume').hidden = true; newGame(); };
@@ -568,7 +584,7 @@ function newHand() {
        toAct:new Set(), turn:-1, awaiting:false, runout:false, over:false, log:[], used:null, reveal:false,
        decisions:[], odds:null};
   G.handNo++;
-  log(`Main #${G.handNo} · bouton : ${P()[G.button].name}`);
+  log(`Hand #${G.handNo} · button: ${P()[G.button].name}`);
   const sbS = n === 2 ? ord[0] : ord[1], bbS = n === 2 ? ord[1] : ord[2];
   post(P()[sbS], SB, 'SB'); post(P()[bbS], BB, 'BB');
   A.forEach(s => { if (!P()[s].allin) H.toAct.add(s); });
@@ -585,7 +601,7 @@ function move(p, a) {
 function post(p, amt, label) {
   const a = Math.min(amt, p.stack); move(p, a);
   p.act = [`${label} ${fmt(a)}`, 'blind'];
-  log(`${p.pos} · ${p.name} poste ${label} ${fmt(a)}`);
+  log(`${p.pos} · ${p.name} posts ${label} ${fmt(a)}`);
 }
 const potTotal = () => P().reduce((a, p) => a + p.total, 0);
 const round50 = x => Math.round(x / 50) * 50;
@@ -613,9 +629,9 @@ function apply(p, kind, to) {
     if (inc >= H.minRaise) H.minRaise = inc;
     H.currentBet = to; H.raises++;
     H.toAct = new Set(P().filter(q => q !== p && !q.folded && !q.allin).map(q => q.seat));
-    p.act = p.allin ? [`ALL-IN ${fmt(to)}`, 'allin'] : [`${opening ? 'MISE' : 'RAISE'} ${fmt(to)}`, 'raise'];
+    p.act = p.allin ? [`ALL-IN ${fmt(to)}`, 'allin'] : [`${opening ? 'BET' : 'RAISE'} ${fmt(to)}`, 'raise'];
   }
-  log(`${p.pos} · ${p.name}${p.hero ? '' : ` (${p.prof.name} ${frc(p.prof)})`} : ${p.act[0]}`, p.hero);
+  log(`${p.pos} · ${p.name}${p.hero ? '' : ` (${p.prof.name} ${frc(p.prof)})`}: ${p.act[0]}`, p.hero);
 }
 
 // Bots act instantly until it is your turn or the betting round is over
@@ -717,7 +733,7 @@ function endRound() {
   H.awaiting = false; H.turn = -1;
   const inHand = P().filter(p => !p.folded);
   if (inHand.filter(p => !p.allin).length <= 1) H.reveal = true; // all-in: cards go face up
-  log(`${inHand.length} joueurs encore dans la main · pot ${fmt(potTotal())}`);
+  log(`${inHand.length} players still in the hand · pot ${fmt(potTotal())}`);
   H.runout = true;
   render();
 }
@@ -727,7 +743,7 @@ function advanceStreet() {
   H.runout = false;
   if (H.street === 3) return finishHand();
   H.street++; H.stage = H.street; H.shown = [0, 3, 4, 5][H.street];
-  log(`${STREETS[H.street]} : ${cardText(H.board.slice(0, H.shown))} · pot ${fmt(potTotal())}`, 'street');
+  log(`${STREETS[H.street]}: ${cardText(H.board.slice(0, H.shown))} · pot ${fmt(potTotal())}`, 'street');
   const live = P().filter(p => !p.folded && !p.allin);
   if (live.length >= 2) {
     P().forEach(p => { p.bet = 0; if (!p.folded && !p.allin) p.act = null; });
@@ -753,7 +769,7 @@ function finishHand() {
   if (inHand.length === 1) {
     const w = inHand[0], pot = potTotal();
     w.stack += pot; w.won = pot;
-    lines.push(`${w.hero ? 'Tu remportes' : w.name + ' remporte'} ${fmt(pot)}, tout le monde a foldé.`);
+    lines.push(`${w.hero ? 'You win' : w.name + ' wins'} ${fmt(pot)}, everyone else folded.`);
   } else {
     H.stage = 4; H.reveal = true; H.shown = 5;
     inHand.forEach(p => p.best = best([...p.cards, ...H.board]));
@@ -770,15 +786,15 @@ function finishHand() {
       const share = Math.floor(amount / winners.length);
       winners.forEach((w, i) => { const g = share + (i === 0 ? amount - share * winners.length : 0); w.stack += g; w.won += g; });
       if (!H.used) H.used = new Set(winners.flatMap(w => w.best.cards));
-      lines.push(`${potNo++ ? 'Pot secondaire' : 'Pot principal'} ${fmt(amount)} : ${winners.map(w => w.hero ? 'toi' : w.name).join(' & ')} (${winners[0].best.name})`);
+      lines.push(`${potNo++ ? 'Side pot' : 'Main pot'} ${fmt(amount)}: ${winners.map(w => w.hero ? 'you' : w.name).join(' & ')} (${winners[0].best.name})`);
     }
     if (me.won > 0) H.used = new Set(best([...me.cards, ...H.board]).cards);
-    inHand.filter(p => !p.hero).forEach(p => log(`${p.name} montre ${cardText(p.cards)} : ${p.best.name}`));
+    inHand.filter(p => !p.hero).forEach(p => log(`${p.name} shows ${cardText(p.cards)}: ${p.best.name}`));
     if (me.folded && !me.out) {
       const mb = best([...me.cards, ...H.board]);
       const topAll = inHand.reduce((b, p) => !b || cmp(p.best.score, b) > 0 ? p.best.score : b, null);
       const c = cmp(mb.score, topAll);
-      cf = `Si tu étais allé·e jusqu'au bout : ${mb.name}, tu aurais ${c > 0 ? 'gagné' : c < 0 ? 'perdu' : 'partagé'}.`;
+      cf = `If you had stayed to the end: ${mb.name}, you would have ${c > 0 ? 'won' : c < 0 ? 'lost' : 'split the pot'}.`;
     }
   }
   lines.forEach(l => log(l));
@@ -787,15 +803,15 @@ function finishHand() {
   let refilled = false;
   if (me.stack === 0) {
     me.stack = START; G.invested += START; G.refills = (G.refills || 0) + 1; refilled = true;
-    log(`Tapis vide : tu recaves ${fmt(START)} (recave n°${G.refills})`, true);
+    log(`Stack empty: you rebuy ${fmt(START)} (rebuy #${G.refills})`, true);
   }
   // eliminations for the other players (no re-buy for them)
   P().forEach(p => {
-    if (!p.out && p.stack === 0) { p.out = true; log(`${p.hero ? 'Tu es éliminé·e' : p.name + ' est éliminé·e'}`); }
+    if (!p.out && p.stack === 0) { p.out = true; log(`${p.hero ? 'You are out' : p.name + ' is out'}`); }
   });
   const alive = P().filter(p => !p.out);
   const delta = me.won - me.total;
-  if (refilled) lines.push(`Tapis rechargé à ${fmt(START)} pour continuer l'entraînement. Recaves jusqu'ici : ${G.refills}.`);
+  if (refilled) lines.push(`Stack refilled to ${fmt(START)} so you can keep training. Rebuys so far: ${G.refills}.`);
   H.result = {delta, lines, cf, heroOut:me.out, champion:alive.length === 1 && !me.out};
   if (me.out) H.result.place = alive.length + 1;
   H.over = true; H.awaiting = false; H.turn = -1;
@@ -806,72 +822,72 @@ function finishHand() {
 }
 
 /* ---------- hand review: each decision, the odds, why the winner won ---------- */
-const CATN = ['Hauteur', 'Paire', 'Double paire', 'Brelan', 'Quinte', 'Couleur', 'Full', 'Carré', 'Quinte flush'];
+const CATN = ['High card', 'Pair', 'Two pair', 'Three of a kind', 'Straight', 'Flush', 'Full house', 'Four of a kind', 'Straight flush'];
 const MADE_RANKS = {1:1, 2:2, 3:1, 6:2, 7:1}; // tie-break slots that belong to the combination itself
-const actFR = (k, d) => ({fold:'folder', call:d.toCall > 0 ? 'suivre (call)' : 'checker',
-  raise:d.toCall > 0 || d.street === 0 ? 'relancer' : 'miser', allin:'faire tapis (all-in)'})[k];
+const actFR = (k, d) => ({fold:'fold', call:d.toCall > 0 ? 'call' : 'check',
+  raise:d.toCall > 0 || d.street === 0 ? 'raise' : 'bet', allin:'go all-in'})[k];
 const family = k => k === 'allin' ? 'raise' : k;
 
 function recommend(d) {
   if (d.street > 0) {
     const eq = d.eq == null ? null : d.raised ? d.eq * 0.85 : d.eq;
-    const outs = d.outs ? ` (dont ${d.outs} outs pour t'améliorer)` : '';
+    const outs = d.outs ? ` (including ${d.outs} outs to improve)` : '';
     if (d.toCall <= 0) {
-      if (eq != null && eq >= 0.6) return {act:'raise', why:`Avec ${d.made} et environ ${pct(eq)} de chances de gagner, tu es sûrement devant : mise pour faire payer les mains plus faibles.`};
-      return {act:'call', why:`Avec ${d.made} (environ ${pct(eq)} de chances), le check est gratuit : pas besoin de gonfler le pot avec une main moyenne.`};
+      if (eq != null && eq >= 0.6) return {act:'raise', why:`With ${d.made} and about ${pct(eq)} to win, you are probably ahead: bet to make weaker hands pay.`};
+      return {act:'call', why:`With ${d.made} (about ${pct(eq)} to win), checking is free: no need to build the pot with a medium hand.`};
     }
-    if (eq != null && eq >= 0.7) return {act:'raise', why:`${d.made} te donne environ ${pct(eq)} : tu es devant, relance pour grossir le pot.`};
-    if (eq != null && eq >= d.need + 0.03) return {act:'call', why:`Il te faut ${pct(d.need)} et tu as environ ${pct(eq)}${outs} : suivre est rentable.`};
-    return {act:'fold', why:`Il te faut ${pct(d.need)} et tu n'as qu'environ ${pct(eq)} avec ${d.made}${outs} : folder économise tes jetons.`};
+    if (eq != null && eq >= 0.7) return {act:'raise', why:`${d.made} gives you about ${pct(eq)}: you are ahead, raise to build the pot.`};
+    if (eq != null && eq >= d.need + 0.03) return {act:'call', why:`You need ${pct(d.need)} and you have about ${pct(eq)}${outs}: calling is profitable.`};
+    return {act:'fold', why:`You need ${pct(d.need)} and you only have about ${pct(eq)} with ${d.made}${outs}: folding saves your chips.`};
   }
   const eq = d.eq == null ? null : d.raised ? d.eq * 0.8 : d.eq;
   const late = ['CO', 'BTN', 'BTN/SB', 'HJ'].includes(d.pos);
   if (d.toCall <= 0) {
-    if (d.cat === 'premium') return {act:'raise', why:'Avec une main premium, on relance pour faire grossir le pot et avoir moins d\'adversaires.'};
-    if (d.cat === 'medium' && late) return {act:'raise', why:'Main correcte en fin de parole : une relance peut prendre les blinds tout de suite.'};
-    return {act:'call', why:'Le check est gratuit : on ne folde jamais, et la main ne mérite pas de relance.'};
+    if (d.cat === 'premium') return {act:'raise', why:'With a premium hand, raise to build the pot and face fewer opponents.'};
+    if (d.cat === 'medium' && late) return {act:'raise', why:'Decent hand in late position: a raise can win the blinds right away.'};
+    return {act:'call', why:'Checking is free: never fold, and the hand is not worth a raise.'};
   }
   if (d.cat === 'premium') {
     return d.toCall >= d.stack * 0.4
-      ? {act:'allin', why:'Main premium face à une grosse mise : tu es souvent devant, donc tu mets tout.'}
-      : {act:'raise', why:'Main premium : on relance plutôt que de juste suivre, pour faire payer les mains moins fortes.'};
+      ? {act:'allin', why:'Premium hand against a big bet: you are often ahead, so put it all in.'}
+      : {act:'raise', why:'Premium hand: raise rather than just call, to make weaker hands pay.'};
   }
   if (eq != null && eq >= d.need + 0.03) {
-    if (d.cat === 'medium' && !d.raised && late) return {act:'raise', why:'Bonne cote et main correcte en position : relancer met la pression et peut gagner le pot tout de suite.'};
-    return {act:'call', why:`Ton équité (${pct(eq)}${d.raised ? ', revue à la baisse à cause de la relance' : ''}) dépasse ce qu'il te faut (${pct(d.need)}) : suivre est rentable à long terme.`};
+    if (d.cat === 'medium' && !d.raised && late) return {act:'raise', why:'Good price and a decent hand in position: raising puts on pressure and can win the pot right away.'};
+    return {act:'call', why:`Your equity (${pct(eq)}${d.raised ? ', adjusted down because of the raise' : ''}) beats what you need (${pct(d.need)}): calling pays off in the long run.`};
   }
-  return {act:'fold', why:`Il te faut ${pct(d.need)} d'équité et tu en as environ ${pct(eq)}${d.raised ? ' (face à une relance, ta vraie équité est plus basse que contre des mains au hasard)' : ''} : payer te fait perdre de l'argent à long terme.`};
+  return {act:'fold', why:`You need ${pct(d.need)} equity and you have about ${pct(eq)}${d.raised ? ' (against a raise, your real equity is lower than against random hands)' : ''}: calling loses money in the long run.`};
 }
 
 function judge(d) {
   const rec = recommend(d), did = family(d.kind), bestAct = family(rec.act);
   let verdict, cls;
-  if (did === bestAct) { verdict = 'Bonne décision ✓'; cls = 'good'; }
-  else if (did === 'fold' && d.toCall <= 0) { verdict = 'Erreur : le check était gratuit ✗'; cls = 'bad'; }
-  else if (did === 'fold') { verdict = 'Fold trop prudent ✗'; cls = 'bad'; }
-  else if (bestAct === 'fold') { verdict = did === 'call' ? 'Mauvais call ✗' : 'Trop de jetons avec cette main ✗'; cls = 'bad'; }
-  else if (did === 'call' && bestAct === 'raise') { verdict = d.toCall > 0 ? 'Correct, mais une relance était meilleure' : 'Correct, mais une mise était meilleure'; cls = 'even'; }
-  else { verdict = 'Agressif, mais défendable'; cls = 'even'; }
+  if (did === bestAct) { verdict = 'Good decision ✓'; cls = 'good'; }
+  else if (did === 'fold' && d.toCall <= 0) { verdict = 'Mistake: checking was free ✗'; cls = 'bad'; }
+  else if (did === 'fold') { verdict = 'Fold too cautious ✗'; cls = 'bad'; }
+  else if (bestAct === 'fold') { verdict = did === 'call' ? 'Bad call ✗' : 'Too many chips with this hand ✗'; cls = 'bad'; }
+  else if (did === 'call' && bestAct === 'raise') { verdict = d.toCall > 0 ? 'OK, but a raise was better' : 'OK, but a bet was better'; cls = 'even'; }
+  else { verdict = 'Aggressive, but defensible'; cls = 'even'; }
   return {rec, verdict, cls};
 }
 
 function whyWin(w, r) {
-  const W = w.best, who = w.hero ? 'Tu gagnes' : `${w.name} gagne`;
+  const W = w.best, who = w.hero ? 'You win' : `${w.name} wins`;
   const lines = [];
-  if (!r) return [`${who} avec ${W.name}.`];
-  const R = r.best, rname = r.hero ? 'toi' : r.name, rhad = r.hero ? 'tu avais' : `${r.name} avait`;
+  if (!r) return [`${who} with ${W.name}.`];
+  const R = r.best, rname = r.hero ? 'you' : r.name, rhad = r.hero ? 'you had' : `${r.name} had`;
   if (W.score[0] !== R.score[0]) {
-    lines.push(`${who} avec ${W.name}. Au classement, « ${CATN[W.score[0]]} » bat « ${CATN[R.score[0]]} » (${rhad} ${R.name}).`);
+    lines.push(`${who} with ${W.name}. In the hand rankings, “${CATN[W.score[0]]}” beats “${CATN[R.score[0]]}” (${rhad} ${R.name}).`);
   } else {
     const i = W.score.findIndex((v, k) => v !== R.score[k]);
     const kicker = MADE_RANKS[W.score[0]] != null && i > MADE_RANKS[W.score[0]];
-    lines.push(`${who} avec ${W.name}. Même combinaison que ${rname} (${R.name}), mais ${kicker ? 'le kicker' : 'la carte qui départage'} ${NOM[W.score[i]]} bat ${NOM[R.score[i]]}.`);
+    lines.push(`${who} with ${W.name}. Same combination as ${rname} (${R.name}), but ${kicker ? 'the kicker' : 'the deciding card'} ${NOM[W.score[i]]} beats ${NOM[R.score[i]]}.`);
   }
   const used = w.cards.filter(c => W.cards.includes(c)).length;
   const how = w.hero
-    ? (used === 2 ? 'tu utilises tes deux cartes' : used === 1 ? 'tu utilises une de tes cartes' : 'tu joues le board seul')
-    : (used === 2 ? 'utilise ses deux cartes' : used === 1 ? 'utilise une de ses cartes' : 'joue le board seul');
-  lines.push(`${w.hero ? 'Tu avais' : w.name + ' avait'} ${cardText(w.cards)} (${classify(w.cards[0], w.cards[1])} avant le flop) et ${how} : ${cardText(W.cards)}.`);
+    ? (used === 2 ? 'you use both your cards' : used === 1 ? 'you use one of your cards' : 'you play the board')
+    : (used === 2 ? 'uses both cards' : used === 1 ? 'uses one card' : 'plays the board');
+  lines.push(`${w.hero ? 'You had' : w.name + ' had'} ${cardText(w.cards)} (${classify(w.cards[0], w.cards[1])} before the flop) and ${how}: ${cardText(W.cards)}.`);
   return lines;
 }
 
@@ -883,7 +899,7 @@ function streetLeaders(inHand) {
       const c = top ? cmp(b.score, top.score) : 1;
       if (c > 0) { top = b; lead = [p]; } else if (c === 0) lead.push(p);
     }
-    return `${label} : ${lead.map(p => p.hero ? 'toi' : p.name).join(' & ')} devant (${top.name})`;
+    return `${label}: ${lead.map(p => p.hero ? 'you' : p.name).join(' & ')} ahead (${top.name})`;
   }).join(' · ');
 }
 
@@ -893,13 +909,13 @@ function buildReview(inHand) {
   let why = [], evo = '';
   if (inHand.length === 1) {
     const w = inHand[0];
-    why = [`${w.hero ? 'Tu gagnes' : w.name + ' gagne'} sans showdown : tout le monde a foldé face à ${w.hero ? 'toi' : 'sa mise'}.`];
+    why = [`${w.hero ? 'You win' : w.name + ' wins'} without a showdown: everyone folded to ${w.hero ? 'you' : 'their bet'}.`];
   } else {
     const ranked = [...inHand].sort((a, b) => cmp(b.best.score, a.best.score));
     const w = ranked[0], r = ranked.find(p => cmp(p.best.score, w.best.score) < 0);
     const tied = ranked.filter(p => cmp(p.best.score, w.best.score) === 0);
     why = tied.length > 1
-      ? [`Égalité : ${tied.map(p => p.hero ? 'toi' : p.name).join(' & ')} ont la même main (${w.best.name}), le pot est partagé.`]
+      ? [`Tie: ${tied.map(p => p.hero ? 'you' : p.name).join(' & ')} have the same hand (${w.best.name}), the pot is split.`]
       : whyWin(w, r);
     evo = streetLeaders(inHand);
   }
@@ -948,7 +964,7 @@ function podHTML(p) {
   const posChip = p.out ? '' : `<span class="pos-chip${blind ? ' blind' : ''}">${p.pos}</span>`;
   let act = p.act;
   if (H.over && p.won > p.total) act = [`+${fmt(p.won - p.total)}`, 'won'];
-  if (p.out) act = ['ÉLIMINÉ', 'fold'];
+  if (p.out) act = ['OUT', 'fold'];
   const actHTML = `<span class="act${act ? ' a-' + act[1] : ''}">${act ? act[0] : ''}</span>`;
   if (p.hero) {
     return `<div class="${cls.join(' ')}">${dealer}${actHTML}
@@ -969,7 +985,7 @@ function render() {
   $('pot').textContent = fmt(potTotal());
   $('potChips').innerHTML = chipStacks(potTotal());
   renderOdds();
-  $('potLabel').textContent = H.over ? 'POT DISTRIBUÉ' : 'POT';
+  $('potLabel').textContent = H.over ? 'POT PAID OUT' : 'POT';
 
   const cat = me.out ? null : classify(me.cards[0], me.cards[1]);
   $('cat').hidden = !cat;
@@ -979,12 +995,12 @@ function render() {
   // prompt + buttons
   const toCall = H.currentBet - me.bet;
   let prompt = '';
-  if (H.awaiting) prompt = `<b>À toi (${me.pos}) · ${STREET_FR[H.street]}</b> · ${toCall > 0 ? `${fmt(Math.min(toCall, me.stack))} pour suivre` : 'check possible'}`;
-  else if (H.runout) prompt = me.folded ? 'Tu as foldé. Touche le bouton pour voir la suite.' : 'Tour de mises terminé. Touche le bouton pour voir la suite.';
+  if (H.awaiting) prompt = `<b>Your turn (${me.pos}) · ${STREET_FR[H.street]}</b> · ${toCall > 0 ? `${fmt(Math.min(toCall, me.stack))} to call` : 'you can check'}`;
+  else if (H.runout) prompt = me.folded ? 'You folded. Tap the button to see the rest of the hand.' : 'Betting round over. Tap the button to see the next card.';
   $('promptText').innerHTML = prompt;
   $('stepRow').hidden = !H.runout;
   if (H.runout) {
-    $('bStep').textContent = ['VOIR LE FLOP ▶', 'VOIR LE TURN ▶', 'VOIR LA RIVER ▶', 'SHOWDOWN ▶'][H.street];
+    $('bStep').textContent = ['SHOW THE FLOP ▶', 'SHOW THE TURN ▶', 'SHOW THE RIVER ▶', 'SHOWDOWN ▶'][H.street];
     $('bSkip').hidden = !(me.folded || me.allin) || H.street === 3;
   }
 
@@ -994,7 +1010,7 @@ function render() {
   $('bCall').innerHTML = toCall <= 0 ? 'CHECK' : toCall >= me.stack ? `CALL<small>all-in ${fmt(me.stack)}</small>` : `CALL<small>${fmt(toCall)}</small>`;
   const minTo = H.street > 0 && H.currentBet === 0 ? BB : H.currentBet + H.minRaise;
   $('bRaise').disabled = !H.awaiting || !canRaise(me) || minTo >= allInAmt;
-  $('bRaise').innerHTML = `${H.street > 0 && H.currentBet === 0 ? 'MISE' : 'RAISE'}<small>choisir…</small>`;
+  $('bRaise').innerHTML = `${H.street > 0 && H.currentBet === 0 ? 'BET' : 'RAISE'}<small>choose…</small>`;
   if (sizing && !H.awaiting) closeSizer();
   $('bAllin').disabled = !H.awaiting || toCall >= me.stack || !canRaise(me);
   if (allinArmed && !H.awaiting) disarmAllin();
@@ -1021,15 +1037,15 @@ function renderResult() {
   const R = H.result;
   const cls = R.delta > 0 ? 'win' : R.delta < 0 ? 'lose' : 'even';
   const me = P()[0];
-  let head = R.delta > 0 ? `Tu gagnes ${sfmt(R.delta)}` : R.delta < 0 ? `Tu perds ${fmt(R.delta)}` : me.folded ? 'Fold sans rien miser' : 'Égalité';
-  let buttons = `<button class="big-btn" id="bNext" type="button">MAIN SUIVANTE ▶</button>`;
+  let head = R.delta > 0 ? `You win ${sfmt(R.delta)}` : R.delta < 0 ? `You lose ${fmt(R.delta)}` : me.folded ? 'Folded, nothing lost' : 'Split pot';
+  let buttons = `<button class="big-btn" id="bNext" type="button">NEXT HAND ▶</button>`;
   if (R.champion) {
-    head = `Tu remportes la table ! ${sfmt(me.stack - G.invested)}`;
-    buttons = `<button class="big-btn" id="bNew" type="button">NOUVELLE PARTIE</button>`;
+    head = `You won the table! ${sfmt(me.stack - G.invested)}`;
+    buttons = `<button class="big-btn" id="bNew" type="button">NEW GAME</button>`;
   } else if (R.heroOut) {
-    head = `Éliminé·e · ${R.place}e sur 9`;
-    buttons = (G.rebuyUsed ? '' : `<button class="big-btn" id="bRebuy" type="button">RE-BUY 20€</button>`) +
-      `<button class="big-btn alt" id="bNew" type="button">NOUVELLE PARTIE</button>`;
+    head = `Out · place ${R.place} of 9`;
+    buttons = (G.rebuyUsed ? '' : `<button class="big-btn" id="bRebuy" type="button">RE-BUY €20</button>`) +
+      `<button class="big-btn alt" id="bNew" type="button">NEW GAME</button>`;
   }
   $('result').innerHTML = `<div class="res-big ${cls}">${head}</div>
     <ul class="res-lines">${R.lines.map(l => `<li>${l}</li>`).join('')}</ul>
@@ -1044,26 +1060,26 @@ function renderResult() {
 function reviewHTML(V) {
   if (!V) return '';
   const blocks = [];
-  if (V.noDecision) blocks.push(['Ta décision', 'Tu n\'as pas eu à jouer : la main s\'est décidée sans toi.']);
+  if (V.noDecision) blocks.push(['Your decision', 'You did not have to act: the hand was decided without you.']);
   const seen = {};
   V.decisions.forEach(({d, rec, verdict, cls}) => {
     seen[d.street] = (seen[d.street] || 0) + 1;
     const again = V.decisions.filter(x => x.d.street === d.street).length > 1 ? ` (${seen[d.street]})` : '';
-    const ctx = d.street === 0 ? `${d.pos}, main ${d.cat}` : `avec ${d.made}`;
+    const ctx = d.street === 0 ? `${d.pos}, ${d.cat} hand` : `with ${d.made}`;
     const odds = d.toCall > 0
-      ? `Payer ${fmt(d.toCall)} pour un pot de ${fmt(d.pot + d.toCall)} : il fallait ${pct(d.need)}. Ton équité : ${pct(d.eq)} contre ${d.opp} adversaire${d.opp > 1 ? 's' : ''}${d.raised ? `, plutôt ${pct(d.eq * (d.street ? 0.85 : 0.8))} face à ${d.street ? 'une mise' : 'une relance'}` : ''}.`
-      : `Rien à payer. Ton équité : ${pct(d.eq)} contre ${d.opp} adversaire${d.opp > 1 ? 's' : ''}.`;
-    const outs = d.street > 0 && d.street < 3 && d.outs ? ` ${d.outs} outs pour t'améliorer.` : '';
+      ? `Paying ${fmt(d.toCall)} for a pot of ${fmt(d.pot + d.toCall)}: you needed ${pct(d.need)}. Your equity: ${pct(d.eq)} against ${d.opp} opponent${d.opp > 1 ? 's' : ''}${d.raised ? `, closer to ${pct(d.eq * (d.street ? 0.85 : 0.8))} against ${d.street ? 'a bet' : 'a raise'}` : ''}.`
+      : `Nothing to pay. Your equity: ${pct(d.eq)} against ${d.opp} opponent${d.opp > 1 ? 's' : ''}.`;
+    const outs = d.street > 0 && d.street < 3 && d.outs ? ` ${d.outs} outs to improve.` : '';
     blocks.push([`${STREET_FR[d.street]}${again}`,
-      `<b class="${cls}">${verdict}</b> Tu as choisi de ${actFR(d.kind, d)} (${ctx}). Meilleur choix : <b>${actFR(rec.act, d)}</b>. ${rec.why}<br><span class="evo">${odds}${outs}</span>${sizeVerdict(d)}`]);
+      `<b class="${cls}">${verdict}</b> You chose to ${actFR(d.kind, d)} (${ctx}). Best choice: <b>${actFR(rec.act, d)}</b>. ${rec.why}<br><span class="evo">${odds}${outs}</span>${sizeVerdict(d)}`]);
   });
-  if (V.why.length) blocks.push(['Pourquoi cette main gagne', V.why.join(' ') + (V.evo ? `<br><span class="evo">${V.evo}</span>` : '')]);
+  if (V.why.length) blocks.push(['Why this hand wins', V.why.join(' ') + (V.evo ? `<br><span class="evo">${V.evo}</span>` : '')]);
   return `<div class="review">${blocks.map(([k, v]) => `<div class="rv"><div class="rk">${k}</div><p>${v}</p></div>`).join('')}</div>`;
 }
 
 /* ---------- choosing your raise size ---------- */
 let sizing = null;
-const xfmt = m => String(Math.round(m * 10) / 10).replace('.', ',');
+const xfmt = m => String(Math.round(m * 10) / 10);
 function sizingContext() {
   const me = P()[0], pot = potTotal(), cb = H.currentBet;
   const maxTo = me.bet + me.stack;
@@ -1076,19 +1092,19 @@ function sizingContext() {
     rec = round50((3 + limpers) * BB);
     if (limpers) opts.push({to:rec, label:`3 BB + ${limpers}`});
     tip = limpers
-      ? `Ouverture standard : 3 BB, plus 1 BB par joueur qui a juste payé (${limpers} ici). Trop petit, tout le monde suit ; trop gros, tu risques beaucoup pour gagner peu.`
-      : 'Ouverture standard : 3 BB. En fin de parole (cut-off, bouton), 2 à 2,5 BB suffisent ; depuis les premières places ou contre une table qui paie tout, monte à 4 BB.';
+      ? `Standard open: 3 BB, plus 1 BB for each player who just called (${limpers} here). Too small and everyone calls; too big and you risk a lot to win a little.`
+      : 'Standard open: 3 BB. In late position (cutoff, button), 2 to 2.5 BB is enough; from early position or against a table that calls everything, go up to 4 BB.';
   } else if (cb > 0) {
     opts = [2, 2.5, 3, 4].map(m => ({to:round50(m * cb), label:`${xfmt(m)}×`}));
     rec = round50(3 * cb);
     tip = H.street === 0
-      ? 'Face à une relance, la sur-relance (3-bet) standard est d\'environ 3× sa mise ; plutôt 4× si tu parles avant lui après le flop ou si d\'autres joueurs ont déjà suivi.'
-      : 'Relance après le flop : 2,5 à 3× la mise adverse. Plus petit, tu donnes une bonne cote aux tirages ; plus gros, tu engages une grosse partie de ton tapis.';
+      ? 'Against a raise, a standard re-raise (3-bet) is about 3× their bet; closer to 4× if you act before them after the flop or if other players already called.'
+      : 'Raise after the flop: 2.5 to 3× the bet you face. Smaller gives draws a good price; bigger commits a big part of your stack.';
   } else {
     const eq = H.odds && H.odds.eq, strong = eq != null && eq >= 0.6;
     opts = [[1 / 3, '⅓ pot'], [1 / 2, '½ pot'], [2 / 3, '⅔ pot'], [1, 'Pot']].map(([f, l]) => ({to:Math.max(BB, round50(f * pot)), label:l}));
     rec = Math.max(BB, round50((strong ? 2 / 3 : 1 / 2) * pot));
-    tip = `Mise après le flop : ½ à ⅔ du pot en général. ⅓ quand le board est calme, ⅔ ou le pot quand il offre des tirages (couleur, quinte) à faire payer. ${strong ? 'Ta main est forte ici : ⅔ du pot fait payer les mains plus faibles.' : 'Main moyenne : ½ pot reste raisonnable.'}`;
+    tip = `Bet after the flop: usually ½ to ⅔ of the pot. ⅓ on a quiet board, ⅔ or pot when it offers draws (flush, straight) you want to charge. ${strong ? 'Your hand is strong here: ⅔ pot makes weaker hands pay.' : 'Medium hand: ½ pot is reasonable.'}`;
   }
   const clamp = t => Math.min(maxTo, Math.max(minTo, t));
   const seen = new Set();
@@ -1100,8 +1116,8 @@ function openSizer() {
   const C = sizingContext();
   sizing = {...C, to:C.rec};
   const bet = H.street > 0 && C.cb === 0;
-  $('sizerTitle').textContent = bet ? 'Choisis ta mise' : 'Choisis ta relance';
-  $('presets').innerHTML = C.opts.map(o => `<button type="button" data-to="${o.to}" class="${o.to === C.rec ? 'rec' : ''}">${o.label}<small>${fmt(o.to)}</small>${o.to === C.rec ? '<em>conseillé</em>' : ''}</button>`).join('');
+  $('sizerTitle').textContent = bet ? 'Choose your bet' : 'Choose your raise';
+  $('presets').innerHTML = C.opts.map(o => `<button type="button" data-to="${o.to}" class="${o.to === C.rec ? 'rec' : ''}">${o.label}<small>${fmt(o.to)}</small>${o.to === C.rec ? '<em>suggested</em>' : ''}</button>`).join('');
   $('presets').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setSize(+b.dataset.to)));
   const r = $('raiseRange');
   r.min = C.minTo; r.max = C.maxTo; r.value = C.rec;
@@ -1117,11 +1133,11 @@ function updateSizer() {
   const bet = H.street > 0 && S.cb === 0;
   $('raiseAmt').textContent = fmt(to);
   $('presets').querySelectorAll('button').forEach(b => b.classList.toggle('sel', +b.dataset.to === to));
-  const scale = S.opening ? `${xfmt(to / BB)} BB` : S.cb > 0 ? `${xfmt(to / S.cb)}× la mise de ${fmt(S.cb)}` : `${Math.round(add / S.pot * 100)}% du pot`;
-  $('sizeInfo').innerHTML = `${bet ? 'Miser' : 'Relancer à'} <b>${fmt(to)}</b> = ${scale}. Tu ajoutes ${fmt(add)} ; le pot passe à ${fmt(S.pot + add)}.`
-    + (bet ? '' : ' <span class="evo">« Relancer à » = ton total sur ce tour, pas un montant en plus.</span>')
-    + (to >= S.maxTo ? ' <b class="bad">C\'est tout ton tapis (all-in).</b>' : '');
-  $('bSizeGo').textContent = `${bet ? 'MISER' : 'RELANCER À'} ${fmt(to)}`;
+  const scale = S.opening ? `${xfmt(to / BB)} BB` : S.cb > 0 ? `${xfmt(to / S.cb)}× the bet of ${fmt(S.cb)}` : `${Math.round(add / S.pot * 100)}% of the pot`;
+  $('sizeInfo').innerHTML = `${bet ? 'Bet' : 'Raise to'} <b>${fmt(to)}</b> = ${scale}. You add ${fmt(add)}; the pot goes to ${fmt(S.pot + add)}.`
+    + (bet ? '' : ' <span class="evo">“Raise to” = your total for this round, not an extra amount.</span>')
+    + (to >= S.maxTo ? ' <b class="bad">That is your whole stack (all-in).</b>' : '');
+  $('bSizeGo').textContent = `${bet ? 'BET' : 'RAISE TO'} ${fmt(to)}`;
 }
 function closeSizer() { sizing = null; $('sizer').hidden = true; }
 $('raiseRange').addEventListener('input', e => { if (sizing) { sizing.to = +e.target.value; updateSizer(); } });
@@ -1132,11 +1148,11 @@ $('bSizeGo').addEventListener('click', () => { if (!sizing) return; const to = s
 function sizeVerdict(d) {
   if (d.size == null || !d.sizeRec) return '';
   const r = d.size / d.sizeRec;
-  const scale = d.opening ? `${xfmt(d.size / BB)} BB` : d.cb > 0 ? `${xfmt(d.size / d.cb)}× la mise` : `${Math.round(d.size / d.potBefore * 100)}% du pot`;
-  const v = r < 0.8 ? '<b class="even">Un peu petit</b> : les adversaires paient facilement et les tirages ont une bonne cote.'
-    : r > 1.35 ? '<b class="even">Un peu gros</b> : les mains plus faibles se couchent, et tu risques beaucoup quand on te paie.'
-    : '<b class="good">Bonne taille ✓</b>';
-  return `<br><span class="evo">Taille : ${fmt(d.size)} (${scale}) · conseillé ${fmt(d.sizeRec)}.</span> ${v}`;
+  const scale = d.opening ? `${xfmt(d.size / BB)} BB` : d.cb > 0 ? `${xfmt(d.size / d.cb)}× the bet` : `${Math.round(d.size / d.potBefore * 100)}% of the pot`;
+  const v = r < 0.8 ? '<b class="even">A bit small</b>: opponents call easily and draws get a good price.'
+    : r > 1.35 ? '<b class="even">A bit big</b>: weaker hands fold, and you risk a lot when someone calls.'
+    : '<b class="good">Good size ✓</b>';
+  return `<br><span class="evo">Size: ${fmt(d.size)} (${scale}) · suggested ${fmt(d.sizeRec)}.</span> ${v}`;
 }
 
 /* ---------- input ---------- */
@@ -1157,7 +1173,7 @@ bind('bAllin', () => {
   if (allinArmed) { disarmAllin(); return heroAct('allin'); }
   allinArmed = setTimeout(() => { disarmAllin(); render(); }, 3000);
   $('bAllin').classList.add('armed');
-  $('bAllin').innerHTML = `CONFIRMER ?<small>all-in ${fmt(P()[0].bet + P()[0].stack)}</small>`;
+  $('bAllin').innerHTML = `CONFIRM?<small>all-in ${fmt(P()[0].bet + P()[0].stack)}</small>`;
 });
 bind('bStep', () => advanceStreet());
 bind('bSkip', skipToEnd);
@@ -1236,63 +1252,63 @@ function startOdds() {
 function renderOdds() {
   const O = H && H.odds, el = $('odds');
   if (!O) {
-    el.innerHTML = `<h2>Tes cotes</h2><div class="verdict">Ton équité et la cote du pot s'affichent ici quand c'est à toi de jouer.</div>`;
+    el.innerHTML = `<h2>Your odds</h2><div class="verdict">Your equity and the pot odds show here when it is your turn.</div>`;
     return;
   }
   const good = O.eq != null && O.eq >= O.need;
-  let verdict = O.made ? `Ta main : <b>${O.made}</b>. ` : '';
-  if (O.eq == null) verdict += 'Calcul en cours…';
-  else if (O.toCall <= 0) verdict += `Rien à payer. Tu gagnes environ ${pct(O.eq)} du temps contre ${O.opp} adversaire${O.opp > 1 ? 's' : ''}.`;
-  else verdict += `Tu paies ${fmt(O.toCall)} pour un pot de ${fmt(O.pot + O.toCall)} : il te faut gagner ${pct(O.need)} du temps. `
-    + (good ? `<span class="good">Tu gagnes environ ${pct(O.eq)}, donc suivre est rentable sur le papier.</span>`
-            : `<span class="bad">Tu gagnes environ ${pct(O.eq)}, pas assez pour suivre.</span>`);
-  if (O.outs) verdict += ` <b>${O.outs} outs</b> : environ ${pct(O.outs / O.unseen)} de toucher à la prochaine carte (règle rapide : outs × 2).`;
-  if (O.raised && O.eq != null) verdict += O.street ? ' Attention : quelqu\'un a misé, sa main est souvent meilleure qu\'une main au hasard.' : ' Attention : quelqu\'un a relancé, sa main est souvent meilleure qu\'une main au hasard.';
-  el.innerHTML = `<h2>Tes cotes · ${STREET_FR[O.street]} <small>${H.awaiting ? `contre ${O.opp} adversaire${O.opp > 1 ? 's' : ''}` : 'ta dernière décision'}</small></h2>
-    <div><div class="k">Équité</div><div class="v ${O.eq == null ? '' : good ? 'good' : 'bad'}">${pct(O.eq)}</div></div>
-    <div><div class="k">Il te faut</div><div class="v">${O.toCall > 0 ? pct(O.need) : '0%'}</div></div>
-    <div><div class="k">À payer</div><div class="v">${fmt(O.toCall)}</div></div>
+  let verdict = O.made ? `Your hand: <b>${O.made}</b>. ` : '';
+  if (O.eq == null) verdict += 'Calculating…';
+  else if (O.toCall <= 0) verdict += `Nothing to pay. You win about ${pct(O.eq)} of the time against ${O.opp} opponent${O.opp > 1 ? 's' : ''}.`;
+  else verdict += `You pay ${fmt(O.toCall)} for a pot of ${fmt(O.pot + O.toCall)}: you need to win ${pct(O.need)} of the time. `
+    + (good ? `<span class="good">You win about ${pct(O.eq)}, so calling is profitable on paper.</span>`
+            : `<span class="bad">You win about ${pct(O.eq)}, not enough to call.</span>`);
+  if (O.outs) verdict += ` <b>${O.outs} outs</b>: about ${pct(O.outs / O.unseen)} to hit on the next card (quick rule: outs × 2).`;
+  if (O.raised && O.eq != null) verdict += O.street ? ' Careful: someone bet, and their hand is often better than a random one.' : ' Careful: someone raised, and their hand is often better than a random one.';
+  el.innerHTML = `<h2>Your odds · ${STREET_FR[O.street]} <small>${H.awaiting ? `against ${O.opp} opponent${O.opp > 1 ? 's' : ''}` : 'your last decision'}</small></h2>
+    <div><div class="k">Equity</div><div class="v ${O.eq == null ? '' : good ? 'good' : 'bad'}">${pct(O.eq)}</div></div>
+    <div><div class="k">You need</div><div class="v">${O.toCall > 0 ? pct(O.need) : '0%'}</div></div>
+    <div><div class="k">To call</div><div class="v">${fmt(O.toCall)}</div></div>
     <div class="meter"><div class="eq" style="width:${O.eq == null ? 0 : Math.round(O.eq * 100)}%"></div>${O.toCall > 0 ? `<div class="need" style="left:${Math.round(O.need * 100)}%"></div>` : ''}</div>
     <div class="verdict">${verdict}</div>`;
 }
 
 /* ---------- coach (asks Claude on the viewer's account) ---------- */
-const RULES = `Tu es le coach de poker d'un joueur qui s'entraîne avant une partie entre amis vendredi : Texas Hold'em, 9 joueurs, blinds 0,50€/1€, tapis de départ 20€, un re-buy possible.
-Le joueur apprend visuellement et veut des conseils concrets. Réponds en 2 à 5 phrases courtes, dans la langue de sa question (français par défaut).
-Donne des chiffres : cote du pot (combien il faut payer pour gagner combien, et le % d'équité nécessaire), équité approximative, outs quand il y en a, position, et l'action conseillée (fold, check, call, mise ou relance avec un montant).
-Dans ce trainer, on mise à chaque street (préflop, flop, turn, river), comme au vrai Hold'em. Les adversaires sont des bots dont le style est indiqué (F/C/R = % habituel de fold/call/raise).
-Pendant une main en cours, tu ne connais pas les cartes des adversaires. Texte simple, pas de titres ni de tableaux.`;
+const RULES = `You are the poker coach of a player practicing before a game with friends on Friday: Texas Hold'em, 9 players, blinds €0.50/€1, €20 starting stack, one rebuy allowed.
+The player learns visually and wants concrete advice. Answer in 2 to 5 short sentences, in the language of the question (English by default).
+Give numbers: pot odds (how much to pay to win how much, and the equity needed in %), approximate equity, outs when there are any, position, and the action you suggest (fold, check, call, bet or raise, with an amount).
+In this trainer there is betting on every street (preflop, flop, turn, river), like real Hold'em. The opponents are bots whose style is shown (F/C/R = usual % of fold/call/raise).
+During a hand in progress, you do not know the opponents' cards. Plain text, no headings or tables.`;
 let sampleFn = null, coachTurns = [], coachBusy = false;
 
 function stateText() {
   const me = P()[0], L = [];
   const alive = P().filter(p => !p.out).length;
-  L.push(`Main #${G.handNo}, ${alive}/9 joueurs encore en course. Street : ${H.over ? 'main terminée' : STREET_FR[H.street]}.`);
-  if (!me.out) L.push(`Moi : position ${me.pos}, cartes ${cardText(me.cards)} (catégorie ${classify(me.cards[0], me.cards[1])}), tapis ${fmt(me.stack)}, déjà misé ${fmt(me.total)} dans cette main${me.folded ? ', j\'ai foldé' : ''}.`);
+  L.push(`Hand #${G.handNo}, ${alive}/9 players still in the game. Street: ${H.over ? 'hand over' : STREET_FR[H.street]}.`);
+  if (!me.out) L.push(`Me: position ${me.pos}, cards ${cardText(me.cards)} (${classify(me.cards[0], me.cards[1])} hand), stack ${fmt(me.stack)}, already put in ${fmt(me.total)} this hand${me.folded ? ', I folded' : ''}.`);
   const opp = P().filter(p => !p.hero && !p.folded && !p.out);
-  L.push('Adversaires encore dans la main : ' + (opp.map(p => `${p.name} (${p.pos}, ${p.prof.name} ${frc(p.prof)}, tapis ${fmt(p.stack)}, misé ${fmt(p.total)})`).join(' ; ') || 'aucun'));
-  L.push(`Pot : ${fmt(potTotal())}.`);
-  if (H.shown) L.push(`Board : ${cardText(H.board.slice(0, H.shown))}. Ma main actuelle : ${best([...me.cards, ...H.board.slice(0, H.shown)]).name}.`);
+  L.push('Opponents still in the hand: ' + (opp.map(p => `${p.name} (${p.pos}, ${p.prof.name} ${frc(p.prof)}, stack ${fmt(p.stack)}, put in ${fmt(p.total)})`).join('; ') || 'none'));
+  L.push(`Pot: ${fmt(potTotal())}.`);
+  if (H.shown) L.push(`Board: ${cardText(H.board.slice(0, H.shown))}. My current hand: ${best([...me.cards, ...H.board.slice(0, H.shown)]).name}.`);
   if (H.awaiting) {
     const toCall = Math.min(H.currentBet - me.bet, me.stack);
-    L.push(`C'est à moi de jouer : ${toCall > 0 ? 'il faut payer ' + fmt(toCall) : 'je peux checker'} ; ${H.street > 0 && H.currentBet === 0 ? 'mise' : 'relance'} possible à ${fmt(raiseTarget())}, all-in ${fmt(me.stack + me.bet)}.`);
+    L.push(`It is my turn: ${toCall > 0 ? 'I must pay ' + fmt(toCall) : 'I can check'}; ${H.street > 0 && H.currentBet === 0 ? 'bet' : 'raise'} possible to ${fmt(raiseTarget())}, all-in ${fmt(me.stack + me.bet)}.`);
   }
-  if (H.odds && H.odds.eq != null) L.push(`Équité estimée par simulation contre ${H.odds.opp} mains au hasard : ${pct(H.odds.eq)} ; équité nécessaire selon la cote du pot : ${pct(H.odds.need)}${H.odds.outs ? ` ; ${H.odds.outs} outs` : ''}.`);
-  L.push('Déroulé de la main : ' + H.log.map(x => x[0]).join(' | '));
-  if (H.decisions.length) L.push('Mes décisions : ' + H.decisions.map(d => `${STREET_FR[d.street]} ${actFR(d.kind, d)} (équité ${pct(d.eq)}, il fallait ${pct(d.need)})`).join(', ') + '.');
-  if (H.over) L.push(`Résultat : ${H.result.lines.join(' ')} Pour moi : ${sfmt(H.result.delta)}.`);
+  if (H.odds && H.odds.eq != null) L.push(`Equity estimated by simulation against ${H.odds.opp} random hands: ${pct(H.odds.eq)}; equity needed from the pot odds: ${pct(H.odds.need)}${H.odds.outs ? `; ${H.odds.outs} outs` : ''}.`);
+  L.push('Hand history: ' + H.log.map(x => x[0]).join(' | '));
+  if (H.decisions.length) L.push('My decisions: ' + H.decisions.map(d => `${STREET_FR[d.street]} ${actFR(d.kind, d)} (equity ${pct(d.eq)}, needed ${pct(d.need)})`).join(', ') + '.');
+  if (H.over) L.push(`Result: ${H.result.lines.join(' ')} For me: ${sfmt(H.result.delta)}.`);
   if (H.over && H.review) {
-    H.review.decisions.forEach(({d, rec, verdict}) => L.push(`Analyse automatique du trainer (${STREET_FR[d.street]}) : ${verdict.replace(/[✓✗]/g, '').trim()} ; j'ai choisi de ${actFR(d.kind, d)}, conseillé : ${actFR(rec.act, d)}.`));
-    L.push('Pourquoi le gagnant gagne : ' + H.review.why.join(' ') + (H.review.evo ? ' ' + H.review.evo : ''));
+    H.review.decisions.forEach(({d, rec, verdict}) => L.push(`Trainer's automatic review (${STREET_FR[d.street]}): ${verdict.replace(/[✓✗]/g, '').trim()}; I chose to ${actFR(d.kind, d)}, suggested: ${actFR(rec.act, d)}.`));
+    L.push('Why the winner wins: ' + H.review.why.join(' ') + (H.review.evo ? ' ' + H.review.evo : ''));
   }
-  L.push(`Session : net ${sfmt(me.stack - G.invested + (H.over ? 0 : me.total))}.`);
+  L.push(`Session: net ${sfmt(me.stack - G.invested + (H.over ? 0 : me.total))}.`);
   return L.join('\n');
 }
 
 function addMsg(who, text, auto = false) {
   const m = document.createElement('div');
   m.className = `msg ${who}${auto ? ' auto' : ''}`;
-  if (auto) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'LE COACH REMARQUE'; m.append(t); }
+  if (auto) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'COACH NOTE'; m.append(t); }
   const body = document.createElement('span'); body.textContent = text; m.append(body);
   $('msgs').append(m); $('msgs').scrollTop = $('msgs').scrollHeight;
   return body;
@@ -1302,16 +1318,16 @@ function setCoachBusy(b) {
   document.querySelectorAll('#coachBody button').forEach(x => x.disabled = b);
 }
 const COACH_ERR = {
-  rate_limited:'Trop de questions d\'un coup. Réessaie dans un moment.',
-  session_expired:'Reconnecte-toi à Claude pour continuer avec le coach.',
-  refused:'Le coach ne peut pas répondre à ça. Reformule ta question.',
+  rate_limited:'Too many questions at once. Try again in a moment.',
+  session_expired:'Sign in to Claude again to keep using the coach.',
+  refused:'The coach cannot answer that. Try rephrasing your question.',
 };
 async function askCoach(question, auto = false) {
   if (!sampleFn || coachBusy || !H) return;
   setCoachBusy(true);
   if (!auto) addMsg('me', question);
-  const bubble = addMsg('bot', 'Réflexion…', auto);
-  const content = `${question}\n\n--- Situation actuelle ---\n${stateText()}`;
+  const bubble = addMsg('bot', 'Thinking…', auto);
+  const content = `${question}\n\n--- Current situation ---\n${stateText()}`;
   try {
     const {text} = await sampleFn([{role:'user', content:RULES}, ...coachTurns.slice(-8), {role:'user', content}], {
       cache:false, modelTier:auto ? 'quick' : 'default',
@@ -1321,10 +1337,10 @@ async function askCoach(question, auto = false) {
     coachTurns.push({role:'user', content:question}, {role:'assistant', content:text});
   } catch (e) {
     if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'].includes(e.code)) {
-      bubble.textContent = 'Le coach n\'est pas autorisé sur cette page. Les cotes et le bilan restent affichés.';
+      bubble.textContent = 'The coach is not allowed on this page. The odds and the review still work.';
       sampleFn = null;
     } else {
-      bubble.textContent = (e.text ? e.text + '\n\n' : '') + (COACH_ERR[e.code] || 'Le coach n\'a pas pu répondre. Réessaie.');
+      bubble.textContent = (e.text ? e.text + '\n\n' : '') + (COACH_ERR[e.code] || 'The coach could not answer. Try again.');
     }
   } finally {
     setCoachBusy(false);
@@ -1337,11 +1353,11 @@ function maybeAutoCoach() {
   const me = P()[0];
   const bad = H.review.decisions.find(x => x.cls === 'bad');
   let why = null;
-  if (bad) why = `au ${STREET_FR[bad.d.street].toLowerCase()}, le trainer juge ma décision mauvaise (${bad.verdict.replace(/[✓✗]/g, '').trim()})`;
-  else if (H.decisions.length && Math.abs(H.result.delta) >= 800) why = 'gros pot';
-  else if (H.decisions.length && classify(me.cards[0], me.cards[1]) === 'premium' && !H.decisions.some(d => family(d.kind) === 'raise')) why = 'main premium jouée sans jamais relancer';
+  if (bad) why = `on the ${STREET_FR[bad.d.street].toLowerCase()}, the trainer rates my decision as bad (${bad.verdict.replace(/[✓✗]/g, '').trim()})`;
+  else if (H.decisions.length && Math.abs(H.result.delta) >= 800) why = 'big pot';
+  else if (H.decisions.length && classify(me.cards[0], me.cards[1]) === 'premium' && !H.decisions.some(d => family(d.kind) === 'raise')) why = 'premium hand played without ever raising';
   if (!why) return false;
-  askCoach(`Commente ma façon de jouer cette main en 2-4 phrases : ce qui était bien, ce qu'il fallait faire autrement, chiffres à l'appui. (Point à regarder : ${why}.)`, true);
+  askCoach(`Comment on how I played this hand in 2-4 sentences: what was good, what I should have done differently, with numbers. (Point to look at: ${why}.)`, true);
   return true;
 }
 
@@ -1357,14 +1373,14 @@ $('askForm').addEventListener('submit', e => {
   try { sampleFn = window.claude ? await window.claude.use('sample') : null; } catch { sampleFn = null; }
   $('coachBody').hidden = !sampleFn;
   $('coachOff').hidden = !!sampleFn;
-  $('coachOff').textContent = 'Le coach Claude ne marche que dans la version Claude du trainer. Ici, les cotes et le bilan de chaque main fonctionnent normalement.';
+  $('coachOff').textContent = 'The Claude coach only works in the Claude version of the trainer. Here, the odds and the hand review work normally.';
 })();
 
 function buildPlayers() {
-  const opts = `<option value="random">Au hasard</option>` + PROFILES.map((p, i) => `<option value="${i}">${p.name} (${frc(p)})</option>`).join('');
-  $('players').innerHTML = NAMES.map((_, i) => `<label>Siège ${i + 1}
-      <span class="row"><input id="pName${i}" maxlength="12" autocomplete="off" aria-label="Nom du joueur ${i + 1}">
-      <select id="pStyle${i}" aria-label="Style du joueur ${i + 1}">${opts}</select></span></label>`).join('');
+  const opts = `<option value="random">Random</option>` + PROFILES.map((p, i) => `<option value="${i}">${p.name} (${frc(p)})</option>`).join('');
+  $('players').innerHTML = NAMES.map((_, i) => `<label>Seat ${i + 1}
+      <span class="row"><input id="pName${i}" maxlength="12" autocomplete="off" aria-label="Player ${i + 1} name">
+      <select id="pStyle${i}" aria-label="Player ${i + 1} style">${opts}</select></span></label>`).join('');
   NAMES.forEach((_, i) => {
     const inp = $('pName' + i), sel = $('pStyle' + i);
     inp.value = SEAT_CFG[i].name; sel.value = SEAT_CFG[i].style;
@@ -1381,20 +1397,45 @@ function buildPlayers() {
   });
 }
 
-$('legend').innerHTML = 'Jetons : ' + [...CHIPS].reverse().map(ch => `<span><i class="${ch.light ? 'light' : ''}" style="${chipStyle(ch)}"></i>${ch.name} ${fmt(ch.v)}</span>`).join('');
+$('legend').innerHTML = 'Chips: ' + [...CHIPS].reverse().map(ch => `<span><i class="${ch.light ? 'light' : ''}" style="${chipStyle(ch)}"></i>${ch.name} ${fmt(ch.v)}</span>`).join('');
 
-// "Nouvelle partie" needs a second tap within 3 seconds
+// "New game" needs a second tap within 3 seconds
 let restartArmed = null;
 $('bRestart').addEventListener('click', () => {
   const b = $('bRestart');
   if (restartArmed) {
     clearTimeout(restartArmed); restartArmed = null;
-    b.classList.remove('armed'); b.textContent = '↺ Nouvelle partie';
+    b.classList.remove('armed'); b.textContent = '↺ New game';
     return newGame();
   }
-  b.classList.add('armed'); b.textContent = 'Confirmer ? Tout recommencer';
-  restartArmed = setTimeout(() => { restartArmed = null; b.classList.remove('armed'); b.textContent = '↺ Nouvelle partie'; }, 3000);
+  b.classList.add('armed'); b.textContent = 'Confirm? Start over';
+  restartArmed = setTimeout(() => { restartArmed = null; b.classList.remove('armed'); b.textContent = '↺ New game'; }, 3000);
 });
+
+// "Share": the phone's share menu, else copy the link, else show it to copy by hand.
+// Always shares the public app (no coach), even from the Claude version.
+const APP_URL = 'https://subzerobm.github.io/MyClaudeCreations/poker-trainer/';
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
+}
+function showShareBox() {
+  $('shareLink').value = APP_URL;
+  $('shareBox').hidden = false;
+  $('shareLink').focus(); $('shareLink').select();
+}
+$('bShare').addEventListener('click', async () => {
+  const data = {title:'Poker trainer', text:'Practice your poker before Friday:', url:APP_URL};
+  if (navigator.share) {
+    try { await navigator.share(data); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; } // closed by the user: nothing to do
+  }
+  try { await navigator.clipboard.writeText(APP_URL); toast('Link copied!'); }
+  catch { showShareBox(); }
+});
+$('bShareClose').addEventListener('click', () => { $('shareBox').hidden = true; });
+$('shareLink').addEventListener('focus', e => e.target.select());
 
 // On opening: offer to continue the saved game, otherwise start a new one
 const saved = loadSave();

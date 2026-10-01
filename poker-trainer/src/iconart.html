@@ -106,7 +106,7 @@ function fedora(x, y, rot) {
   };
   // brim shadow on the card
   g.save(); g.filter = 'blur(14px)'; g.fillStyle = 'rgba(0,0,0,0.55)';
-  g.beginPath(); g.ellipse(6, 26, 200, 34, 0, 0, Math.PI * 2); g.fill(); g.restore();
+  g.beginPath(); g.ellipse(4, 22, 168, 26, 0, 0, Math.PI * 2); g.fill(); g.restore();
   // crown
   const cg = g.createLinearGradient(-120, 0, 120, 0);
   cg.addColorStop(0, '#2c2c31'); cg.addColorStop(0.45, '#17171a'); cg.addColorStop(1, '#0a0a0b');
@@ -125,11 +125,11 @@ function fedora(x, y, rot) {
   const bg = g.createLinearGradient(0, -20, 0, 30);
   bg.addColorStop(0, '#2a2a2f'); bg.addColorStop(1, '#08080a');
   g.fillStyle = bg;
-  g.beginPath(); g.moveTo(-205, 4);
-  g.bezierCurveTo(-190, -26, 190, -26, 205, 4);
-  g.bezierCurveTo(190, 34, -190, 34, -205, 4); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(-172, 4);
+  g.bezierCurveTo(-160, -24, 160, -24, 172, 4);
+  g.bezierCurveTo(160, 30, -160, 30, -172, 4); g.closePath(); g.fill();
   g.strokeStyle = 'rgba(212,175,55,0.55)'; g.lineWidth = 2;
-  g.beginPath(); g.moveTo(-200, 2); g.bezierCurveTo(-185, -22, 185, -22, 200, 2); g.stroke();
+  g.beginPath(); g.moveTo(-168, 2); g.bezierCurveTo(-156, -20, 156, -20, 168, 2); g.stroke();
   g.restore();
 }
 
@@ -215,12 +215,11 @@ function stack(x, y, colors) {
   colors.forEach((c, i) => chip(x + (i % 2 ? 1.5 : -1.5), y - i * 12, CHIP[c]));
 }
 function chipStacks() {
-  stack(452, 872, ['red', 'ivory', 'red', 'ivory']);
-  stack(690, 868, ['ivory', 'red', 'ivory', 'ivory']);
-  stack(776, 856, ['black', 'black', 'red', 'black', 'red', 'black', 'black', 'black']);
-  stack(864, 872, ['red', 'red', 'black', 'red', 'red']);
-  chip(574, 868, CHIP.black); // a loose chip on the felt
-}
+  // all chips grouped on the right, clear of the Ace and the bottom lettering
+  stack(648, 872, ['red', 'ivory', 'red', 'ivory']);
+  stack(728, 862, ['ivory', 'red', 'ivory', 'ivory', 'ivory']);
+  stack(806, 850, ['black', 'black', 'red', 'black', 'red', 'black', 'black', 'black']);
+  stack(886, 868, ['red', 'red', 'black', 'red', 'red']);}
 
 /* ---------- ashtray (art deco glass with a gold rim) ---------- */
 function ashtray(x, y) {
@@ -291,7 +290,7 @@ async function draw() {
   // A Hold'em hand is two cards, read "A K": the Ace (the "face") on the left in front, the King behind on the right
   card(612, 618, 0.26, 'K', '♥', C.heart, 250, 352, true);
   card(478, 625, -0.08, 'A', '♠', C.ink);
-  fedora(462, 450, -0.12);
+  fedora(463, 424, -0.08); // centered on the Ace, same tilt as the card
   // cigar resting in the ashtray: mouth end on the rim, lit end over the bowl
   ashtray(196, 828);
   cigar(340, 872, Math.atan2(-58, -186));
